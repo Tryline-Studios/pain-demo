@@ -14,9 +14,12 @@ There is no application code yet. The design is tracked as a wayfinder map on Gi
 
 ## pain001 library gotchas
 
-- Pin an exact version. It is pre-1.0 and ships several releases a day.
-- Use `pain001.xml.generate_xml.generate_xml_string(rows, message_type, template_path, xsd_path)` for in-memory XML. `process_files` writes to disk.
-- Its path validator rejects files outside the cwd, temp dir and package dir, so its file-based loaders can raise `SecurityError`. Pass rows as `list[dict]` instead.
+- Pin an exact version of `pain001[fast]` (the extra supplies lxml). It is pre-1.0 and ships several releases a day; goldens in CI catch output drift on upgrade.
+- Build XML with `pain001.corpus.build(scenario, version)` (ADR-0002). It emits every party and agent role in every Message Version, renames `BIC`/`BICFI` per version, and XSD-validates the result. Do not use `generate_xml_string` or the bundled templates: they cannot emit Intermediary Agents and .04 to .08 are thin.
+- Only the renderer module imports pain001. Map our own model to the scenario dict there; never expose pain001 types or its scenario schema elsewhere.
+- Pass every identifier explicitly (no `auto` ids) and do not use `raw` merges. Read the build report: a dropped Placement is an error, any other drop is a warning.
+- `corpus.build` checks the XSD only. Ultimate Debtor at one level and contiguous Intermediary Agents are enforced by our model; `pain001.corpus.rules.mdr.evaluate_mdr` is for tests.
+- Its path validator rejects files outside the cwd, temp dir and package dir, so its file-based loaders can raise `SecurityError`. Keep everything in memory.
 - It registers XML namespaces process-wide. Generation is blocking, so run it off the event loop.
 
 ## Agent skills
