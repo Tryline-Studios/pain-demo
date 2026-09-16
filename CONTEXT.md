@@ -64,8 +64,12 @@ _Avoid_: Ownership, affiliation, link, UBO relationship
 The curated set of Sanctioned Entities shipped with the app, each traceable through its Listings, plus the Control Relationships between them.
 _Avoid_: Seed list, sanctions list, watchlist, blacklist
 
+**Hit**:
+One Placement of a Sanctioned Entity in a Sample File, either file-level (Debtor, Debtor Agent) or in one transaction. A Hit is either drawn by the app or named in the request.
+_Avoid_: Match, alert (those belong to the Screening Tool), injection
+
 **Hit Count**:
-The number of Sanctioned Entity Placements requested in a Sample File; zero yields a clean file.
+The number of Hits requested in a Sample File, named ones included; zero yields a clean file.
 _Avoid_: Hit rate, density
 
 **Placement**:
