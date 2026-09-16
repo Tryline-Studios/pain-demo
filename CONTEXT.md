@@ -64,6 +64,10 @@ _Avoid_: Ownership, affiliation, link, UBO relationship
 The curated set of Sanctioned Entities shipped with the app, each traceable through its Listings, plus the Control Relationships between them.
 _Avoid_: Seed list, sanctions list, watchlist, blacklist
 
+**Clean Bank List**:
+The curated set of real, non-sanctioned banks that Generated Data draws agents and accounts from; checked against the Entity Catalogue, and separate from it.
+_Avoid_: Bank allowlist, safe banks, registry
+
 **Hit**:
 One Placement of a Sanctioned Entity in a Sample File, either file-level (Debtor, Debtor Agent) or in one transaction. A Hit is either drawn by the app or named in the request.
 _Avoid_: Match, alert (those belong to the Screening Tool), injection
