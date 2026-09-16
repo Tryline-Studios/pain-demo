@@ -92,6 +92,10 @@ _Avoid_: Romanisation (the act, not the variant), translation
 The record accompanying a Sample File that states each Placement of a Sanctioned Entity and its Name Variant, i.e. what the Screening Tool should flag.
 _Avoid_: Manifest, ground truth, expected results
 
+**Effective Request**:
+A request with every default resolved (Seed, timestamps, counts, countries) as echoed back with its Sample File; replaying it on the same Generator Version reproduces the file exactly.
+_Avoid_: Resolved request, normalised request, echo
+
 **Seed**:
 The value that makes generating a Sample File reproducible: same request plus same Seed yields the identical file and Answer Key within one Generator Version.
 _Avoid_: Random state, nonce (and never for the Entity Catalogue)
