@@ -89,8 +89,12 @@ The record accompanying a Sample File that states each Placement of a Sanctioned
 _Avoid_: Manifest, ground truth, expected results
 
 **Seed**:
-The value that makes generating a Sample File reproducible: same request plus same Seed yields the identical file and Answer Key.
+The value that makes generating a Sample File reproducible: same request plus same Seed yields the identical file and Answer Key within one Generator Version.
 _Avoid_: Random state, nonce (and never for the Entity Catalogue)
+
+**Generator Version**:
+The identity of everything that shapes generated output: the app release, the exact versions of its data libraries, and the Entity Catalogue snapshot. The Seed promise holds only within one.
+_Avoid_: Build, engine version, fingerprint
 
 **Screening Tool**:
 The external sanctions payment screening system that Sample Files are fed into; the system under test, not part of this app.
