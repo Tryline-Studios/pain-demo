@@ -73,8 +73,16 @@ The party role a Sanctioned Entity occupies in a transaction (debtor, creditor, 
 _Avoid_: Position, slot, location
 
 **Name Variant**:
-How a Sanctioned Entity's name is rendered in a Placement: exact, alias, transliteration, or fuzzed.
+How a Sanctioned Entity's name is rendered in a Placement: exact (a listed primary name), alias (a listed non-primary name), Native Script, Transliteration, or fuzzed (a listed Latin name altered by named operations).
 _Avoid_: Mutation, spelling, obfuscation
+
+**Native Script**:
+The Name Variant that uses a listed non-Latin name of a Sanctioned Entity verbatim, such as its Cyrillic name.
+_Avoid_: Original script, local name, foreign name
+
+**Transliteration**:
+The Name Variant that romanises a listed non-Latin name under a named scheme, producing a Latin string that is itself on no Sanctions List.
+_Avoid_: Romanisation (the act, not the variant), translation
 
 **Answer Key**:
 The record accompanying a Sample File that states each Placement of a Sanctioned Entity and its Name Variant, i.e. what the Screening Tool should flag.
