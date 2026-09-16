@@ -2,7 +2,7 @@
 
 Generates sample **ISO 20022 pain.001** (Customer Credit Transfer Initiation) files for testing and proving a sanctions payment screening tool.
 
-Each Sample File mixes generated fake payment data (or data you supply) with real Sanctioned Entities from OFAC and OFSI/FCDO lists, such as Sberbank and Evraz PLC, and comes with an Answer Key that says exactly what the screening tool should flag.
+Each Sample File mixes generated fake payment data (or data you supply) with real Sanctioned Entities from the OFAC SDN and UK Sanctions List, such as Sberbank and Evraz PLC, and comes with an Answer Key that says exactly what the screening tool should flag.
 
 > **Status:** planning. The design is being worked out on the GitHub issue labelled `wayfinder:map`. There is no application code yet.
 

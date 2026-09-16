@@ -21,11 +21,47 @@ Payment content provided by a user through the web form or API.
 _Avoid_: Custom data, manual data, input data
 
 **Sanctioned Entity**:
-A real party or bank drawn from a sanctions list (OFAC, OFSI/FCDO), such as Sberbank or Evraz PLC, deliberately placed in a Sample File.
+A real Entity with at least one Listing, such as Sberbank or Evraz PLC, deliberately placed in a Sample File.
 _Avoid_: Bad actor, hit, SDN
 
+**Entity**:
+Any party that can be sanctioned. Every Entity has an Entity Type.
+_Avoid_: Party (reserved for pain.001 roles), person, target
+
+**Entity Type**:
+The classification of an Entity: an Individual, or a Legal Entity that is either a Bank or a Corporate.
+_Avoid_: Entity kind, category
+
+**Individual**:
+An Entity that is a natural person, such as an ultimate beneficial owner or controlling party of a Legal Entity.
+_Avoid_: Person, natural person, UBO (a relationship, not a type)
+
+**Legal Entity**:
+An Entity that is not a natural person; for now either a Bank or a Corporate.
+_Avoid_: Organisation, company, firm
+
+**Bank**:
+A Legal Entity that is a financial institution able to hold accounts and act as a payment agent.
+_Avoid_: Financial institution, FI
+
+**Corporate**:
+A Legal Entity that is not a Bank.
+_Avoid_: Company, business, non-bank
+
+**Sanctions List**:
+An official published list of sanctioned parties; in scope are the OFAC SDN List and the UK Sanctions List.
+_Avoid_: Watchlist, blacklist, OFSI list (closed January 2026)
+
+**Listing**:
+One Entity's entry on one Sanctions List, identified by that list and its entry ID (OFAC UID or UK Unique ID).
+_Avoid_: Designation, record, SDN entry
+
+**Control Relationship**:
+A sourced link stating that one Entity controls a Legal Entity (as ultimate beneficial owner, controlling shareholder, director or parent company), currently or formerly.
+_Avoid_: Ownership, affiliation, link, UBO relationship
+
 **Entity Catalogue**:
-The curated set of Sanctioned Entities shipped with the app, each traceable to its source list and list entry.
+The curated set of Sanctioned Entities shipped with the app, each traceable through its Listings, plus the Control Relationships between them.
 _Avoid_: Seed list, sanctions list, watchlist, blacklist
 
 **Hit Count**:
