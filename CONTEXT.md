@@ -92,6 +92,10 @@ _Avoid_: Original script, local name, foreign name
 The Name Variant that romanises a listed non-Latin name under a named scheme, producing a Latin string that is itself on no Sanctions List.
 _Avoid_: Romanisation (the act, not the variant), translation
 
+**Exposure**:
+A clean transaction whose creditor side is deliberately placed in a sanctioned or high-risk country, to test country-based screening. Neither a Hit nor clean; the Answer Key lists Exposures separately.
+_Avoid_: Country hit, geo hit, risk flag
+
 **Answer Key**:
 The record accompanying a Sample File that states each Placement of a Sanctioned Entity and its Name Variant, i.e. what the Screening Tool should flag.
 _Avoid_: Manifest, ground truth, expected results
