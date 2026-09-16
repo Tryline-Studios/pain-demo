@@ -57,7 +57,7 @@ One Entity's entry on one Sanctions List, identified by that list and its entry 
 _Avoid_: Designation, record, SDN entry
 
 **Control Relationship**:
-A sourced link stating that one Entity controls a Legal Entity (as ultimate beneficial owner, controlling shareholder, director or parent company), currently or formerly.
+A sourced link stating that one Entity controls or acts for a Legal Entity (as ultimate beneficial owner, controlling shareholder, director, officer or parent company), currently, formerly, or as stated in a Listing.
 _Avoid_: Ownership, affiliation, link, UBO relationship
 
 **Entity Catalogue**:
