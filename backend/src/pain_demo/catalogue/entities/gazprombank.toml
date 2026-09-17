@@ -1,0 +1,133 @@
+# Gazprombank: on both lists; the OFAC Listing carries the BIC and the LEI. andrey-akimov chairs its
+# Management Board (control_relationships.toml).
+id = "gazprombank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "17016"
+programmes = ["UKRAINE-EO13662", "RUSSIA-EO14024"]
+designation_date = 2024-11-21
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1072"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Gazprombank Joint Stock Company"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[names]]
+value = "Gazprombank"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1072" }
+
+[[names]]
+value = "Газпромбанк Акционерное общество"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[names]]
+value = "Gazprombank Open Joint Stock Company"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[names]]
+value = "Bank GPB JSC"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[names]]
+value = "Joint Stock Bank of the Gas Industry Gazprombank"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[names]]
+value = "Газпромбанк (АО)"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS1072" }
+
+[[addresses]]
+lines = ["16 Nametkina Street", "Bldg. 1"]
+city = "Moscow"
+postal_code = "117420"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[addresses]]
+lines = ["6 Enh-Taivan St."]
+city = "Ulaanbaatar"
+postal_code = "14250"
+country = "MN"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[addresses]]
+lines = ["6 Floor", "Business Center Q", "Block A", "Building 15A", "Kabanbay Batyra Avenue"]
+city = "Astana"
+postal_code = "010000"
+country = "KZ"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[addresses]]
+lines = ["10/48 Malcha Marg", "Diplomatic Enclave", "Chanakyapuri"]
+city = "Delhi"
+postal_code = "110021"
+country = "IN"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[addresses]]
+lines = ["Central International Trade Center", "Suite No. 1205", "Tower C", "No. 6A Jianguomenwai Avenue"]
+city = "Chaoyang"
+region = "Liaoning"
+postal_code = "100022"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[addresses]]
+lines = ["16 Nametkina Street", "Bldg. 1"]
+city = "Moscow"
+postal_code = "117420"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS1072" }
+
+[lei]
+value = "253400WSS48YWMBUA688"
+gleif_legal_name = '"Газпромбанк" (Акционерное общество)'
+source = "OFAC 17016 Legal Entity Number; GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for GAZPRUMM; GLEIF lei-records filter[entity.registeredAs]=1027700167110 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "1027700167110"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[registration_numbers]]
+value = "7744001497"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+
+[[bics]]
+value = "GAZPRUMM"
+listing = { list = "ofac_sdn", entry_id = "17016" }
+verified_date = 2026-09-14

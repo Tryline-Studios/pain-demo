@@ -1,0 +1,137 @@
+# KOMID: on both lists. No GLEIF record was found.
+id = "komid"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "9345"
+programmes = ["NPWMD", "DPRK2"]
+designation_date = 2005-06-29
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "DPR0157"
+programmes = ["The Democratic People's Republic of Korea (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2009-04-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "KOREA MINING DEVELOPMENT TRADING CORPORATION"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[names]]
+value = "KOREA MINING DEVELOPMENT TRADING CORPORATION"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0157" }
+
+[[names]]
+value = "NORTH KOREAN MINING DEVELOPMENT TRADING CORPORATION"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[names]]
+value = "CHANGGWANG SINYONG CORPORATION"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[names]]
+value = "EXTERNAL TECHNOLOGY GENERAL CORPORATION"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[names]]
+value = "KOREA KUMRYONG TRADING COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[names]]
+value = "DPRKN Mining Development Trading Cooperation"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[names]]
+value = "Korean Mining and Industrial Development Corporation"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[names]]
+value = "CHANGGWANG SINYONG CORPORATION"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0157" }
+
+[[names]]
+value = "DPRKN MINING DEVELOPMENT TRADING COOPERATION"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0157" }
+
+[[names]]
+value = "EXTERNAL TECHNOLOGY GENERAL CORPORATION"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0157" }
+
+[[names]]
+value = "KOMID"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0157" }
+
+[[addresses]]
+lines = ["Central District"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[addresses]]
+lines = ["Beijing"]
+city = "Beijing"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[addresses]]
+lines = ["Moscow"]
+city = "Moscow"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[addresses]]
+lines = ["Tehran"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[addresses]]
+lines = ["Damascus"]
+city = "Damascus"
+country = "SY"
+listing = { list = "ofac_sdn", entry_id = "9345" }
+
+[[addresses]]
+lines = ["Central District"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "uk", entry_id = "DPR0157" }

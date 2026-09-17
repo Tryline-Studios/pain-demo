@@ -1,0 +1,117 @@
+# Bank Sepah: on both lists; the OFAC Listing carries the head-office BIC and GLEIF maps four branch BICs. No LEI:
+# GLEIF holds two lapsed Bank Sepah records and neither clearly matches (spec 3.3). ahmad-derakhshandeh is a former
+# chairman (control_relationships.toml).
+id = "bank-sepah"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "25580"
+programmes = ["IFSR", "IRAN", "NPWMD"]
+designation_date = 2018-11-05
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "INU0361"
+programmes = ["The Iran (Sanctions) (Nuclear) (EU Exit) Regulations 2019"]
+designation_date = 2025-09-28
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Bank Sepah"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[names]]
+value = "Bank Sepah"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0361" }
+
+[[names]]
+value = "Bank Sepah International"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0361" }
+
+[[addresses]]
+lines = ["Negin Sepah Building", "Head Office of Bank Sepah", "Nowrouz Street", "Africa Hwy", "Argentina Square"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[addresses]]
+lines = ["6th Floor", "Negin Sepah Building", "Nowrouz St.", "Africa Hwy.", "Argentina Sq."]
+city = "Tehran"
+postal_code = "1519662840"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[addresses]]
+lines = ["Imam Khomeini Square - PO Box 11364"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[addresses]]
+lines = ["Hafenstrasse 54", "D-60327"]
+city = "Frankfurt am Main"
+country = "DE"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[addresses]]
+lines = ["PO Box 110261"]
+city = "Franfurt am Main"
+region = "Hessen"
+postal_code = "60037"
+country = "DE"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[addresses]]
+lines = ["20 Rue Auguste Vacquerie"]
+city = "Paris"
+postal_code = "75016"
+country = "FR"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[addresses]]
+lines = ["Via Barberini 50"]
+city = "Rome"
+postal_code = "00187"
+country = "IT"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[registration_numbers]]
+value = "4293"
+type = "Registration Number"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+
+[[bics]]
+value = "SEPBIRTH"
+listing = { list = "ofac_sdn", entry_id = "25580" }
+verified_date = 2026-09-14
+
+[[bics]]
+value = "SEPBDE21XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 5493008Z30ZS378SB107"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "SEPBFRP1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 5493008Z30ZS378SB107"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "SEPBIRT1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 5493008Z30ZS378SB107"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "SEPBITR1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 5493008Z30ZS378SB107"
+verified_date = 2026-08-28

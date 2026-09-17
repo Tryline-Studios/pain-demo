@@ -1,0 +1,56 @@
+# Mikhail Fridman: on both lists. Former director of alfa-bank (control_relationships.toml).
+id = "mikhail-fridman"
+entity_type = "individual"
+date_of_birth = 1964-04-21
+place_of_birth = "Lviv, Ukraine"
+nationalities = ["RU", "IL"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "44291"
+programmes = ["RUSSIA-EO14024"]
+designation_date = 2023-08-11
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0664"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-15
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Fridman Mikhail Maratovich"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "44291" }
+
+[[names]]
+value = "Mikhail Maratovic FRIDMAN"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0664" }
+
+[[names]]
+value = "Фридман Михаил Маратович"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "44291" }
+
+[[names]]
+value = "Mikhail Maratovic FRIEDMAN"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0664" }
+
+[[names]]
+value = "Михаил Маратович ФРИДМАН"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS0664" }

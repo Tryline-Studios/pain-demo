@@ -1,0 +1,18 @@
+# Syriatel: UK-only. Its only listed address has no country, so none is recorded (spec 3.3). Controlled by
+# rami-makhlouf (control_relationships.toml).
+id = "syriatel"
+entity_type = "corporate"
+
+[[listings]]
+list = "uk"
+entry_id = "SYR0336"
+programmes = ["The Syria (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2020-12-31
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Syriatel"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0336" }

@@ -1,0 +1,67 @@
+# Belaruskali: UK-only; neither OFAC file contains it. No GLEIF record was found.
+id = "belaruskali"
+entity_type = "corporate"
+
+[[listings]]
+list = "uk"
+entry_id = "BEL0111"
+programmes = ["The Republic of Belarus (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2021-12-02
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = 'Open Joint Stock Company "Belaruskali"'
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0111" }
+
+[[names]]
+value = 'Open Joint Stock Company "Belaruskali"'
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0111" }
+
+[[names]]
+value = 'OJSC "Belaruskali"'
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0111" }
+
+[[names]]
+value = 'Открытое акционерное общество "Беларуськалий"'
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0111" }
+
+[[names]]
+value = 'Адкрытае акцыянернае таварыства "Беларуськалiй"'
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0111" }
+
+[[names]]
+value = 'ААТ "Беларуськалiй"'
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0111" }
+
+[[names]]
+value = 'ОАО "Беларуськалий"'
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0111" }
+
+[[addresses]]
+lines = ["OJSC Belaruskali", "5 Korzha Street"]
+city = "Soligorsk"
+region = "Minsk Region"
+postal_code = "223710"
+country = "BY"
+listing = { list = "uk", entry_id = "BEL0111" }

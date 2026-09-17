@@ -1,0 +1,138 @@
+# Evrofinance Mosnarbank: on both lists, under the Russia and Venezuela programmes on OFAC. The UK Listing's
+# "BIC 044525204" is a Russian domestic BIK: it stays among the registration numbers as the list labels it and is
+# never stored as a BIC (spec 3.3).
+id = "evrofinance-mosnarbank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "26503"
+programmes = ["VENEZUELA-EO13850", "RUSSIA-EO14024"]
+designation_date = 2019-03-11
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS3620"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2026-06-16
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Evrofinance Mosnarbank"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26503" }
+
+[[names]]
+value = 'JOINT-STOCK COMMERCIAL BANK "EVROFINANCE MOSNARBANK" (JOINT-STOCK COMPANY)'
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[names]]
+value = "Bank Evrofinance"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26503" }
+
+[[names]]
+value = "EVROFINANCE MOSNARBANK"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[names]]
+value = 'JOINT-STOCK COMMERCIAL BANK "EVROFINANCE MOSNARBANK"'
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[names]]
+value = 'JSC JSCB "EVROFINANCE MOSNARBANK"'
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[names]]
+value = 'АКЦИОНЕРНЫЙ КОММЕРЧЕСКИЙ БАНК "ЕВРОФИНАНС МОСНАРБАНК" (акционерное общество)'
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[names]]
+value = "АО АКБ «ЕВРОФИНАНС МОСНАРБАНК»"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[addresses]]
+lines = ["29, ul. Novy Arbat"]
+city = "Moscow"
+postal_code = "121099"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "26503" }
+
+[[addresses]]
+lines = ["Novy Arbat Street, 29"]
+city = "Moscow"
+postal_code = "121099"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[lei]
+value = "253400R9321UP8XXUB33"
+gleif_legal_name = 'АКЦИОНЕРНЫЙ КОММЕРЧЕСКИЙ БАНК "ЕВРОФИНАНС МОСНАРБАНК" (акционерное общество)'
+source = "OFAC 26503 Legal Entity Number; GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for EVRFRUMM; GLEIF lei-records filter[entity.registeredAs]=1027700565970 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "1027700565970"
+type = "Registration ID"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "26503" }
+
+[[registration_numbers]]
+value = "7703115760"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "26503" }
+
+[[registration_numbers]]
+value = "OGRN 1027700565970"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[registration_numbers]]
+value = "Correspondent account: 30101810900000000204 in OCC No 1 of the Main Directorate of the Bank of Russia for the Central Federal District"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[registration_numbers]]
+value = "BIC 044525204"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[registration_numbers]]
+value = "TIN 7703115760"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[registration_numbers]]
+value = "KPP 997950001 / 770401001"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS3620" }
+
+[[bics]]
+value = "EVRFRUMM"
+listing = { list = "ofac_sdn", entry_id = "26503" }
+verified_date = 2026-09-14

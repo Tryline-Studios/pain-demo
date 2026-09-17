@@ -1,0 +1,55 @@
+# Fares Chehabi: UK-only. Vice-chairman of cham-holding (control_relationships.toml).
+id = "fares-chehabi"
+entity_type = "individual"
+date_of_birth = 1972-09-07
+nationalities = ["SY"]
+
+[[listings]]
+list = "uk"
+entry_id = "SYR0041"
+programmes = ["The Syria (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2020-12-31
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Fares Chehabi"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0041" }
+
+[[names]]
+value = "Fares Al-Chibabi"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0041" }
+
+[[names]]
+value = "Fares Al-Shihabi"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0041" }
+
+[[names]]
+value = "Fares Chihabi"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0041" }
+
+[[names]]
+value = "Fares Shihabi"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0041" }
+
+[[names]]
+value = "فارس الشهابي"
+source_type = "aka"
+script = "arabic"
+script_source = "stated"
+language = "ar"
+listing = { list = "uk", entry_id = "SYR0041" }

@@ -1,0 +1,132 @@
+# Alfa-Bank (Russia): on both lists; the OFAC Listing carries the BIC. mikhail-fridman is a former director
+# (control_relationships.toml).
+id = "alfa-bank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "34682"
+programmes = ["RUSSIA-EO14024", "UKRAINE-EO13662"]
+designation_date = 2022-04-06
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1074"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "JOINT STOCK COMPANY ALFA-BANK"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[names]]
+value = "Alfa-Bank JSC"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1074" }
+
+[[names]]
+value = "АКЦИОНЕРНОЕ ОБЩЕСТВО АЛЬФА-БАНК"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[names]]
+value = "ALFA-BANK"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[names]]
+value = "JSC ALFA-BANK"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[names]]
+value = "AO ALFA-BANK"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[names]]
+value = "OPEN JOINT STOCK COMPANY ALFA-BANK"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[names]]
+value = "АО АЛЬФА-БАНК"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[names]]
+value = "Alfa-Bank Russia"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1074" }
+
+[[names]]
+value = "Альфа-Банка"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS1074" }
+
+[[addresses]]
+lines = ["Kalanchevskaya Street 27"]
+city = "Moscow"
+postal_code = "107078"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[addresses]]
+lines = ["27, Kalanchyovskaya Ul."]
+city = "Moscow"
+postal_code = "107078"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[addresses]]
+lines = ["27 Kalanchevskaya str."]
+city = "Moscow"
+postal_code = "107078"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS1074" }
+
+[lei]
+value = "253400QWEQNERA6RJS29"
+gleif_legal_name = 'АКЦИОНЕРНОЕ ОБЩЕСТВО "АЛЬФА-БАНК"'
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for ALFARUMM; GLEIF lei-records filter[entity.registeredAs]=1027700067328 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "1027700067328"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[registration_numbers]]
+value = "7728168971"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+
+[[bics]]
+value = "ALFARUMM"
+listing = { list = "ofac_sdn", entry_id = "34682" }
+verified_date = 2026-09-14

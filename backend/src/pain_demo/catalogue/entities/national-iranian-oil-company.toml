@@ -1,0 +1,97 @@
+# National Iranian Oil Company: on both lists. No GLEIF record was found.
+id = "national-iranian-oil-company"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "11317"
+programmes = ["IRAN", "IFCA", "IFSR", "SDGT"]
+designation_date = 2008-11-26
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "INU0318"
+programmes = ["The Iran (Sanctions) (Nuclear) (EU Exit) Regulations 2019"]
+designation_date = 2025-09-29
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "NATIONAL IRANIAN OIL COMPANY"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "11317" }
+
+[[names]]
+value = "NATIONAL IRANIAN OIL COMPANY"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0318" }
+
+[[names]]
+value = "NIOC"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "11317" }
+
+[[names]]
+value = "National Iranian Oil Co"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0318" }
+
+[[names]]
+value = "NIOC"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0318" }
+
+[[names]]
+value = "شرکت ملّی نفت ایران"
+source_type = "aka"
+script = "arabic"
+script_source = "derived"
+language = "fa"
+listing = { list = "uk", entry_id = "INU0318" }
+
+[[addresses]]
+lines = ["Hafez Crossing", "Taleghani Avenue", "P.O. Box 1863 and 2501"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "11317" }
+
+[[addresses]]
+lines = ["National Iranian Oil Company Building", "Taleghani Avenue", "Hafez Street"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "11317" }
+
+[[addresses]]
+lines = ["Hafez Crossing", "Taleghani Avenue", "P.O. Box 1863 and 2501"]
+city = "Tehran"
+country = "IR"
+listing = { list = "uk", entry_id = "INU0318" }
+
+[[addresses]]
+lines = ["National Iranian Oil Company Building 214", "Khorramshahr Avenue"]
+city = "Tehran"
+postal_code = "1533743911"
+country = "IR"
+listing = { list = "uk", entry_id = "INU0318" }
+
+[[addresses]]
+lines = ["NIOC Central Building", "Junction Of Taleghani Avenue And Hafez Avenue"]
+city = "Tehran"
+postal_code = "15875-1863"
+country = "IR"
+listing = { list = "uk", entry_id = "INU0318" }
+
+[[registration_numbers]]
+value = "1863 4976 EPTDKB2J3TX1"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "INU0318" }

@@ -1,0 +1,63 @@
+# Bank Mellat: on both lists; the OFAC Listing carries the BIC. No GLEIF record was found.
+id = "bank-mellat"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "25019"
+programmes = ["IFSR", "SDGT", "IRAN"]
+designation_date = 2018-10-16
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "INU0299"
+programmes = ["The Iran (Sanctions) (Nuclear) (EU Exit) Regulations 2019"]
+designation_date = 2025-09-29
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Bank Mellat"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25019" }
+
+[[names]]
+value = "Bank Mellat"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0299" }
+
+[[names]]
+value = "Mellat International Bank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0299" }
+
+[[names]]
+value = "Nation's Bank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0299" }
+
+[[addresses]]
+lines = ["Head Office Bldg", "276 Taleghani Ave"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25019" }
+
+[[addresses]]
+lines = ["Head Office Building", "327 Takeghani (Taleghani) Avenue"]
+city = "Tehran"
+postal_code = "15817"
+country = "IR"
+listing = { list = "uk", entry_id = "INU0299" }
+
+[[bics]]
+value = "BKMTIRTH"
+listing = { list = "ofac_sdn", entry_id = "25019" }
+verified_date = 2026-09-14

@@ -1,0 +1,19 @@
+# Ahmad Derakhshandeh: UK-only. Former chairman and managing director of bank-sepah (control_relationships.toml).
+id = "ahmad-derakhshandeh"
+entity_type = "individual"
+date_of_birth = 1956-08-11
+nationalities = ["IR"]
+
+[[listings]]
+list = "uk"
+entry_id = "INU0275"
+programmes = ["The Iran (Sanctions) (Nuclear) (EU Exit) Regulations 2019"]
+designation_date = 2023-10-18
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "AHMAD DERAKHSHANDEH"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0275" }

@@ -1,0 +1,26 @@
+# Simon Zerpa: OFAC-only; the Listing gives the primary name in two spellings. President of bandes per his
+# undated OFAC title (control_relationships.toml).
+id = "simon-zerpa"
+entity_type = "individual"
+date_of_birth = 1983-08-28
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "22746"
+programmes = ["VENEZUELA"]
+designation_date = 2017-07-26
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "ZERPA DELGADO Simon Alejandro"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "22746" }
+
+[[names]]
+value = "ZERPA DELGADO Simón Alejandro"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "22746" }

@@ -1,0 +1,69 @@
+# IRISL: on both lists. The UK Listing's address is a bare country and is not recorded. No GLEIF record was found.
+id = "irisl"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "25396"
+programmes = ["IRAN", "IFCA", "NPWMD", "IFSR"]
+designation_date = 2018-11-05
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "IRN0241"
+programmes = ["The Iran (Sanctions) Regulations 2023"]
+designation_date = 2024-11-18
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Islamic Republic of Iran Shipping Lines"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25396" }
+
+[[names]]
+value = "The Islamic Republic of Iran Shipping Lines (IRISL)"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "IRN0241" }
+
+[[names]]
+value = "IRISL"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25396" }
+
+[[addresses]]
+lines = ["Asseman Tower", "Pasdaran Street"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25396" }
+
+[[addresses]]
+lines = ["P.O. Box 19395-177"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25396" }
+
+[[addresses]]
+lines = ["P.O. Box 1957614114"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25396" }
+
+[[addresses]]
+lines = ["No 523", "Al Seman Tower Building", "No 8: Narenjestan", "Laveltani Street", "Sayya Shirazi Square", "Pasdaran Street"]
+city = "Tehran"
+postal_code = "1957617114"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25396" }
+
+[[addresses]]
+lines = ["No 37 Aseman Tower Sayyade Shirazee Square", "Pasdaran Avenue", "PO Box 19395-1311"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25396" }

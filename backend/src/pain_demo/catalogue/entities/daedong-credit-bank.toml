@@ -1,0 +1,96 @@
+# Daedong Credit Bank: on both lists; the OFAC Listing carries the BIC. No GLEIF record was found. kim-chol-sam is its
+# treasurer and representative (control_relationships.toml).
+id = "daedong-credit-bank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "16085"
+programmes = ["NPWMD"]
+designation_date = 2013-06-27
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "DPR0131"
+programmes = ["The Democratic People's Republic of Korea (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2016-03-02
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "DAEDONG CREDIT BANK"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16085" }
+
+[[names]]
+value = "DAEDONG CREDIT BANK (DCB)"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0131" }
+
+[[names]]
+value = "DAE-DONG CREDIT BANK"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16085" }
+
+[[names]]
+value = "TAEDONG CREDIT BANK"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16085" }
+
+[[names]]
+value = "Dae-Dong Credit Bank"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0131" }
+
+[[names]]
+value = "DCB"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0131" }
+
+[[names]]
+value = "Taedong Credit Bank"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0131" }
+
+[[addresses]]
+lines = ["Suite 401", "Potonggang Hotel", "Ansan-Dong", "Pyongchon District"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "ofac_sdn", entry_id = "16085" }
+
+[[addresses]]
+lines = ["Ansan-dong", "Botongang Hotel", "Pongchon"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "ofac_sdn", entry_id = "16085" }
+
+[[addresses]]
+lines = ["Ansan-dong", "Botonggang Hotel", "Pongchon"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "uk", entry_id = "DPR0131" }
+
+[[addresses]]
+lines = ["Suite 401", "Potonggang Hotel", "Ansan-Dong", "Pyongchon District"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "uk", entry_id = "DPR0131" }
+
+[[bics]]
+value = "DCBKKPPY"
+listing = { list = "ofac_sdn", entry_id = "16085" }
+verified_date = 2026-09-14

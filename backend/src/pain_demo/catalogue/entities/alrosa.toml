@@ -1,0 +1,133 @@
+# Alrosa: on both lists; the OFAC Listing carries the LEI.
+id = "alrosa"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "34644"
+programmes = ["RUSSIA-EO14024"]
+designation_date = 2022-04-07
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1075"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "PUBLIC JOINT STOCK COMPANY ALROSA"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[names]]
+value = "Alrosa"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1075" }
+
+[[names]]
+value = "Акционерная Компания Алроса Публичное Акционерное Общество"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[names]]
+value = "AK ALROSA PAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[names]]
+value = "PJSC ALROSA"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[names]]
+value = "ALROSA Group"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[names]]
+value = "АК АЛРОСА ПАО"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[names]]
+value = "AK Alrosa PAO"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1075" }
+
+[[names]]
+value = "Aktsionernaya kompaniya ALROSA PAO"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1075" }
+
+[[names]]
+value = "ALROSA Company PJSC"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1075" }
+
+[[names]]
+value = "Алроса"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "uk", entry_id = "RUS1075" }
+
+[[addresses]]
+lines = ["24 Ozerkovskaya Naberezhnaya"]
+city = "Moscow"
+postal_code = "115184"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[addresses]]
+lines = ["6 ulitsa Lenina"]
+city = "Mirny"
+region = "Republic of Sakha (Yakutia)"
+postal_code = "678174"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[addresses]]
+lines = ["ul. Lenina, 6", "Republic of Sakha (Yakutia)"]
+city = "Mirny"
+postal_code = "678174"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS1075" }
+
+[lei]
+value = "894500DKUWVBYZLLE651"
+gleif_legal_name = 'АКЦИОНЕРНАЯ КОМПАНИЯ "АЛРОСА" (ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО)'
+source = "OFAC 34644 Legal Entity Number; GLEIF lei-records filter[entity.registeredAs]=1021400967092 on 2026-09-16 (entity ACTIVE, registration LAPSED)"
+
+[[registration_numbers]]
+value = "1021400967092"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34644" }
+
+[[registration_numbers]]
+value = "1433000147"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34644" }

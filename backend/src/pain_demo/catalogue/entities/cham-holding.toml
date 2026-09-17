@@ -1,0 +1,108 @@
+# Cham Holding: on both lists. The UK address has no country, so only the OFAC address is recorded (spec 3.3).
+# fares-chehabi is its vice-chairman (control_relationships.toml).
+id = "cham-holding"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "12744"
+programmes = ["PAARSSR-EO13894"]
+designation_date = 2011-05-18
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "SYR0287"
+programmes = ["The Syria (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2020-12-31
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "CHAM HOLDING"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "12744" }
+
+[[names]]
+value = "Cham Holding"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0287" }
+
+[[names]]
+value = "CHAM INVESTMENT GROUP"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "12744" }
+
+[[names]]
+value = "AL SHAM COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "12744" }
+
+[[names]]
+value = "SHAM HOLDING COMPANY SAL"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "12744" }
+
+[[names]]
+value = "AL-SHAM COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "12744" }
+
+[[names]]
+value = "Al Sham Company"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0287" }
+
+[[names]]
+value = "Al-Sham Company"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0287" }
+
+[[names]]
+value = "Cham"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0287" }
+
+[[names]]
+value = "Cham Investment Group"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0287" }
+
+[[names]]
+value = "Sham Holding"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0287" }
+
+[[names]]
+value = "Sham Holding Company Sal"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0287" }
+
+[[addresses]]
+lines = ["Cham Holding Building", "Daraa Highway", "Sahnaya Area", "P.O. Box 9525"]
+city = "Damascus"
+country = "SY"
+listing = { list = "ofac_sdn", entry_id = "12744" }

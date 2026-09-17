@@ -1,0 +1,64 @@
+# PDVSA: OFAC-only; the UK Venezuela regime lists Individuals only.
+id = "pdvsa"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "26367"
+programmes = ["VENEZUELA-EO13850"]
+designation_date = 2019-01-28
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "Petroleos De Venezuela, S.A."
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26367" }
+
+[[names]]
+value = "PDVSA"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26367" }
+
+[[names]]
+value = "Petroleos de Venezuela S.A"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26367" }
+
+[[names]]
+value = "Refineria El Palito"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26367" }
+
+[[names]]
+value = "PETROLEOS DE VENEZUELA S A"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26367" }
+
+[[addresses]]
+lines = ["Edificio Petroleos De Venezuela", "Torre Este", "Piso 9", "Avenida Libertador con calle El Empalme", "La Campina"]
+city = "Caracas"
+postal_code = "1010"
+country = "VE"
+listing = { list = "ofac_sdn", entry_id = "26367" }
+
+[[addresses]]
+lines = ["Torre Este Piso 9", "Edif Petroleos de Venezuela", "Avenida Libertador", "Urb La Campina"]
+city = "Caracas"
+region = "Distrito Federal"
+country = "VE"
+listing = { list = "ofac_sdn", entry_id = "26367" }
+
+[lei]
+value = "549300YWR8TN1OFD4P06"
+gleif_legal_name = "Petróleos de Venezuela S.A."
+source = "GLEIF lei-records filter[fulltext]=Petroleos de Venezuela on 2026-09-16; legal address VE (entity ACTIVE, registration LAPSED)"

@@ -1,0 +1,67 @@
+# T-Bank (formerly Tinkoff Bank): OFAC-only; the Listing carries the BIC and the LEI.
+id = "t-bank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "44259"
+programmes = ["RUSSIA-EO14024", "UKRAINE-EO13662"]
+designation_date = 2023-07-20
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "T-BANK"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+
+[[names]]
+value = "Tinkoff Credit Systems Bank Closed Joint Stock Company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+
+[[names]]
+value = "Khimmashbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+
+[[names]]
+value = "JSC Tinkoff Bank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+
+[[addresses]]
+lines = ["Ul. 2nd Khutorskaya, 38A", "building 26"]
+city = "Moscow"
+postal_code = "127287"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+
+[lei]
+value = "2534000KL0PLD6KG7T76"
+gleif_legal_name = 'Акционерное общество "ТБанк"'
+source = "OFAC 44259 Legal Entity Number; GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for TICSRUMM; GLEIF lei-records filter[entity.registeredAs]=1027739642281 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "1027739642281"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+
+[[registration_numbers]]
+value = "7710140679"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+
+[[bics]]
+value = "TICSRUMM"
+listing = { list = "ofac_sdn", entry_id = "44259" }
+verified_date = 2026-09-14

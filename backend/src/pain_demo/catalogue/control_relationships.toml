@@ -1,5 +1,6 @@
 # Control Relationships between catalogue Entities (spec section 3.3). `as_of` is the UK entry's last-updated date
-# or the OFAC file date; `source` quotes the Listing's own words.
+# or the OFAC file date; `source` quotes the Listing's own words. Rows follow the roster write-up's table order:
+# the Individuals first, then the two parent-company links.
 
 [[relationships]]
 controller = "roman-abramovich"
@@ -8,6 +9,128 @@ role = "ultimate_beneficial_owner"
 status = "current"
 as_of = 2025-04-09
 source = 'UK RUS0270 statement of reasons: "ABRAMOVICH is involved in obtaining a benefit from or supporting the Government of Russia by owning or controlling directly or indirectly: (i) Evraz plc"; position "Stakeholder in Evraz PLC and Norilsk Nickel"'
+
+[[relationships]]
+controller = "alexander-abramov"
+controlled = "evraz-plc"
+role = "director"
+status = "former"
+as_of = 2025-04-09
+source = 'UK RUS1656 position: "Former Non-Executive Chairman and Director, Evraz Plc"; statement of reasons: "ABRAMOV is a former non-executive director of Evraz plc"'
+
+[[relationships]]
+controller = "alexander-abramov"
+controlled = "evraz-plc"
+role = "ultimate_beneficial_owner"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS1656 statement of reasons: "ABRAMOV is involved in obtaining a benefit from or supporting the Government of Russia by owning or controlling directly or indirectly (within the meaning of reg. 7 (2)) Evraz plc"'
+
+[[relationships]]
+controller = "andrey-kostin"
+controlled = "vtb-bank"
+role = "director"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS0267 positions: "President of VTB Bank (PJSC)", "Chairman of VTB Bank (PJSC) Management Board", "Member of the Supervisory Council of VTB Bank (PJSC)"'
+
+[[relationships]]
+controller = "herman-gref"
+controlled = "sberbank"
+role = "director"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS1057 position: "Chief Executive Officer and Chairman of the Board of PJSC SberBank"; statement of reasons: "He has served in this role since 2007"'
+
+[[relationships]]
+controller = "andrey-akimov"
+controlled = "gazprombank"
+role = "director"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS1122 statement of reasons: "AKIMOV is Chairman of the Management Board and Deputy Chairman of the Board of Directors at Gazprombank"; OFAC 24316 title: "Chairman of the Management Board of Gazprombank"'
+
+[[relationships]]
+controller = "mikhail-fridman"
+controlled = "alfa-bank"
+role = "director"
+status = "former"
+as_of = 2026-06-24
+source = 'UK RUS0664 position: "Former Member of the Board of Directors of Alfa-Bank Russia"'
+
+# The source says "largest" and "major" shareholder, not "controlling"; `controlling_shareholder` is the nearest role.
+[[relationships]]
+controller = "yuri-kovalchuk"
+controlled = "bank-rossiya"
+role = "controlling_shareholder"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS0007 statement of reasons: "As the chairman and largest shareholder of Bank Rossiya"; position: "Major shareholder of Bank Rossiya and the National Media Group"'
+
+[[relationships]]
+controller = "yuri-kovalchuk"
+controlled = "bank-rossiya"
+role = "director"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS0007 statement of reasons: "As the chairman and largest shareholder of Bank Rossiya"'
+
+[[relationships]]
+controller = "igor-sechin"
+controlled = "rosneft"
+role = "director"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS0273 statement of reasons: "SECHIN is Chief Executive Officer, Chairman of the Management Board and Deputy Chairman of the Board of Directors at Rosneft"'
+
+[[relationships]]
+controller = "sergey-chemezov"
+controlled = "rostec"
+role = "director"
+status = "current"
+as_of = 2025-04-09
+source = "UK RUS0088 position: \"Chair of the Rostec conglomerate\"; statement of reasons: \"including as CEO of the state technology holding company 'Rostec'. He chairs the Rostec conglomerate\""
+
+[[relationships]]
+controller = "rami-makhlouf"
+controlled = "syriatel"
+role = "ultimate_beneficial_owner"
+status = "current"
+as_of = 2025-05-01
+source = "UK SYR0336 (Syriatel's own Listing) other information: \"Telecommunications sector. Controlled by Rami Makhlouf.\""
+
+[[relationships]]
+controller = "fares-chehabi"
+controlled = "cham-holding"
+role = "director"
+status = "current"
+as_of = 2025-05-01
+source = 'UK SYR0041 position: "Vice-chairman of Cham Holding"'
+
+[[relationships]]
+controller = "ahmad-derakhshandeh"
+controlled = "bank-sepah"
+role = "director"
+status = "former"
+as_of = 2025-10-01
+source = 'UK INU0275 position: "Former Chairman and Managing Director of Bank Sepah"'
+
+# The OFAC title is undated, so whether the role still holds is not stated: `as_listed`, dated to the OFAC file.
+[[relationships]]
+controller = "simon-zerpa"
+controlled = "bandes"
+role = "officer"
+status = "as_listed"
+as_of = 2026-09-14
+source = "OFAC 22746 title: \"Vice President of Finance for Petroleos de Venezuela, S.A. (PDVSA) ; President of Venezuela's Economic and Social Development Bank (BANDES); President of Venezuela's National Development Fund (FONDEN)\""
+
+[[relationships]]
+controller = "kim-chol-sam"
+controlled = "daedong-credit-bank"
+role = "officer"
+status = "current"
+as_of = 2022-08-01
+source = 'UK DPR0226 other information: "Kim Chol Sam is a representative for Daedong Credit Bank (DCB) who has been involved in managing transactions on behalf of DCB Finance Limited"; OFAC 16084 title: "Treasurer, Daedong Credit Bank"'
 
 [[relationships]]
 controller = "sberbank"
