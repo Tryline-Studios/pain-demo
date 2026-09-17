@@ -1,0 +1,22 @@
+# Serves the built Workbench and forwards the API to the `api` service on one origin, so no CORS anywhere (spec 2.2).
+{
+	auto_https off
+	admin off
+}
+
+:8080 {
+	log {
+		output stdout
+		format json
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

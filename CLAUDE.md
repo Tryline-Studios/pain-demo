@@ -14,6 +14,14 @@ The build-ready spec is `docs/spec.md`; it is the source of truth for behaviour,
 - Raise `HTTPException` or let request validation fail; the problem handlers shape every error. Never write an error body by hand.
 - The Generator Version block lives in `version.py`; the five generator libraries (`pain001`, `Faker`, `schwifty`, `iuliia`, `rapidfuzz`) are pinned exactly and excluded from Dependabot. Bump them only via the upgrade procedure in spec section 15.4.
 
+## Working in the frontend
+
+- `frontend/` is Vite, React, TypeScript and pnpm (pinned via `packageManager`, Node 24 in `.node-version`). Pure TypeScript: no `.js`, `.jsx` or `.mjs`, and config files are `.ts`. Biome formats and lints; `just web-lint`, `just web-typecheck`, `just web-test` are what CI runs, `just web-dev` runs Vite with `/api` proxied to `just dev`.
+- The UI talks to the API only through the generated client in `src/api/client.ts` (openapi-fetch and openapi-react-query over `src/api/schema.d.ts`). After any API change run `just openapi` then `just gen-client`, and commit both files; CI fails on drift. Never hand-edit `schema.d.ts` or call `fetch` directly.
+- The Workbench (`src/workbench/`) is one screen with no router: a resizable settings pane (File, Data, Hits sections), a drag handle, and the output pane. shadcn/ui components live in `src/components/ui/` and are added with `pnpm dlx shadcn add <name>`; keep them as generated.
+- Tests are Vitest with React Testing Library and MSW under `src/`, at the seam of a rendered component and the mocked API (`src/test/`). The Playwright smoke test in `e2e/` runs against the compose stack (`just up` then `just e2e`).
+- The compose stack (`compose.yaml`, the two Dockerfiles, `frontend/Caddyfile`) publishes only `localhost:8080`; Caddy serves the build and proxies `/api`, so there is no CORS middleware anywhere. `just up` passes the git SHA into the API image.
+
 ## Settled constraints
 
 - Backend: Python 3.13, FastAPI, Astral tooling (uv, ruff, ty). Frontend: Vite, React, TypeScript, pnpm, TanStack Query, shadcn/ui, Biome, and a TS client generated from the OpenAPI spec. Deployed with docker-compose.

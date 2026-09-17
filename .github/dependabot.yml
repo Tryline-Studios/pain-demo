@@ -37,3 +37,48 @@ updates:
       actions:
         patterns:
           - "*"
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      tooling:
+        patterns:
+          - "@biomejs/*"
+          - typescript
+          - vite
+          - "@vitejs/*"
+          - vitest
+          - "@testing-library/*"
+          - "@types/*"
+          - jsdom
+          - msw
+          - "@playwright/*"
+          - openapi-typescript
+          - shadcn
+      frameworks:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@biomejs/*"
+          - typescript
+          - vite
+          - "@vitejs/*"
+          - vitest
+          - "@testing-library/*"
+          - "@types/*"
+          - jsdom
+          - msw
+          - "@playwright/*"
+          - openapi-typescript
+          - shadcn
+  - package-ecosystem: docker
+    directories:
+      - /backend
+      - /frontend
+    schedule:
+      interval: weekly
+    groups:
+      images:
+        patterns:
+          - "*"

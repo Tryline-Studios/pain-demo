@@ -1,0 +1,5 @@
+packages: []
+
+# msw prints a notice in its postinstall; nothing needs building.
+allowBuilds:
+  msw: false

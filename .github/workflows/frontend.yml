@@ -1,0 +1,28 @@
+name: frontend
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  frontend:
+    name: ${{ matrix.recipe }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # One parallel job per just recipe: Biome, tsc, Vitest and the generated-client drift check.
+        recipe: [web-lint, web-typecheck, web-test, gen-client-check]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: frontend/.node-version
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: extractions/setup-just@v4
+      - run: just web-setup
+      - run: just ${{ matrix.recipe }}
