@@ -4,7 +4,7 @@ Generates sample **ISO 20022 pain.001** (Customer Credit Transfer Initiation) fi
 
 Each Sample File mixes generated fake payment data (or data you supply) with real Sanctioned Entities from the OFAC SDN and UK Sanctions List, such as Sberbank and Evraz PLC, and comes with an Answer Key that says exactly what the screening tool should flag.
 
-> **Status:** planning. The design is being worked out on the GitHub issue labelled `wayfinder:map`. There is no application code yet.
+> **Status:** planning complete, no application code yet. The build-ready spec is [`docs/spec.md`](docs/spec.md); the decisions behind it live on the GitHub issue labelled `wayfinder:map` ([#1](https://github.com/Tryline-Studios/pain-demo/issues/1)).
 
 ## Planned shape
 
@@ -16,5 +16,6 @@ Each Sample File mixes generated fake payment data (or data you supply) with rea
 
 ## Docs
 
+- [`docs/spec.md`](docs/spec.md): build-ready spec, assembled from the wayfinder map
 - [`CONTEXT.md`](CONTEXT.md): domain glossary
 - [`docs/adr/`](docs/adr/): architecture decision records
