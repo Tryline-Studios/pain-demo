@@ -37,3 +37,57 @@ updates:
       actions:
         patterns:
           - "*"
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    ignore:
+      # openapi-typescript builds the client with the JavaScript compiler API that TypeScript 6 and 7 no longer
+      # ship (openapi-ts/openapi-typescript#2723 and #2841). Move the pin by hand once it supports them.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+    groups:
+      tooling:
+        patterns:
+          - "@biomejs/*"
+          - typescript
+          - vite
+          - "@vitejs/*"
+          - vitest
+          - "@testing-library/*"
+          - "@types/*"
+          - jsdom
+          - msw
+          - "@playwright/*"
+          - openapi-typescript
+          - shadcn
+      frameworks:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@biomejs/*"
+          - typescript
+          - vite
+          - "@vitejs/*"
+          - vitest
+          - "@testing-library/*"
+          - "@types/*"
+          - jsdom
+          - msw
+          - "@playwright/*"
+          - openapi-typescript
+          - shadcn
+  - package-ecosystem: docker
+    directories:
+      - /backend
+      - /frontend
+    schedule:
+      interval: weekly
+    ignore:
+      # These follow .python-version and .node-version by hand, so the Dockerfiles keep the same pins (spec 2.3).
+      - dependency-name: python
+      - dependency-name: node
+    groups:
+      images:
+        patterns:
+          - "*"

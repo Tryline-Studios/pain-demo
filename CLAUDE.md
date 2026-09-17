@@ -8,11 +8,19 @@ The build-ready spec is `docs/spec.md`; it is the source of truth for behaviour,
 
 ## Working in the backend
 
-- `backend/` is a uv src-layout project, package `pain_demo`, Python 3.13 pinned. Run everything through the root `justfile`: `just setup` (deps and prek hooks), `just check` (ruff, ty, OpenAPI drift), `just test`, `just dev` (native API with reload), `just openapi` (regenerate `backend/openapi.json`; run it after any route or model change or CI fails on drift).
+- `backend/` is a uv src-layout project, package `pain_demo`, Python 3.13 pinned. Run everything through the root `justfile`: `just setup` (deps and prek hooks), `just check` (ruff, ty, Biome, tsc, OpenAPI and client drift), `just test` (pytest and Vitest), `just dev` (native API with reload), `just openapi` (regenerate `backend/openapi.json`; run it after any route or model change or CI fails on drift).
 - Tests are pytest under `backend/tests`, in-process through FastAPI's test client. Warnings are errors. Test at public seams (HTTP, `Settings`, log output), not internals.
 - The `app.py` factory wires the skeleton: `Settings` (`PAIN_DEMO_` prefix, `settings.py`), structlog (`log_config.py`), the request id and one-event-per-request middleware (`request_context.py`), the 1 MB body cap (`body_limit.py`) and RFC 9457 problem details (`problems.py`). New endpoints go in `api/v1/<tag>.py` routers with snake_case `operation_id`s and one of the tags `sample-files`, `catalogue`, `meta`.
 - Raise `HTTPException` or let request validation fail; the problem handlers shape every error. Never write an error body by hand.
 - The Generator Version block lives in `version.py`; the five generator libraries (`pain001`, `Faker`, `schwifty`, `iuliia`, `rapidfuzz`) are pinned exactly and excluded from Dependabot. Bump them only via the upgrade procedure in spec section 15.4.
+
+## Working in the frontend
+
+- `frontend/` is Vite, React, TypeScript and pnpm (pinned via `packageManager`, Node 24 in `.node-version`). Pure TypeScript: no `.js`, `.jsx` or `.mjs`, and config files are `.ts`. Biome formats and lints; `just web-lint`, `just web-typecheck`, `just web-test` and `just gen-client-check` are what CI runs, `just web-dev` runs Vite with `/api` proxied to `just dev`.
+- The UI talks to the API only through the generated client in `src/api/client.ts` (openapi-fetch and openapi-react-query over `src/api/schema.d.ts`). After any API change run `just openapi` then `just gen-client`, and commit both files; CI fails on drift. Never hand-edit `schema.d.ts` or call `fetch` directly.
+- The Workbench (`src/workbench/`) is one screen with no router: a resizable settings pane (File, Data, Hits sections), a drag handle, and the output pane. shadcn/ui components live in `src/components/ui/` and are added with `pnpm dlx shadcn add <name>`; keep them as generated.
+- Tests are Vitest with React Testing Library and MSW under `src/`, at the seam of a rendered component and the mocked API (`src/test/`). The Playwright smoke test in `e2e/` runs against the compose stack (`just up` then `just e2e`).
+- The compose stack (`compose.yaml`, the two Dockerfiles, `frontend/Caddyfile`) publishes only `localhost:8080`; Caddy serves the build and proxies `/api`, so there is no CORS middleware anywhere. `just up` passes the git SHA into the API image.
 
 ## Settled constraints
 
