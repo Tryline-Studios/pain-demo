@@ -41,6 +41,11 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+    ignore:
+      # openapi-typescript builds the client with the JavaScript compiler API that TypeScript 6 and 7 no longer
+      # ship (openapi-ts/openapi-typescript#2723 and #2841). Move the pin by hand once it supports them.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     groups:
       tooling:
         patterns:
