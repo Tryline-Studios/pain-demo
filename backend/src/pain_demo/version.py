@@ -3,6 +3,7 @@
 import importlib.metadata
 import subprocess
 from datetime import date
+from pathlib import Path
 
 from pydantic import BaseModel
 
@@ -30,7 +31,7 @@ def app_version() -> str:
 
 
 def git_sha_from_checkout() -> str:
-    """The HEAD commit of the checkout the app runs from, or `unknown` outside a git checkout."""
+    """The HEAD commit of the checkout this package is imported from, or `unknown` outside a git checkout."""
     try:
         completed = subprocess.run(
             ["git", "rev-parse", "HEAD"],  # noqa: S607 - resolved on PATH on purpose
@@ -38,6 +39,7 @@ def git_sha_from_checkout() -> str:
             text=True,
             check=False,
             timeout=5,
+            cwd=Path(__file__).parent,
         )
     except (OSError, subprocess.TimeoutExpired):
         return UNKNOWN_GIT_SHA

@@ -16,14 +16,13 @@ def render_openapi() -> str:
     return json.dumps(app.openapi(), indent=2, ensure_ascii=False) + "\n"
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = sys.argv[1:] if argv is None else argv
-    if args == ["--check"]:
-        if not OPENAPI_PATH.exists() or OPENAPI_PATH.read_text() != render_openapi():
+def main() -> int:
+    if sys.argv[1:] == ["--check"]:
+        if not OPENAPI_PATH.exists() or OPENAPI_PATH.read_text(encoding="utf-8") != render_openapi():
             print(f"{OPENAPI_PATH} is out of date: run `just openapi`", file=sys.stderr)
             return 1
         return 0
-    OPENAPI_PATH.write_text(render_openapi())
+    OPENAPI_PATH.write_text(render_openapi(), encoding="utf-8")
     print(f"wrote {OPENAPI_PATH}")
     return 0
 

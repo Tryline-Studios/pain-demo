@@ -745,7 +745,7 @@ Structured logs via `structlog` (ordinary pin, Dependabot allowed). JSON lines i
 
 ### 14.2 Request id
 
-Accept an incoming `X-Request-Id` or generate a UUID. Echo it as a response header, put it in the problem details `instance` on every error, and bind it to every log line of that request.
+Accept an incoming `X-Request-Id` (kept when it is 1 to 128 characters of `[A-Za-z0-9._:-]`, otherwise replaced) or generate a UUID. Echo it as a response header, put it in the problem details `instance` on every error, and bind it to every log line of that request.
 
 ### 14.3 One event per request
 

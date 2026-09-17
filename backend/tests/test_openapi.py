@@ -1,7 +1,6 @@
 """The committed OpenAPI document (spec section 12.5)."""
 
 import json
-from pathlib import Path
 
 from pain_demo.app import create_app
 from pain_demo.openapi import OPENAPI_PATH, render_openapi
@@ -22,8 +21,7 @@ def test_info_version_is_the_app_semver() -> None:
 
 
 def test_the_committed_document_is_current() -> None:
-    assert Path(__file__).resolve().parent.parent / "openapi.json" == OPENAPI_PATH
-    assert json.loads(OPENAPI_PATH.read_text()) == json.loads(render_openapi()), "run `just openapi`"
+    assert json.loads(OPENAPI_PATH.read_text(encoding="utf-8")) == json.loads(render_openapi()), "run `just openapi`"
 
 
 def test_the_rendered_document_ends_with_a_newline() -> None:

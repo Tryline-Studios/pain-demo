@@ -113,6 +113,13 @@ def test_a_body_over_one_megabyte_is_rejected_with_413(client: TestClient) -> No
     }
 
 
+def test_an_oversized_body_is_rejected_even_when_the_route_never_reads_it(client: TestClient) -> None:
+    response = client.request("GET", "/api/v1/health", content=b"x" * (ONE_MEGABYTE + 1))
+
+    assert response.status_code == 413
+    assert response.headers["content-type"] == PROBLEM_JSON
+
+
 def test_a_chunked_body_over_one_megabyte_is_rejected_with_413(client: TestClient) -> None:
     def chunks() -> Iterator[bytes]:
         for _ in range(3):

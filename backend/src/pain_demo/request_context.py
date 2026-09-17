@@ -4,19 +4,12 @@ import logging
 import re
 import time
 import uuid
-from collections.abc import Awaitable, Callable, MutableMapping
 from http import HTTPStatus
-from typing import Any
 
 import structlog
 from starlette.datastructures import MutableHeaders
 from starlette.requests import Request
-
-type Scope = MutableMapping[str, Any]
-type Message = MutableMapping[str, Any]
-type Receive = Callable[[], Awaitable[Message]]
-type Send = Callable[[Message], Awaitable[None]]
-type ASGIApp = Callable[[Scope, Receive, Send], Awaitable[None]]
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 REQUEST_ID_HEADER = "X-Request-Id"
 _ACCEPTABLE_REQUEST_ID = re.compile(r"[A-Za-z0-9._:-]{1,128}")

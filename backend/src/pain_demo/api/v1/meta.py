@@ -1,5 +1,7 @@
 """The `meta` endpoints: health and Generator Version."""
 
+from typing import Literal
+
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
@@ -9,7 +11,7 @@ router = APIRouter(tags=["meta"])
 
 
 class Health(BaseModel):
-    status: str
+    status: Literal["ok"]
 
 
 @router.get("/health", operation_id="get_health", summary="Compose healthcheck")
