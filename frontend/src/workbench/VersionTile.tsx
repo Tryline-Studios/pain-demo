@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import { Tile } from "@/workbench/OutputPane";
+import { Tile } from "@/workbench/Tile";
 
 /** The app version from `GET /api/v1/version`, the first thing the UI fetches through the generated client. */
 export function VersionTile() {

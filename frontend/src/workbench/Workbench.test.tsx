@@ -3,7 +3,8 @@ import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { renderWithQueries } from "@/test/render";
 import { server } from "@/test/server";
-import { SETTINGS_WIDTH_KEY, Workbench } from "@/workbench/Workbench";
+import { SETTINGS_WIDTH_KEY } from "@/workbench/useSettingsPaneWidth";
+import { Workbench } from "@/workbench/Workbench";
 
 function settingsPane() {
   return screen.getByRole("complementary", { name: "Settings" });
@@ -68,6 +69,21 @@ describe("Workbench", () => {
     fireEvent.mouseUp(window);
     expect(settingsPane()).toHaveStyle({ width: "640px" });
     expect(window.localStorage.getItem(SETTINGS_WIDTH_KEY)).toBe("640");
+  });
+
+  it("resizes from the keyboard with the arrow, Home and End keys", () => {
+    renderWithQueries(<Workbench />);
+
+    fireEvent.keyDown(resizeHandle(), { key: "ArrowRight" });
+    expect(settingsPane()).toHaveStyle({ width: "576px" });
+    fireEvent.keyDown(resizeHandle(), { key: "ArrowLeft" });
+    fireEvent.keyDown(resizeHandle(), { key: "ArrowLeft" });
+    expect(settingsPane()).toHaveStyle({ width: "544px" });
+    fireEvent.keyDown(resizeHandle(), { key: "End" });
+    expect(settingsPane()).toHaveStyle({ width: "900px" });
+    fireEvent.keyDown(resizeHandle(), { key: "Home" });
+    expect(settingsPane()).toHaveStyle({ width: "380px" });
+    expect(window.localStorage.getItem(SETTINGS_WIDTH_KEY)).toBe("380");
   });
 
   it("restores the remembered width", () => {

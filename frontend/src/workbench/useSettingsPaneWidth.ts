@@ -5,6 +5,7 @@ export const SETTINGS_WIDTH_DEFAULT = 560;
 export const SETTINGS_WIDTH_MIN = 380;
 export const SETTINGS_WIDTH_MAX = 900;
 export const SETTINGS_WIDTH_KEY = "workbench.settingsWidth";
+export const KEYBOARD_STEP = 16;
 
 function clamp(width: number): number {
   return Math.min(SETTINGS_WIDTH_MAX, Math.max(SETTINGS_WIDTH_MIN, width));
@@ -33,15 +34,40 @@ function rememberWidth(width: number): void {
 export function useSettingsPaneWidth() {
   const [width, setWidth] = useState(rememberedWidth);
   const [dragging, setDragging] = useState(false);
+  // The latest width as set by an event handler, independent of React's commit timing, so a mouseup right after
+  // the last mousemove remembers the width that move produced.
+  const latest = useRef(width);
   const drag = useRef<{ startX: number; startWidth: number } | null>(null);
-  const widthRef = useRef(width);
-  widthRef.current = width;
+
+  const apply = useCallback((next: number) => {
+    latest.current = clamp(next);
+    setWidth(latest.current);
+  }, []);
 
   const startResize = useCallback((event: { clientX: number; preventDefault(): void }) => {
     event.preventDefault();
-    drag.current = { startX: event.clientX, startWidth: widthRef.current };
+    drag.current = { startX: event.clientX, startWidth: latest.current };
     setDragging(true);
   }, []);
+
+  const resizeByKey = useCallback(
+    (key: string): boolean => {
+      const steps: Record<string, number> = {
+        ArrowLeft: latest.current - KEYBOARD_STEP,
+        ArrowRight: latest.current + KEYBOARD_STEP,
+        Home: SETTINGS_WIDTH_MIN,
+        End: SETTINGS_WIDTH_MAX,
+      };
+      const next = steps[key];
+      if (next === undefined) {
+        return false;
+      }
+      apply(next);
+      rememberWidth(latest.current);
+      return true;
+    },
+    [apply],
+  );
 
   useEffect(() => {
     if (!dragging) {
@@ -49,13 +75,13 @@ export function useSettingsPaneWidth() {
     }
     const move = (event: MouseEvent) => {
       if (drag.current !== null) {
-        setWidth(clamp(drag.current.startWidth + event.clientX - drag.current.startX));
+        apply(drag.current.startWidth + event.clientX - drag.current.startX);
       }
     };
     const stop = () => {
       drag.current = null;
       setDragging(false);
-      rememberWidth(widthRef.current);
+      rememberWidth(latest.current);
     };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", stop);
@@ -63,7 +89,7 @@ export function useSettingsPaneWidth() {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", stop);
     };
-  }, [dragging]);
+  }, [dragging, apply]);
 
-  return { width, dragging, startResize };
+  return { width, dragging, startResize, resizeByKey };
 }

@@ -8,7 +8,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: process.env.PAIN_DEMO_E2E_URL ?? "http://localhost:8080",
+    baseURL: "http://localhost:8080",
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
