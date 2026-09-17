@@ -11,10 +11,11 @@ from pain_demo.catalogue import CatalogueError, load_catalogue
 from pain_demo.settings import Settings
 
 
-def test_the_shipped_catalogue_loads_with_the_starter_entities(starter_ids: list[str]) -> None:
+def test_the_shipped_catalogue_holds_the_full_roster(roster_ids: list[str]) -> None:
     catalogue = load_catalogue()
 
-    assert list(catalogue.entities) == starter_ids
+    assert list(catalogue.entities) == roster_ids
+    assert len(catalogue.entities) == 50
     assert catalogue.snapshot_date == date(2026, 9, 14)
 
 

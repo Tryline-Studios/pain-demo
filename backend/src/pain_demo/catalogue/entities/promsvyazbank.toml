@@ -1,0 +1,151 @@
+# Promsvyazbank: on both lists; the OFAC Listing carries the BIC. GLEIF has renamed the record to Bank PSB; the LEI
+# stays because both the registration number and the BIC match, with the new legal name recorded (spec 3.3).
+id = "promsvyazbank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "34656"
+programmes = ["RUSSIA-EO14024", "UKRAINE-EO13662"]
+designation_date = 2022-02-22
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0237"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-02-22
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "PROMSVYAZBANK PUBLIC JOINT STOCK COMPANY"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[names]]
+value = "Public Joint Stock Company Promsvyazbank"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0237" }
+
+[[names]]
+value = "Публичное Акционерное Общество Промсвязьбанк"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[names]]
+value = "PROMSVYAZBANK PJSC"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[names]]
+value = "OJSC Promsvyazbank"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[names]]
+value = "PROMSVYAZBANK PAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[names]]
+value = "Publichnoe Aktsionernoe Obshchestvo Promsvyazbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[names]]
+value = "ПАО Промсвязьбанк"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[names]]
+value = "PJSC Promsvyazbank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0237" }
+
+[[names]]
+value = "Promsvyazbank PJSC"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0237" }
+
+[[names]]
+value = 'ПAO "Промсвязьбанк"'
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0237" }
+
+[[addresses]]
+lines = ["Smirnovskaya Street 10/22"]
+city = "Moscow"
+postal_code = "109052"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[addresses]]
+lines = ["Room 1308", "SCITECH Tower22", "Jianguomenwai Dajie"]
+city = "Beijing"
+postal_code = "100004"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[addresses]]
+lines = ["7, MunirkaMarg", "Vasant Vhiar"]
+city = "New Delhi"
+postal_code = "110057"
+country = "IN"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[addresses]]
+lines = ["Building 22", "Smirnovskaya Street, 10"]
+city = "Moscow"
+postal_code = "109052"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS0237" }
+
+[lei]
+value = "VX43JDHPWL0M8GQ0QU45"
+gleif_legal_name = 'Публичное акционерное общество "Банк ПСБ"'
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for PRMSRUMM; GLEIF lei-records filter[entity.registeredAs]=1027739019142 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "7744000912"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[registration_numbers]]
+value = "1027739019142"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[registration_numbers]]
+value = "40148343"
+type = "Government Gazette Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+
+[[bics]]
+value = "PRMSRUMM"
+listing = { list = "ofac_sdn", entry_id = "34656" }
+verified_date = 2026-09-14

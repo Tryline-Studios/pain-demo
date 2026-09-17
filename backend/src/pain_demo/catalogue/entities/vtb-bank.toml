@@ -1,0 +1,381 @@
+# VTB Bank: on both lists; the OFAC Listing carries the BIC and the LEI. Headed by andrey-kostin
+# (control_relationships.toml).
+id = "vtb-bank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "17013"
+programmes = ["UKRAINE-EO13662", "RUSSIA-EO14024", "IRAN-EO13902"]
+designation_date = 2022-02-24
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0250"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-02-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "VTB BANK PUBLIC JOINT STOCK COMPANY"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB Bank (Public Joint-Stock Company)"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0250" }
+
+[[names]]
+value = "Банк ВТБ публичное акционерное общество"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "JSC VTB BANK"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "BANK VTB OPEN JOINT STOCK COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "BANK VNESHNEY TORGOVLI OPEN JOINT STOCK COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "BANK VNESHNEY TORGOVLI JOINT STOCK COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "BANK VNESHNEI TORGOVLI RSFSR"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "BANK VNESHNEY TORGOVLI ROSSIYSKOY FEDERATSII CLOSED JOINT STOCK COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VNESHTORGBANK ROSSII CLOSED JOINT STOCK COMPANY"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "BANK VTB OAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB Bank PAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB BANK OAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB Bank PJSC"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Bank VTB Publichnoe Aktsionernoe Obshchestvo"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB Bank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "OAO Bank VTB"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB Bank open joint stock company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Bank Vneshei Torgovli OAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Bank Vneshnei Torgovli Rossiskoi Federatsii as a Private Joint Stock Company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "OAO Vneshtorgbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Bank of Foreign Trade of the Russian Federation"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Bank for Foreign Trade of RSFSR"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Vneshtorgbank of RSFSR"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "CJSC Bank for Foreign Trade of the Russian Federation"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Russian Vneshtorgbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Vneshtorgbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "OJSC CJSC Bank for Foreign Trade"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Bank VTB PAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB Bank PJSC Shanghai Branch"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "Банк ВТБ ПАО"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[names]]
+value = "VTB"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0250" }
+
+[[names]]
+value = "VTB Bank (PJSC)"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0250" }
+
+[[names]]
+value = "Банк ВТБ (публичное акционерное общество)"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0250" }
+
+[[addresses]]
+lines = ["29, Bolshaya Morskaya str."]
+city = "St. Petersburg"
+postal_code = "190000"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["37 Plyushchikha ul."]
+city = "Moscow"
+postal_code = "119121"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["43, Vorontsovskaya str."]
+city = "Moscow"
+postal_code = "109044"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["11 litera", "per. Degtyarny"]
+city = "St. Petersburg"
+postal_code = "191144"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["11, lit A", "Degtyarnyy pereulok"]
+city = "St. Petersburg"
+postal_code = "191144"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["43, bld.1", "Vorontsovskaya str."]
+city = "Moscow"
+postal_code = "109147"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["Bashnya Zapad", "Kompleks Federatsiya, 12", "nab. Presnenskaya"]
+city = "Moscow"
+postal_code = "123317"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["str. 1, 43", "ul. Vorontsovskaya"]
+city = "Moscow"
+postal_code = "109147"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["Vorontsovskaya Str 43"]
+city = "Moscow"
+postal_code = "109147"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["The Taj Mahal Hotel", "Lobby Mezzanine Floor 1", "Mansingh Road"]
+city = "New Delhi"
+postal_code = "110001"
+country = "IN"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["1266 Nanjing Xilu Street", "Jingan District"]
+city = "Shanghai"
+postal_code = "200040"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["18 BC", "CITIC Building", "19 Jianguomenwai Dajie"]
+city = "Beijing"
+postal_code = "100004"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["Tehran"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[addresses]]
+lines = ["11, lit A", "Degtyarnyy pereulok"]
+city = "St. Petersburg"
+postal_code = "191144"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS0250" }
+
+[lei]
+value = "253400V1H6ART1UQ0N98"
+gleif_legal_name = "Банк ВТБ (публичное акционерное общество)"
+source = "OFAC 17013 Legal Entity Number; GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for VTBRRUMM; GLEIF lei-records filter[entity.registeredAs]=1027739609391 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "1027739609391"
+type = "Registration ID"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[registration_numbers]]
+value = "00032520"
+type = "Government Gazette Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[registration_numbers]]
+value = "7702070139"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+
+[[bics]]
+value = "VTBRRUMM"
+listing = { list = "ofac_sdn", entry_id = "17013" }
+verified_date = 2026-09-14

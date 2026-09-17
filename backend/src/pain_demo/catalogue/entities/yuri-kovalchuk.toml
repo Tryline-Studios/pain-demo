@@ -1,0 +1,84 @@
+# Yuri Kovalchuk: on both lists. Chairman and largest shareholder of bank-rossiya (control_relationships.toml).
+id = "yuri-kovalchuk"
+entity_type = "individual"
+date_of_birth = 1951-07-25
+# The two Listings word the place of birth differently; the fuller of the two is kept.
+place_of_birth = "Leningrad (St Petersburg), Russia"
+nationalities = ["RU"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "16680"
+programmes = ["UKRAINE-EO13661", "RUSSIA-EO14024"]
+designation_date = 2014-03-20
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0007"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2020-12-31
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "KOVALCHUK Yuri Valentinovich"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16680" }
+
+[[names]]
+value = "Yuriy Valentinovich Kovalchuk"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0007" }
+
+[[names]]
+value = "Ковалчук Юрий Валентинович"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16680" }
+
+[[names]]
+value = "Kovalchuk Yuriy Valentynovych"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16680" }
+
+[[names]]
+value = "Kovalchuk Yury Valentinovich"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16680" }
+
+[[names]]
+value = "Ковальчук Юрій Валентинович"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16680" }
+
+[[names]]
+value = "Yuri Valentinovich Kovalchuk"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0007" }
+
+[[names]]
+value = "Yury Valentinovich Kovalchuk"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0007" }
+
+[[names]]
+value = "Юрий Валентинович Ковальчук"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "uk", entry_id = "RUS0007" }

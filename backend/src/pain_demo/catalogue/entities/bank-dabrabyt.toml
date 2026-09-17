@@ -1,0 +1,110 @@
+# Bank Dabrabyt: on both lists; the OFAC Listing carries the BIC.
+id = "bank-dabrabyt"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "34749"
+programmes = ["BELARUS-EO14038"]
+designation_date = 2022-02-24
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "BEL0120"
+programmes = ["The Republic of Belarus (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Bank Dabrabyt Joint Stock Company"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[names]]
+value = "BANK DABRABYT JOINT STOCK COMPANY"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0120" }
+
+[[names]]
+value = "OJSC Bank Dabrabyt"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[names]]
+value = "Bank Dabrabyt JSC"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[names]]
+value = "Bank Moscow-Minsk Joint stock Company"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[names]]
+value = "Foreign Bank Moskva-Minsk"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[names]]
+value = "Moscow-Minsk Foreign Bank"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[names]]
+value = "ОАО Банк Дабрабыт"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[names]]
+value = "Банк Дабрабыт"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "BEL0120" }
+
+[[addresses]]
+lines = ["Kommunisticheskaya Str. 49", "premises 1"]
+city = "Minsk"
+postal_code = "220002"
+country = "BY"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[addresses]]
+lines = ["premises 1", "Kommunisticheskaya Str. 49"]
+city = "Minsk"
+country = "BY"
+listing = { list = "uk", entry_id = "BEL0120" }
+
+[lei]
+value = "253400W29T5225G8X631"
+gleif_legal_name = 'Адкрытае акцыянернае таварыства "Банк Дабрабыт"'
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for MMBNBY22; GLEIF lei-records filter[entity.registeredAs]=807000002 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "807000002"
+type = "Registration Number"
+country = "BY"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+
+[[bics]]
+value = "MMBNBY22"
+listing = { list = "ofac_sdn", entry_id = "34749" }
+verified_date = 2026-09-14

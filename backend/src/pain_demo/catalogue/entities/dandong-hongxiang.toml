@@ -1,0 +1,23 @@
+# Dandong Hongxiang: OFAC-only. No GLEIF record was found.
+id = "dandong-hongxiang"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "20564"
+programmes = ["NPWMD"]
+designation_date = 2016-09-26
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "Dandong Hongxiang Industrial Development Co Ltd"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "20564" }
+
+[[addresses]]
+lines = ["Dandong"]
+city = "Dandong"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "20564" }

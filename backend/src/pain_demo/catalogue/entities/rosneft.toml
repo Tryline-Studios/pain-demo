@@ -1,0 +1,141 @@
+# Rosneft: on both lists. Headed by igor-sechin (control_relationships.toml).
+id = "rosneft"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "17022"
+programmes = ["UKRAINE-EO13662", "RUSSIA-EO14024"]
+designation_date = 2025-10-22
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS3064"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2025-10-15
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Open Joint-Stock Company Rosneft Oil Company"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[names]]
+value = "PJSC Rosneft Oil Company"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS3064" }
+
+[[names]]
+value = "OJSC Rosneft Oil Company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[names]]
+value = "Rosneft Oil Company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[names]]
+value = "OAO Rosneft Oil Company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[names]]
+value = "Oil Company Rosneft"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[names]]
+value = "Rosneft"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[names]]
+value = "PJSC Oil and Gas Company Rosneft"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS3064" }
+
+[[names]]
+value = "ROSNEFT"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS3064" }
+
+[[names]]
+value = "ПАО НК РОСНЕФТЬ"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS3064" }
+
+[[names]]
+value = 'Публичное акционерное общество "Нефтегазовая компания" "Роснефть"'
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS3064" }
+
+[[names]]
+value = "Роснефть"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS3064" }
+
+[[addresses]]
+lines = ["26/1 Sofiyskaya Embankment"]
+city = "Moscow"
+postal_code = "115035"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[addresses]]
+lines = ["26/1", "Sofiyskaya Embankment"]
+city = "Moscow"
+postal_code = "115035"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS3064" }
+
+[lei]
+value = "253400JT3MQWNDKMJE44"
+gleif_legal_name = 'публичное акционерное общество "Нефтяная компания "Роснефть"'
+source = "GLEIF lei-records filter[entity.registeredAs]=1027700043502 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "1027700043502"
+type = "Registration ID"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[registration_numbers]]
+value = "00044428"
+type = "Government Gazette Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17022" }
+
+[[registration_numbers]]
+value = "7706107510"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17022" }

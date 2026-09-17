@@ -1,0 +1,22 @@
+NOTICE
+
+The Entity Catalogue in backend/src/pain_demo/catalogue/ is a frozen snapshot of entries from two public
+sanctions lists, with bank identifiers from GLEIF. It is sample data for testing screening tools, not a
+sanctions list, and it is not kept current (see docs/spec.md, section 3).
+
+UK Sanctions List
+    Contains public sector information licensed under the Open Government Licence v3.0.
+    Source: Foreign, Commonwealth & Development Office, "The UK Sanctions List",
+    https://www.gov.uk/government/publications/the-uk-sanctions-list
+    (UK-Sanctions-List.xml, generated 11 September 2026).
+    Licence: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+
+OFAC Specially Designated Nationals and Blocked Persons List (SDN List)
+    Source: U.S. Department of the Treasury, Office of Foreign Assets Control (OFAC), Sanctions List Service,
+    https://sanctionslistservice.ofac.treas.gov/ (SDN_ADVANCED.XML, date of issue 14 September 2026).
+    OFAC's sanctions list data is a work of the United States Government.
+
+GLEIF
+    BICs and LEIs that do not appear on a Listing come from the Global Legal Entity Identifier Foundation:
+    the BIC-to-LEI mapping (lei-bic-20260828T000000.csv, 28 August 2026) and the LEI records API
+    (https://api.gleif.org/, read 16 September 2026), https://www.gleif.org/.

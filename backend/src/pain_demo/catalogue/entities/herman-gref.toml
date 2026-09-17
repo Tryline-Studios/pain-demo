@@ -1,0 +1,63 @@
+# Herman Gref: on both lists. Chief executive and chairman of sberbank (control_relationships.toml).
+id = "herman-gref"
+entity_type = "individual"
+date_of_birth = 1964-02-08
+place_of_birth = "Panfilovo, Kazakhstan"
+nationalities = ["RU", "DE"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "34796"
+programmes = ["RUSSIA-EO14024"]
+designation_date = 2022-03-24
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1057"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Gref Herman Oskarovich"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34796" }
+
+[[names]]
+value = "Herman Oskarovich GREF"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1057" }
+
+[[names]]
+value = "Греф Герман Оскарович"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34796" }
+
+[[names]]
+value = "Gref German Oskarovich"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34796" }
+
+[[names]]
+value = "Graf Herman"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34796" }
+
+[[names]]
+value = "Герман Оскарович Греф"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS1057" }

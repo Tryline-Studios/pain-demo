@@ -1,0 +1,132 @@
+# Bank Rossiya: on both lists; the OFAC Listing carries the BIC. The UK non-Latin name ends in a stray apostrophe
+# in the source, dropped here as a list artefact. yuri-kovalchuk chairs it and is its largest shareholder
+# (control_relationships.toml).
+id = "bank-rossiya"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "16681"
+programmes = ["UKRAINE-EO13661"]
+designation_date = 2014-03-20
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0232"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-02-22
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "BANK ROSSIYA"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[names]]
+value = "Bank Rossiya"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[[names]]
+value = "AKTSIONERNY BANK RUSSIAN FEDERATION"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[names]]
+value = "AB ROSSIYA, OAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[names]]
+value = "OTKRYTOE AKTSIONERNOE OBSHCHESTVO AKTSIONERNY BANK ROSSIYA"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[names]]
+value = "Bank of Russia"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[[names]]
+value = "Russia Bank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[[names]]
+value = 'Акционерное общество "Акционерный Банк "РОССИЯ"'
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[[addresses]]
+lines = ["2 Liter A Pl. Rastrelli"]
+city = "Saint Petersburg"
+postal_code = "191124"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[addresses]]
+lines = ["Rastrelli Square, 2A"]
+city = "Saint-Petersburg"
+postal_code = "191124"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[lei]
+value = "2534006WDUE2J9S01D70"
+gleif_legal_name = 'Акционерное общество "Акционерный Банк "РОССИЯ"'
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for ROSYRU2P; GLEIF lei-records filter[entity.registeredAs]=1027800000084 on 2026-09-16 (entity ACTIVE, registration LAPSED)"
+
+[[registration_numbers]]
+value = "09804148"
+type = "Government Gazette Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[registration_numbers]]
+value = "7831000122"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[registration_numbers]]
+value = "1027800000084"
+type = "Registration ID"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+
+[[registration_numbers]]
+value = "License number: 328"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[[registration_numbers]]
+value = "INN: 7831000122"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[[registration_numbers]]
+value = "OGRN: 1027800000084"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS0232" }
+
+[[bics]]
+value = "ROSYRU2P"
+listing = { list = "ofac_sdn", entry_id = "16681" }
+verified_date = 2026-09-14

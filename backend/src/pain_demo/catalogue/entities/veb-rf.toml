@@ -1,0 +1,178 @@
+# VEB.RF: on both lists; the OFAC Listing carries the BIC.
+id = "veb-rf"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "17015"
+programmes = ["RUSSIA-EO14024", "UKRAINE-EO13662"]
+designation_date = 2018-08-15
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0253"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-02-28
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "STATE CORPORATION BANK FOR DEVELOPMENT AND FOREIGN ECONOMIC AFFAIRS VNESHECONOMBANK"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "VEB.RF"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0253" }
+
+[[names]]
+value = "GOSUDARSTVENNAYA KORPORATSIYA RAZVITIYA VEB.RF"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "State Development Corporation VEB.RF"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "GK VEB.RF"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "VEB.RF"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "Vnesheconombank"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "Vneshekonombank SSSR"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "Vneshekonombank GK"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "Bank for Foreign Trade of the U.S.S.R."
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "ГОСУДАРСТВЕННАЯ КОРПОРАЦИЯ РАЗВИТИЯ ВЭБ.РФ"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "ВЭБ.РФ"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[names]]
+value = "Vneshekonombank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0253" }
+
+[[names]]
+value = "ВЭБ.РФ"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0253" }
+
+[[addresses]]
+lines = ["Akademik Sakharov Ave 9"]
+city = "Moscow"
+postal_code = "107996"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[addresses]]
+lines = ["Pr-kt", "Akademika Sakharova", "D. 9"]
+city = "Moscow"
+postal_code = "107078"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[addresses]]
+lines = ["20A, CITIC Building, 19", "Joanguomenwai Dajie"]
+city = "Beijing"
+postal_code = "100004"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[addresses]]
+lines = ["Shop No. 11", "Arcade Ground Floor", "World Trade Centre", "Cuffe Prade", "Colaba"]
+city = "Mumbai"
+postal_code = "400005"
+country = "IN"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[addresses]]
+lines = ["Akademia Sakharova Prospekt"]
+city = "Moscow"
+postal_code = "107996"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS0253" }
+
+[lei]
+value = "25340076UP17XECUF417"
+gleif_legal_name = 'государственная корпорация развития "ВЭБ.РФ"'
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for BFEARUMM; GLEIF lei-records filter[entity.registeredAs]=1077711000102 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "00005061"
+type = "Government Gazette Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[registration_numbers]]
+value = "1077711000102"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[registration_numbers]]
+value = "7750004150"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+
+[[bics]]
+value = "BFEARUMM"
+listing = { list = "ofac_sdn", entry_id = "17015" }
+verified_date = 2026-09-14

@@ -1,0 +1,56 @@
+# Andrey Akimov: on both lists. Chairman of the Management Board of gazprombank (control_relationships.toml).
+id = "andrey-akimov"
+entity_type = "individual"
+date_of_birth = 1953-09-22
+# The two Listings word the place of birth differently; the fuller of the two is kept.
+place_of_birth = "Leningrad (St Petersburg), Russia"
+nationalities = ["RU"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "24316"
+programmes = ["UKRAINE-EO13661", "RUSSIA-EO14024"]
+designation_date = 2018-04-06
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1122"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-04-06
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Akimov Andrey Igorevich"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "24316" }
+
+[[names]]
+value = "Andrey Igorevich AKIMOV"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1122" }
+
+[[names]]
+value = "Akimov Andrei Igorevich"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "24316" }
+
+[[names]]
+value = "Andrei Igorevich AKIMOV"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1122" }
+
+[[names]]
+value = "Андрей Игоревич Акимов"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1122" }

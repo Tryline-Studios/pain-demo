@@ -1,0 +1,57 @@
+# Alfa Bank Belarus: UK-only, and its Listing carries no BIC; the only BIC comes from GLEIF. The source labels the
+# non-Latin name Belarusian.
+id = "alfa-bank-belarus"
+entity_type = "bank"
+
+[[listings]]
+list = "uk"
+entry_id = "BEL0166"
+programmes = ["The Republic of Belarus (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2024-10-03
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "CJSC Alfa Bank Belarus"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0166" }
+
+[[names]]
+value = "Alfa Bank Belarus"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0166" }
+
+[[names]]
+value = "Closed Joint Stock Company Alfa Bank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "BEL0166" }
+
+[[names]]
+value = "ЗАО Альфа-Банк"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "be"
+listing = { list = "uk", entry_id = "BEL0166" }
+
+[[addresses]]
+lines = ["43-47 Surganova Street"]
+city = "Minsk"
+postal_code = "220013"
+country = "BY"
+listing = { list = "uk", entry_id = "BEL0166" }
+
+[lei]
+value = "253400CHFC0XZ6QMP406"
+gleif_legal_name = "Закрытае акцыянернае таварыства «Альфа-Банк»"
+source = "GLEIF lei-records filter[fulltext]=Альфа-Банк on 2026-09-16; legal address BY (entity ACTIVE, registration ISSUED)"
+
+[[bics]]
+value = "ALFABY2XXXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 253400CHFC0XZ6QMP406"
+verified_date = 2026-08-28

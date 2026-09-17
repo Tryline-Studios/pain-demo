@@ -1,0 +1,61 @@
+# Belinvestbank: OFAC-only; the Listing carries the BIC.
+id = "belinvestbank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "34752"
+programmes = ["BELARUS-EO14038"]
+designation_date = 2022-02-24
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "Belarussian Bank of Development and Reconstruction Belinvestbank Joint Stock Company"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34752" }
+
+[[names]]
+value = "Belinvestbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34752" }
+
+[[names]]
+value = "Belinvestbank JSC"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34752" }
+
+[[names]]
+value = "Belarussian Bank of Development and Reconstruction Joint Stock Company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "34752" }
+
+[[addresses]]
+lines = ["29 Masherova Av."]
+city = "Minsk"
+postal_code = "220002"
+country = "BY"
+listing = { list = "ofac_sdn", entry_id = "34752" }
+
+[lei]
+value = "253400XG24WV7PY3HY18"
+gleif_legal_name = 'Адкрытае акцыянернае таварыства "Беларускi банк развiцця i рэканструкцыi "Белiнвестбанк"'
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for BLBBBY2X; GLEIF lei-records filter[entity.registeredAs]=807000028 on 2026-09-16 (entity ACTIVE, registration LAPSED)"
+
+[[registration_numbers]]
+value = "807000028"
+type = "Registration Number"
+country = "BY"
+listing = { list = "ofac_sdn", entry_id = "34752" }
+
+[[bics]]
+value = "BLBBBY2X"
+listing = { list = "ofac_sdn", entry_id = "34752" }
+verified_date = 2026-09-14

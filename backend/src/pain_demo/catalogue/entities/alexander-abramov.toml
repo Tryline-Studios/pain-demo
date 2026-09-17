@@ -1,0 +1,27 @@
+# Alexander Abramov: UK-only. Former director and current owner of evraz-plc (control_relationships.toml).
+id = "alexander-abramov"
+entity_type = "individual"
+date_of_birth = 1959-02-20
+nationalities = ["RU"]
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1656"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-11-02
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Alexander Grigoryevich ABRAMOV"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1656" }
+
+[[names]]
+value = "АБРАМОВ Александр Григорьевич"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS1656" }

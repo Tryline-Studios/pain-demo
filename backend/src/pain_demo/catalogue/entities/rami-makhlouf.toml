@@ -1,0 +1,63 @@
+# Rami Makhlouf: on both lists. Controls syriatel per Syriatel's own UK Listing (control_relationships.toml).
+id = "rami-makhlouf"
+entity_type = "individual"
+date_of_birth = 1969-07-10
+# The two Listings word the place of birth differently; the fuller of the two is kept.
+place_of_birth = "Damascus, Syria"
+nationalities = ["SY"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "10725"
+programmes = ["PAARSSR-EO13894"]
+designation_date = 2008-02-21
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "SYR0204"
+programmes = ["The Syria (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2020-12-31
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "MAKHLUF Rami"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "10725" }
+
+[[names]]
+value = "Rami Makhlouf"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0204" }
+
+[[names]]
+value = "MAKHLOUF Rami"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "10725" }
+
+[[names]]
+value = "MAKHLOUF Rami Bin Mohammed"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "10725" }
+
+[[names]]
+value = "MAKHLOUF Rami Mohammad"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "10725" }
+
+[[names]]
+value = "رامي مخلوف"
+source_type = "aka"
+script = "arabic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "SYR0204" }

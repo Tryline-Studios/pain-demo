@@ -1,0 +1,103 @@
+# Rostec: on both lists. No GLEIF record was found. Chaired by sergey-chemezov (control_relationships.toml).
+id = "rostec"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "17260"
+programmes = ["UKRAINE-EO13662", "RUSSIA-EO14024"]
+designation_date = 2022-06-28
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0238"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-02-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "State Corporation Rostec"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[names]]
+value = 'State Corporation for the Promotion of the Development, Manufacture and Export of High Technology Products "Rostec"'
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0238" }
+
+[[names]]
+value = "State Corporation for the Promotion of the Development, Manufacture, and Export of High Tech Products Rostec"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[names]]
+value = "Государственная корпорация по содействию разработке, производству и экспорту высокотехнологичной промышленной продукции Ростех"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[names]]
+value = "Rostec"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0238" }
+
+[[names]]
+value = "Государственная корпорация по содействию разработке, производству и экспорту высокотехнологичной промышленной продукции «Ростех»"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0238" }
+
+[[addresses]]
+lines = ["24 Usacheva Str."]
+city = "Moscow"
+postal_code = "119048"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[addresses]]
+lines = ["21 Gogolevsky Blvd."]
+city = "Moscow"
+postal_code = "119991"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[addresses]]
+lines = ["24 Usacheva Street"]
+city = "Moscow"
+postal_code = "119048"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS0238" }
+
+[[registration_numbers]]
+value = "1077799030847"
+type = "Registration ID"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[registration_numbers]]
+value = "7704274402"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[registration_numbers]]
+value = "94137372"
+type = "Government Gazette Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17260" }
+
+[[registration_numbers]]
+value = "1077799030847"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS0238" }

@@ -1,0 +1,63 @@
+# Andrey Kostin: on both lists. President and chairman of vtb-bank (control_relationships.toml).
+id = "andrey-kostin"
+entity_type = "individual"
+date_of_birth = 1956-09-21
+# The two Listings word the place of birth differently; the fuller of the two is kept.
+place_of_birth = "Moscow, Russian Federation"
+nationalities = ["RU"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "24063"
+programmes = ["UKRAINE-EO13661"]
+designation_date = 2018-04-06
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0267"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-10
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "KOSTIN Andrey Leonidovich"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "24063" }
+
+[[names]]
+value = "Andrei Leonidovich KOSTIN"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0267" }
+
+[[names]]
+value = "Andrei KOSTIN"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0267" }
+
+[[names]]
+value = "Andrey KOSTIN"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0267" }
+
+[[names]]
+value = "Andrey Leonidovich KOSTIN"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0267" }
+
+[[names]]
+value = "Андрей Леонидович КОСТИН"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0267" }

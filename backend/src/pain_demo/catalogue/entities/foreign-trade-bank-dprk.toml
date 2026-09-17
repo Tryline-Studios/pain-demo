@@ -1,0 +1,83 @@
+# Foreign Trade Bank of the DPRK: on both lists; the OFAC Listing carries the BIC. No GLEIF record was found.
+id = "foreign-trade-bank-dprk"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "15603"
+programmes = ["DPRK3", "NPWMD"]
+designation_date = 2013-03-11
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "DPR0134"
+programmes = ["The Democratic People's Republic of Korea (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2017-08-05
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "FOREIGN TRADE BANK OF THE DEMOCRATIC PEOPLE'S REPUBLIC OF KOREA"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "15603" }
+
+[[names]]
+value = "FOREIGN TRADE BANK (FTB)"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0134" }
+
+[[names]]
+value = "NORTH KOREA'S FOREIGN TRADE BANK"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "15603" }
+
+[[names]]
+value = "Mooyokbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "15603" }
+
+[[names]]
+value = "Korea Trade Bank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "15603" }
+
+[[names]]
+value = "Korea Trading Bank"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0134" }
+
+[[names]]
+value = "Mooyokbank"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0134" }
+
+[[addresses]]
+lines = ["FTB Building", "Jungsong-dong", "Central District"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "ofac_sdn", entry_id = "15603" }
+
+[[addresses]]
+lines = ["FTB Building", "Jungsong-dong", "Central District"]
+city = "Pyongyang"
+country = "KP"
+listing = { list = "uk", entry_id = "DPR0134" }
+
+[[bics]]
+value = "FTBDKPPY"
+listing = { list = "ofac_sdn", entry_id = "15603" }
+verified_date = 2026-09-14

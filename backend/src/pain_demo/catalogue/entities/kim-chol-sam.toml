@@ -1,5 +1,6 @@
 # Kim Chol Sam: on both lists; the UK non-Latin name is Han script (the source labels its language Korean) and the
-# source's surrounding brackets are dropped as a list artefact. His role at Daedong Credit Bank is recorded once that Bank joins the catalogue.
+# source's surrounding brackets are dropped as a list artefact. Treasurer and representative of daedong-credit-bank
+# (control_relationships.toml).
 id = "kim-chol-sam"
 entity_type = "individual"
 date_of_birth = 1971-03-11

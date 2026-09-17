@@ -1,0 +1,63 @@
+# BANDES: OFAC-only; the Listing carries the BIC. simon-zerpa is listed as its president
+# (control_relationships.toml).
+id = "bandes"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "26587"
+programmes = ["VENEZUELA-EO13850"]
+designation_date = 2019-03-22
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "BANCO DE DESARROLLO ECONOMICO Y SOCIAL DE VENEZUELA"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26587" }
+
+[[names]]
+value = "BANDES"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26587" }
+
+[[names]]
+value = "Banco Bandes"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26587" }
+
+[[names]]
+value = "Fondo de Inversiones de Venezuela"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "26587" }
+
+[[addresses]]
+lines = ["Av. Universidad", "Esq. de Traposos a Colon", "P-1", "Torre BANDES"]
+city = "CARACAS"
+region = "DISTRITO FEDERAL"
+postal_code = "1010"
+country = "VE"
+listing = { list = "ofac_sdn", entry_id = "26587" }
+
+[[addresses]]
+lines = ["Edificio Fondo de Inversiones de Venezuela Avenida Norte 1", "Esquina Colon a Traposos"]
+city = "Caracas"
+country = "VE"
+listing = { list = "ofac_sdn", entry_id = "26587" }
+
+[lei]
+value = "52990049IEUGB01L0409"
+gleif_legal_name = "Banco de Desarrollo Economico y Social de Venezuela"
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for FIVVVECA; GLEIF lei-records read 2026-09-16 (entity ACTIVE, registration LAPSED)"
+
+[[bics]]
+value = "FIVVVECA"
+listing = { list = "ofac_sdn", entry_id = "26587" }
+verified_date = 2026-09-14

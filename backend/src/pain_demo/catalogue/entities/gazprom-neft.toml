@@ -1,0 +1,130 @@
+# Gazprom Neft: on both lists.
+id = "gazprom-neft"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "17143"
+programmes = ["UKRAINE-EO13662", "RUSSIA-EO14024"]
+designation_date = 2025-01-10
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS2383"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2025-01-10
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Public Joint Stock Company Gazprom Neft"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[names]]
+value = "GAZPROM NEFT"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS2383" }
+
+[[names]]
+value = "Publichnoe Aktsionernoe Obshchestvo Gazprom Neft"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[names]]
+value = "Gazprom Neft PJSC"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[names]]
+value = "GAZPROM NEFT PAO"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[names]]
+value = "Gazprom Neft Joint Stock Company"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[names]]
+value = "GAZPROM NEFT PAO"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS2383" }
+
+[[names]]
+value = "PUBLIC JOINT STOCK COMPANY GAZPROM NEFT"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS2383" }
+
+[[names]]
+value = "ГАЗПРОМ НЕФТЬ"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS2383" }
+
+[[addresses]]
+lines = ["5, Let. A", "Galernaya"]
+city = "Saint Petersburg"
+postal_code = "190000"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[addresses]]
+lines = ["d. 3-5 litera A Ch. Pom. 1N kab. 2401", "ul. Pochtamtskaya"]
+city = "St. Petersburg"
+postal_code = "190000"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[addresses]]
+lines = ["5 Let. A. Galernaya"]
+city = "Saint Petersburg"
+postal_code = "190000"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS2383" }
+
+[lei]
+value = "253400KXA9P2AN72P004"
+gleif_legal_name = 'Публичное акционерное общество "Газпром нефть"'
+source = "GLEIF lei-records filter[entity.registeredAs]=1025501701686 on 2026-09-16 (entity ACTIVE, registration LAPSED)"
+
+[[registration_numbers]]
+value = "1025501701686"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[registration_numbers]]
+value = "42045241"
+type = "Government Gazette Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[registration_numbers]]
+value = "5504036333"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17143" }
+
+[[registration_numbers]]
+value = "Russia TIN: 5504036333"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS2383" }

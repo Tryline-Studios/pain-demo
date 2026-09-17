@@ -11,11 +11,96 @@ def summary_of(client: TestClient, entity_id: str) -> dict[str, object]:
     return next(entity for entity in client.get("/api/v1/entities").json() if entity["id"] == entity_id)
 
 
-def test_list_entities_summarises_every_entity_in_id_order(client: TestClient, starter_ids: list[str]) -> None:
+def detail_of(client: TestClient, entity_id: str) -> dict:
+    response = client.get(f"/api/v1/entities/{entity_id}")
+    assert response.status_code == 200
+    return response.json()
+
+
+def listing_refs(detail: dict) -> list[tuple[str, str]]:
+    return [(listing["list"], listing["entry_id"]) for listing in detail["listings"]]
+
+
+# --- the shipped roster (spec section 3.2, ticket #26)
+
+
+def test_the_roster_facets_match_the_spec(client: TestClient, roster: dict[str, list[str]]) -> None:
+    summaries = client.get("/api/v1/entities").json()
+
+    by_type = {
+        entity_type: sorted(s["id"] for s in summaries if s["entity_type"] == entity_type) for entity_type in roster
+    }
+    assert by_type == {entity_type: sorted(ids) for entity_type, ids in roster.items()}
+    assert {entity_type: len(ids) for entity_type, ids in by_type.items()} == {
+        "bank": 20,
+        "corporate": 16,
+        "individual": 14,
+    }
+
+    coverage = {"both": 0, "ofac_only": 0, "uk_only": 0}
+    for summary in summaries:
+        lists = set(summary["lists"])
+        coverage["both" if lists == {"ofac_sdn", "uk"} else "ofac_only" if lists == {"ofac_sdn"} else "uk_only"] += 1
+    assert coverage == {"both": 32, "ofac_only": 9, "uk_only": 9}
+
+    banks = [s for s in summaries if s["entity_type"] == "bank"]
+    assert all(bank["has_bic"] for bank in banks)
+    gleif_only = [
+        bank["id"] for bank in banks if all(bic["listing"] is None for bic in detail_of(client, bank["id"])["bics"])
+    ]
+    assert gleif_only == ["alfa-bank-belarus", "bank-melli-iran", "russian-agricultural-bank"]
+
+
+def test_the_must_includes_of_spec_3_2_hold(client: TestClient) -> None:
+    sberbank = detail_of(client, "sberbank")
+    assert listing_refs(sberbank) == [("ofac_sdn", "17018"), ("uk", "RUS0256")]
+    sabrrumm = next(bic for bic in sberbank["bics"] if bic["value"] == "SABRRUMM")
+    assert sabrrumm["listing"] == {"list": "ofac_sdn", "entry_id": "17018"}
+
+    assert listing_refs(detail_of(client, "evraz-plc")) == [("uk", "RUS1027")]
+    assert listing_refs(detail_of(client, "roman-abramovich")) == [("uk", "RUS0270")]
+
+
+def test_every_individual_has_a_sourced_control_relationship_and_both_parent_links_exist(
+    client: TestClient, roster: dict[str, list[str]]
+) -> None:
+    for individual_id in roster["individual"]:
+        relationships = detail_of(client, individual_id)["control_relationships"]
+        assert relationships, individual_id
+        assert all(r["controller"] == individual_id and r["source"] for r in relationships), individual_id
+
+    parents = {
+        (r["controller"], r["controlled"])
+        for entity_id in roster["bank"] + roster["corporate"]
+        for r in detail_of(client, entity_id)["control_relationships"]
+        if r["role"] == "parent_company"
+    }
+    assert parents == {("sberbank", "sberbank-europe"), ("evraz-plc", "evraz-ntmk")}
+
+
+def test_leis_are_stored_only_where_the_gleif_record_clearly_matches(client: TestClient) -> None:
+    assert detail_of(client, "bank-sepah")["lei"] is None
+    assert detail_of(client, "evraz-ntmk")["lei"] is None
+    lei = detail_of(client, "sberbank-europe")["lei"]
+    assert lei["value"] == "529900IZ8TASAYR3A694"
+    assert lei["gleif_legal_name"] == "MeSoFa Vermögensverwaltungs AG in Abwicklung"
+
+
+def test_no_domestic_bank_code_is_stored_as_a_bic(client: TestClient) -> None:
+    evrofinance = detail_of(client, "evrofinance-mosnarbank")
+
+    assert [bic["value"] for bic in evrofinance["bics"]] == ["EVRFRUMM"]
+    assert "BIC 044525204" in [number["value"] for number in evrofinance["registration_numbers"]]
+
+
+# --- listing and filtering
+
+
+def test_list_entities_summarises_every_entity_in_id_order(client: TestClient, roster_ids: list[str]) -> None:
     response = client.get("/api/v1/entities")
 
     assert response.status_code == 200
-    assert ids(response.json()) == starter_ids
+    assert ids(response.json()) == roster_ids
     assert summary_of(client, "sberbank") == {
         "id": "sberbank",
         "entity_type": "bank",
@@ -65,16 +150,19 @@ def test_a_bank_with_only_a_gleif_bic_has_a_bic(client: TestClient) -> None:
     assert bank["has_bic"] is True
 
 
-def test_list_entities_filters_by_entity_type(client: TestClient) -> None:
+def test_list_entities_filters_by_entity_type(client: TestClient, roster: dict[str, list[str]]) -> None:
     response = client.get("/api/v1/entities", params={"entity_type": "individual"})
 
-    assert ids(response.json()) == ["kim-chol-sam", "roman-abramovich"]
+    assert ids(response.json()) == sorted(roster["individual"])
 
 
 def test_list_entities_filters_by_list(client: TestClient) -> None:
     response = client.get("/api/v1/entities", params={"list": "ofac_sdn"})
 
-    assert ids(response.json()) == ["bank-melli-iran", "evraz-ntmk", "kim-chol-sam", "sberbank", "sberbank-europe"]
+    listed = ids(response.json())
+    assert len(listed) == 41
+    assert "sberbank" in listed
+    assert {"roman-abramovich", "evraz-plc", "russian-agricultural-bank"}.isdisjoint(listed)
 
 
 def test_list_entities_filters_by_country(client: TestClient) -> None:
@@ -86,7 +174,17 @@ def test_list_entities_filters_by_country(client: TestClient) -> None:
 def test_list_entities_filters_combine(client: TestClient) -> None:
     response = client.get("/api/v1/entities", params={"entity_type": "bank", "list": "uk", "country": "RU"})
 
-    assert ids(response.json()) == ["russian-agricultural-bank", "sberbank"]
+    assert ids(response.json()) == [
+        "alfa-bank",
+        "bank-rossiya",
+        "evrofinance-mosnarbank",
+        "gazprombank",
+        "promsvyazbank",
+        "russian-agricultural-bank",
+        "sberbank",
+        "veb-rf",
+        "vtb-bank",
+    ]
 
 
 def test_an_unknown_filter_value_is_a_validation_problem(client: TestClient) -> None:
@@ -149,17 +247,19 @@ def test_get_entity_returns_every_name_listing_bic_lei_and_address_with_its_sour
         "country": "RU",
         "listing": {"list": "ofac_sdn", "entry_id": "17018"},
     }
-    assert sberbank["control_relationships"] == [
-        {
-            "controller": "sberbank",
-            "controlled": "sberbank-europe",
-            "role": "parent_company",
-            "status": "current",
-            "as_of": "2026-09-14",
-            "source": "OFAC SDN_ADVANCED.XML ProfileRelationship: "
-            '18716 SBERBANK EUROPE AG "Owned or Controlled By" 17018, Former="false"',
-        }
+    assert [(r["controller"], r["controlled"], r["role"]) for r in sberbank["control_relationships"]] == [
+        ("herman-gref", "sberbank", "director"),
+        ("sberbank", "sberbank-europe", "parent_company"),
     ]
+    assert sberbank["control_relationships"][1] == {
+        "controller": "sberbank",
+        "controlled": "sberbank-europe",
+        "role": "parent_company",
+        "status": "current",
+        "as_of": "2026-09-14",
+        "source": "OFAC SDN_ADVANCED.XML ProfileRelationship: "
+        '18716 SBERBANK EUROPE AG "Owned or Controlled By" 17018, Former="false"',
+    }
 
 
 def test_get_entity_for_an_individual_exposes_only_what_the_catalogue_holds(client: TestClient) -> None:
@@ -188,9 +288,11 @@ def test_get_entity_for_an_individual_exposes_only_what_the_catalogue_holds(clie
 def test_get_entity_lists_relationships_from_both_sides(client: TestClient) -> None:
     evraz = client.get("/api/v1/entities/evraz-plc").json()
 
-    assert [(r["controller"], r["controlled"]) for r in evraz["control_relationships"]] == [
-        ("roman-abramovich", "evraz-plc"),
-        ("evraz-plc", "evraz-ntmk"),
+    assert [(r["controller"], r["controlled"], r["role"]) for r in evraz["control_relationships"]] == [
+        ("roman-abramovich", "evraz-plc", "ultimate_beneficial_owner"),
+        ("alexander-abramov", "evraz-plc", "director"),
+        ("alexander-abramov", "evraz-plc", "ultimate_beneficial_owner"),
+        ("evraz-plc", "evraz-ntmk", "parent_company"),
     ]
     assert evraz["lei"]["gleif_legal_name"] == "EVRAZ PLC"
     assert "bics" not in evraz

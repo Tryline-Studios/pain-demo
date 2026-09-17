@@ -1,0 +1,64 @@
+# Igor Sechin: on both lists. Chief executive and chairman of the Management Board of rosneft
+# (control_relationships.toml).
+id = "igor-sechin"
+entity_type = "individual"
+date_of_birth = 1960-09-07
+# The two Listings word the place of birth differently; the fuller of the two is kept.
+place_of_birth = "Leningrad / St. Petersburg, Russia"
+nationalities = ["RU"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "16692"
+programmes = ["UKRAINE-EO13661", "RUSSIA-EO14024"]
+designation_date = 2014-04-28
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0273"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-10
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "SECHIN Igor Ivanovich"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16692" }
+
+[[names]]
+value = "Igor Ivanovich SECHIN"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0273" }
+
+[[names]]
+value = "Сечин Игорь Иванович"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16692" }
+
+[[names]]
+value = "Sechin Igor"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16692" }
+
+[[names]]
+value = "Igor SECHIN"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0273" }
+
+[[names]]
+value = "Игорь Иванович СЕЧИН"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0273" }

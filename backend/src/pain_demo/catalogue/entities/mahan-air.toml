@@ -1,0 +1,47 @@
+# Mahan Air: OFAC-only. No GLEIF record was found.
+id = "mahan-air"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "12927"
+programmes = ["NPWMD", "IFSR", "SDGT"]
+designation_date = 2011-10-12
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "MAHAN AIR"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "12927" }
+
+[[names]]
+value = "MAHAN AIR CO."
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "12927" }
+
+[[addresses]]
+lines = ["No. 21", "Mahan Air Tower", "Azadegan Street", "Jenah Expressway", "Beginning of Sheykh Fazlollah Exp. Way", "First of Karaj High Way"]
+city = "Tehran"
+region = "Tehran"
+postal_code = "1481655761"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "12927" }
+
+[[addresses]]
+lines = ["Mahan Air Tower", "21st Floor", "Azadeghan Street", "Karaj Highway", "P.O. Box 14515-411"]
+city = "Tehran"
+region = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "12927" }
+
+[[addresses]]
+lines = ["Mahan Air Tower", "Azadegan St.", "Karaj Highway", "P.O. Box 411-14515"]
+city = "Tehran"
+region = "Tehran"
+postal_code = "1481655761"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "12927" }
