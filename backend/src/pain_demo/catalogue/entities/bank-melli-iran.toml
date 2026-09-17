@@ -228,12 +228,12 @@ source = "GLEIF lei-records filter[fulltext]=Bank Melli on 2026-09-16; registere
 
 [[registration_numbers]]
 value = "60"
-kind = "Business registration number"
+type = "Business registration number"
 listing = { list = "uk", entry_id = "INU0300" }
 
 [[registration_numbers]]
 value = "FC005874"
-kind = "Business registration number"
+type = "Business registration number"
 listing = { list = "uk", entry_id = "INU0300" }
 
 [[bics]]

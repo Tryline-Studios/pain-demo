@@ -2,26 +2,21 @@
 
 from fastapi.testclient import TestClient
 
-STARTER_IDS = [
-    "bank-melli-iran",
-    "evraz-ntmk",
-    "evraz-plc",
-    "kim-chol-sam",
-    "roman-abramovich",
-    "russian-agricultural-bank",
-    "sberbank",
-    "sberbank-europe",
-]
+
+def ids(response_json: list[dict[str, object]]) -> list[object]:
+    return [entity["id"] for entity in response_json]
 
 
-def test_list_entities_summarises_every_entity_in_id_order(client: TestClient) -> None:
+def summary_of(client: TestClient, entity_id: str) -> dict[str, object]:
+    return next(entity for entity in client.get("/api/v1/entities").json() if entity["id"] == entity_id)
+
+
+def test_list_entities_summarises_every_entity_in_id_order(client: TestClient, starter_ids: list[str]) -> None:
     response = client.get("/api/v1/entities")
 
     assert response.status_code == 200
-    entities = response.json()
-    assert [entity["id"] for entity in entities] == STARTER_IDS
-    sberbank = next(entity for entity in entities if entity["id"] == "sberbank")
-    assert sberbank == {
+    assert ids(response.json()) == starter_ids
+    assert summary_of(client, "sberbank") == {
         "id": "sberbank",
         "entity_type": "bank",
         "display_name": "PUBLIC JOINT STOCK COMPANY SBERBANK OF RUSSIA",
@@ -44,12 +39,8 @@ def test_list_entities_summarises_every_entity_in_id_order(client: TestClient) -
     }
 
 
-def ids(response_json: list[dict[str, object]]) -> list[object]:
-    return [entity["id"] for entity in response_json]
-
-
 def test_an_individual_supports_party_and_remittance_placements_only(client: TestClient) -> None:
-    abramovich = next(e for e in client.get("/api/v1/entities").json() if e["id"] == "roman-abramovich")
+    abramovich = summary_of(client, "roman-abramovich")
 
     assert abramovich["entity_type"] == "individual"
     assert abramovich["display_name"] == "Roman Arkadyevich ABRAMOVICH"
@@ -61,7 +52,7 @@ def test_an_individual_supports_party_and_remittance_placements_only(client: Tes
 
 
 def test_a_corporate_without_a_non_latin_name_lacks_native_script(client: TestClient) -> None:
-    ntmk = next(e for e in client.get("/api/v1/entities").json() if e["id"] == "evraz-ntmk")
+    ntmk = summary_of(client, "evraz-ntmk")
 
     assert ntmk["name_variants"] == ["exact", "alias", "fuzzed"]
     assert ntmk["placements"] == ["debtor", "creditor", "ultimate_debtor", "ultimate_creditor", "remittance"]
@@ -69,7 +60,7 @@ def test_a_corporate_without_a_non_latin_name_lacks_native_script(client: TestCl
 
 
 def test_a_bank_with_only_a_gleif_bic_has_a_bic(client: TestClient) -> None:
-    bank = next(e for e in client.get("/api/v1/entities").json() if e["id"] == "russian-agricultural-bank")
+    bank = summary_of(client, "russian-agricultural-bank")
 
     assert bank["has_bic"] is True
 

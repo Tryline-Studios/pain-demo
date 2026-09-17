@@ -186,19 +186,19 @@ source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for SABRRUMM; GLE
 
 [[registration_numbers]]
 value = "1027700132195"
-kind = "Registration Number"
+type = "Registration Number"
 country = "RU"
 listing = { list = "ofac_sdn", entry_id = "17018" }
 
 [[registration_numbers]]
 value = "7707083893"
-kind = "Tax ID No."
+type = "Tax ID No."
 country = "RU"
 listing = { list = "ofac_sdn", entry_id = "17018" }
 
 [[registration_numbers]]
 value = "1027700132195"
-kind = "Business registration number"
+type = "Business registration number"
 listing = { list = "uk", entry_id = "RUS0256" }
 
 [[bics]]

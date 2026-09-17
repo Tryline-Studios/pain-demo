@@ -537,7 +537,8 @@
               "type": "string"
             },
             "type": "array",
-            "title": "Countries"
+            "title": "Countries",
+            "description": "A Legal Entity's address countries; an Individual's nationalities and country of residence"
           },
           "name_variants": {
             "items": {
@@ -911,7 +912,7 @@
           "value": {
             "$ref": "#/components/schemas/NonEmpty"
           },
-          "kind": {
+          "type": {
             "$ref": "#/components/schemas/NonEmpty",
             "description": "The identifier type as the list names it, e.g. `Tax ID No.`"
           },
@@ -933,7 +934,7 @@
         "type": "object",
         "required": [
           "value",
-          "kind",
+          "type",
           "listing"
         ],
         "title": "RegistrationNumber"

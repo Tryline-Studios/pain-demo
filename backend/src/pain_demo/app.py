@@ -8,8 +8,7 @@ from fastapi import FastAPI
 from pain_demo.api.v1 import catalogue as catalogue_api
 from pain_demo.api.v1 import meta
 from pain_demo.body_limit import BodyLimitMiddleware
-from pain_demo.catalogue import Catalogue, CatalogueError, load_catalogue
-from pain_demo.catalogue.loader import DEFAULT_ROOT
+from pain_demo.catalogue import DEFAULT_ROOT, Catalogue, CatalogueError, load_catalogue
 from pain_demo.log_config import configure_logging
 from pain_demo.problems import install_problem_handlers
 from pain_demo.request_context import RequestContextMiddleware

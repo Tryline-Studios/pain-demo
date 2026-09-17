@@ -4,6 +4,6 @@ One TOML file per Entity under `entities/`, the Control Relationships in `contro
 by `load_catalogue` at startup.
 """
 
-from pain_demo.catalogue.loader import Catalogue, CatalogueError, load_catalogue
+from pain_demo.catalogue.loader import DEFAULT_ROOT, Catalogue, CatalogueError, load_catalogue
 
-__all__ = ["Catalogue", "CatalogueError", "load_catalogue"]
+__all__ = ["DEFAULT_ROOT", "Catalogue", "CatalogueError", "load_catalogue"]

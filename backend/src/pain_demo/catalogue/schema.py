@@ -81,7 +81,7 @@ class Address(CatalogueModel):
 
 class RegistrationNumber(CatalogueModel):
     value: NonEmpty
-    kind: NonEmpty = Field(description="The identifier type as the list names it, e.g. `Tax ID No.`")
+    type: NonEmpty = Field(description="The identifier type as the list names it, e.g. `Tax ID No.`")
     country: CountryCode | None = None
     listing: ListingRef
 
@@ -103,6 +103,7 @@ class Lei(CatalogueModel):
 class Bic(CatalogueModel):
     """Either the Listing that carries the BIC or an external non-sanctions citation, never both."""
 
+    # The pattern keeps the value upper case and documents the shape in OpenAPI; schwifty checks the country code.
     value: str = Field(pattern=_BIC_PATTERN)
     listing: ListingRef | None = None
     citation: NonEmpty | None = Field(default=None, description="e.g. the GLEIF BIC-to-LEI mapping file")

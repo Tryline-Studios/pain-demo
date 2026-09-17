@@ -38,5 +38,5 @@ source = "GLEIF lei-records filter[entity.registeredAs]=07784342 on 2026-09-16 (
 
 [[registration_numbers]]
 value = "07784342"
-kind = "Business registration number"
+type = "Business registration number"
 listing = { list = "uk", entry_id = "RUS1027" }

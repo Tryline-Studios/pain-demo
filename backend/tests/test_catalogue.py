@@ -10,22 +10,11 @@ from pain_demo.app import create_app
 from pain_demo.catalogue import CatalogueError, load_catalogue
 from pain_demo.settings import Settings
 
-STARTER_IDS = [
-    "bank-melli-iran",
-    "evraz-ntmk",
-    "evraz-plc",
-    "kim-chol-sam",
-    "roman-abramovich",
-    "russian-agricultural-bank",
-    "sberbank",
-    "sberbank-europe",
-]
 
-
-def test_the_shipped_catalogue_loads_with_the_starter_entities() -> None:
+def test_the_shipped_catalogue_loads_with_the_starter_entities(starter_ids: list[str]) -> None:
     catalogue = load_catalogue()
 
-    assert sorted(catalogue.entities) == STARTER_IDS
+    assert list(catalogue.entities) == starter_ids
     assert catalogue.snapshot_date == date(2026, 9, 14)
 
 
@@ -49,7 +38,7 @@ listing = { list = "ofac_sdn", entry_id = "1" }
 """
 
 MINIMAL_INDIVIDUAL = """
-id = "test-person"
+id = "test-individual"
 entity_type = "individual"
 
 [[listings]]
@@ -60,7 +49,7 @@ designation_date = 2022-03-10
 verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
 
 [[names]]
-value = "Test PERSON"
+value = "Test INDIVIDUAL"
 source_type = "primary"
 script = "latin"
 script_source = "derived"
@@ -159,9 +148,9 @@ listing = { list = "uk", entry_id = "RUS0001" }
 """
     )
 
-    problems = problems_of(write_catalogue(tmp_path, {"test-person": with_address}))
+    problems = problems_of(write_catalogue(tmp_path, {"test-individual": with_address}))
 
-    assert problems == ["test-person.toml: individual.addresses: Extra inputs are not permitted"]
+    assert problems == ["test-individual.toml: individual.addresses: Extra inputs are not permitted"]
 
 
 @pytest.mark.parametrize("bic", ["SABRRUM", "sabrrumm", "SABRRUMMX", "SABRZZMM"])
@@ -242,11 +231,11 @@ source = "UK RUS0001 position"
 def test_a_relationship_controls_a_legal_entity(tmp_path: Path) -> None:
     root = write_catalogue(
         tmp_path,
-        {"test-bank": MINIMAL_BANK, "test-person": MINIMAL_INDIVIDUAL},
+        {"test-bank": MINIMAL_BANK, "test-individual": MINIMAL_INDIVIDUAL},
         """
 [[relationships]]
 controller = "test-bank"
-controlled = "test-person"
+controlled = "test-individual"
 role = "parent_company"
 status = "current"
 as_of = 2025-04-09
@@ -255,7 +244,7 @@ source = "made up"
     )
 
     assert problems_of(root) == [
-        "control_relationships.toml: test-bank -> test-person: "
+        "control_relationships.toml: test-bank -> test-individual: "
         "the controlled Entity must be a Legal Entity, not an Individual",
     ]
 

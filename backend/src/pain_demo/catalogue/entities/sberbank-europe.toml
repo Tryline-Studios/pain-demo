@@ -31,13 +31,13 @@ source = "GLEIF lei-records filter[fulltext]=Sberbank Europe on 2026-09-16 match
 
 [[registration_numbers]]
 value = "FN 161285 i"
-kind = "Registration Number"
+type = "Registration Number"
 country = "AT"
 listing = { list = "ofac_sdn", entry_id = "18716" }
 
 [[registration_numbers]]
 value = "ATU55795009"
-kind = "Tax ID No."
+type = "Tax ID No."
 country = "AT"
 listing = { list = "ofac_sdn", entry_id = "18716" }
 

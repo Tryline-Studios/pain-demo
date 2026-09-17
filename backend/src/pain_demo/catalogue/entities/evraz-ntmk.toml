@@ -34,12 +34,12 @@ listing = { list = "ofac_sdn", entry_id = "50054" }
 
 [[registration_numbers]]
 value = "1026601367539"
-kind = "Registration Number"
+type = "Registration Number"
 country = "RU"
 listing = { list = "ofac_sdn", entry_id = "50054" }
 
 [[registration_numbers]]
 value = "6623000680"
-kind = "Tax ID No."
+type = "Tax ID No."
 country = "RU"
 listing = { list = "ofac_sdn", entry_id = "50054" }

@@ -24,26 +24,23 @@ type Placement = Literal[
 MAX_NAME_LENGTH = 140
 """`Nm` is `Max140Text`: longer names are never candidates for any variant."""
 
-PARTY_PLACEMENTS: tuple[Placement, ...] = ("debtor", "creditor", "ultimate_debtor", "ultimate_creditor")
-AGENT_PLACEMENTS: tuple[Placement, ...] = (
-    "debtor_agent",
-    "creditor_agent",
-    "intermediary_agent_1",
-    "intermediary_agent_2",
-    "intermediary_agent_3",
-)
-PLACEMENT_ORDER: tuple[Placement, ...] = (
-    "debtor",
-    "debtor_agent",
-    "creditor",
-    "creditor_agent",
-    "ultimate_debtor",
-    "ultimate_creditor",
-    "intermediary_agent_1",
-    "intermediary_agent_2",
-    "intermediary_agent_3",
-    "remittance",
-)
+LEGAL_ENTITIES: frozenset[EntityType] = frozenset({"bank", "corporate"})
+EVERY_TYPE: frozenset[EntityType] = frozenset({"individual", *LEGAL_ENTITIES})
+BANK_ONLY: frozenset[EntityType] = frozenset({"bank"})
+
+PLACEMENT_ELIGIBILITY: dict[Placement, frozenset[EntityType]] = {
+    "debtor": EVERY_TYPE,
+    "debtor_agent": BANK_ONLY,
+    "creditor": EVERY_TYPE,
+    "creditor_agent": BANK_ONLY,
+    "ultimate_debtor": EVERY_TYPE,
+    "ultimate_creditor": EVERY_TYPE,
+    "intermediary_agent_1": BANK_ONLY,
+    "intermediary_agent_2": BANK_ONLY,
+    "intermediary_agent_3": BANK_ONLY,
+    "remittance": EVERY_TYPE,
+}
+"""The spec 6.1 table, in Placement enum order."""
 
 
 def candidate_names(entity: Entity) -> list[Name]:
@@ -62,5 +59,4 @@ def supported_name_variants(entity: Entity) -> list[NameVariant]:
 
 
 def supported_placements(entity_type: EntityType) -> list[Placement]:
-    allowed = {*PARTY_PLACEMENTS, "remittance", *(AGENT_PLACEMENTS if entity_type == "bank" else ())}
-    return [placement for placement in PLACEMENT_ORDER if placement in allowed]
+    return [placement for placement, eligible in PLACEMENT_ELIGIBILITY.items() if entity_type in eligible]

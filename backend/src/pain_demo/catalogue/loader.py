@@ -75,7 +75,7 @@ def _load_entities(entities_dir: Path, problems: list[str]) -> list[Entity]:
         seen.add(entity.id)
         entities.append(entity)
     if not entities and not problems:
-        problems.append(f"{entities_dir}: no Entity files found")
+        problems.append(f"{ENTITIES_DIR}/: no Entity files found")
     return entities
 
 
@@ -91,9 +91,9 @@ def _check_relationships(entities: list[Entity], relationships: list[ControlRela
     by_id = {entity.id: entity for entity in entities}
     for relationship in relationships:
         label = f"{CONTROL_RELATIONSHIPS_FILE}: {relationship.controller} -> {relationship.controlled}"
-        for role, entity_id in (("controller", relationship.controller), ("controlled", relationship.controlled)):
+        for side, entity_id in (("controller", relationship.controller), ("controlled", relationship.controlled)):
             if entity_id not in by_id:
-                problems.append(f"{label}: {role} {entity_id!r} is not in the catalogue")
+                problems.append(f"{label}: {side} {entity_id!r} is not in the catalogue")
         controlled = by_id.get(relationship.controlled)
         if isinstance(controlled, Individual):
             problems.append(f"{label}: the controlled Entity must be a Legal Entity, not an Individual")

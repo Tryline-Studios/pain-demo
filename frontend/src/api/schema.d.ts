@@ -192,7 +192,10 @@ export interface components {
             display_name: string;
             /** Lists */
             lists: components["schemas"]["SanctionsList"][];
-            /** Countries */
+            /**
+             * Countries
+             * @description A Legal Entity's address countries; an Individual's nationalities and country of residence
+             */
             countries: string[];
             /** Name Variants */
             name_variants: components["schemas"]["NameVariant"][];
@@ -322,7 +325,7 @@ export interface components {
         RegistrationNumber: {
             value: components["schemas"]["NonEmpty"];
             /** @description The identifier type as the list names it, e.g. `Tax ID No.` */
-            kind: components["schemas"]["NonEmpty"];
+            type: components["schemas"]["NonEmpty"];
             country?: components["schemas"]["CountryCode"] | null;
             listing: components["schemas"]["ListingRef"];
         };

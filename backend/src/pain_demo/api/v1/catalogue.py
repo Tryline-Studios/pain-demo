@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 
 from pain_demo.catalogue import Catalogue
 from pain_demo.catalogue.capabilities import NameVariant, Placement, supported_name_variants, supported_placements
@@ -27,7 +27,9 @@ class EntitySummary(BaseModel):
     entity_type: EntityType
     display_name: str
     lists: list[SanctionsList]
-    countries: list[str]
+    countries: list[str] = Field(
+        description="A Legal Entity's address countries; an Individual's nationalities and country of residence"
+    )
     name_variants: list[NameVariant]
     placements: list[Placement]
     has_bic: bool
@@ -46,6 +48,8 @@ class IndividualDetail(Individual):
 
 
 type EntityDetail = Annotated[BankDetail | CorporateDetail | IndividualDetail, Field(discriminator="entity_type")]
+
+_detail_adapter: TypeAdapter[EntityDetail] = TypeAdapter(EntityDetail)
 
 
 def summarise(entity: Entity) -> EntitySummary:
@@ -87,12 +91,5 @@ def get_entity(request: Request, entity_id: str) -> EntityDetail:
     entity = catalogue.get(entity_id)
     if entity is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail=f"No Entity with id {entity_id!r}")
-    relationships = catalogue.relationships_of(entity_id)
-    fields = entity.model_dump()
-    match entity:
-        case Bank():
-            return BankDetail(**fields, control_relationships=relationships)
-        case Corporate():
-            return CorporateDetail(**fields, control_relationships=relationships)
-        case Individual():
-            return IndividualDetail(**fields, control_relationships=relationships)
+    detail = {**entity.model_dump(), "control_relationships": catalogue.relationships_of(entity_id)}
+    return _detail_adapter.validate_python(detail)
