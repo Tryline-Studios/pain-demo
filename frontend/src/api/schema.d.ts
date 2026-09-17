@@ -38,10 +38,171 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The Entity Catalogue, one summary per Entity */
+        get: operations["list_entities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One Entity with every sourced fact */
+        get: operations["get_entity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Address */
+        Address: {
+            /** Lines */
+            lines: components["schemas"]["NonEmpty"][];
+            city?: components["schemas"]["NonEmpty"] | null;
+            region?: components["schemas"]["NonEmpty"] | null;
+            postal_code?: components["schemas"]["NonEmpty"] | null;
+            country: components["schemas"]["CountryCode"];
+            listing: components["schemas"]["ListingRef"];
+        };
+        /** BankDetail */
+        BankDetail: {
+            id: components["schemas"]["EntityId"];
+            /** Listings */
+            listings: components["schemas"]["Listing"][];
+            /** Names */
+            names: components["schemas"]["Name"][];
+            /**
+             * Addresses
+             * @default []
+             */
+            addresses: components["schemas"]["Address"][];
+            lei?: components["schemas"]["Lei"] | null;
+            /**
+             * Registration Numbers
+             * @default []
+             */
+            registration_numbers: components["schemas"]["RegistrationNumber"][];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            entity_type: "bank";
+            /**
+             * Bics
+             * @description May be empty: such a Bank is placed by name and address only
+             * @default []
+             */
+            bics: components["schemas"]["Bic"][];
+            /** Control Relationships */
+            control_relationships: components["schemas"]["ControlRelationship"][];
+        };
+        /**
+         * Bic
+         * @description Either the Listing that carries the BIC or an external non-sanctions citation, never both.
+         */
+        Bic: {
+            /** Value */
+            value: string;
+            listing?: components["schemas"]["ListingRef"] | null;
+            /** @description e.g. the GLEIF BIC-to-LEI mapping file */
+            citation?: components["schemas"]["NonEmpty"] | null;
+            /**
+             * Verified Date
+             * Format: date
+             */
+            verified_date: string;
+        };
+        /** ControlRelationship */
+        ControlRelationship: {
+            controller: components["schemas"]["EntityId"];
+            /** @description Always a Legal Entity */
+            controlled: components["schemas"]["EntityId"];
+            role: components["schemas"]["ControlRole"];
+            status: components["schemas"]["ControlStatus"];
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** @description The Listing and the words it uses */
+            source: components["schemas"]["NonEmpty"];
+        };
+        /** @enum {string} */
+        ControlRole: "ultimate_beneficial_owner" | "controlling_shareholder" | "director" | "officer" | "parent_company";
+        /** @enum {string} */
+        ControlStatus: "current" | "former" | "as_listed";
+        /** CorporateDetail */
+        CorporateDetail: {
+            id: components["schemas"]["EntityId"];
+            /** Listings */
+            listings: components["schemas"]["Listing"][];
+            /** Names */
+            names: components["schemas"]["Name"][];
+            /**
+             * Addresses
+             * @default []
+             */
+            addresses: components["schemas"]["Address"][];
+            lei?: components["schemas"]["Lei"] | null;
+            /**
+             * Registration Numbers
+             * @default []
+             */
+            registration_numbers: components["schemas"]["RegistrationNumber"][];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            entity_type: "corporate";
+            /** Control Relationships */
+            control_relationships: components["schemas"]["ControlRelationship"][];
+        };
+        /** @description ISO 3166-1 alpha-2 */
+        CountryCode: string;
+        EntityDetail: components["schemas"]["BankDetail"] | components["schemas"]["CorporateDetail"] | components["schemas"]["IndividualDetail"];
+        EntityId: string;
+        /** EntitySummary */
+        EntitySummary: {
+            /** Id */
+            id: string;
+            entity_type: components["schemas"]["EntityType"];
+            /** Display Name */
+            display_name: string;
+            /** Lists */
+            lists: components["schemas"]["SanctionsList"][];
+            /** Countries */
+            countries: string[];
+            /** Name Variants */
+            name_variants: components["schemas"]["NameVariant"][];
+            /** Placements */
+            placements: components["schemas"]["Placement"][];
+            /** Has Bic */
+            has_bic: boolean;
+        };
+        /** @enum {string} */
+        EntityType: "individual" | "bank" | "corporate";
         /**
          * GeneratorVersion
          * @description Recorded in every Answer Key and returned by `GET /version`; key order is the wire order.
@@ -67,6 +228,11 @@ export interface components {
              */
             catalogue_snapshot: string;
         };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** Health */
         Health: {
             /**
@@ -74,6 +240,122 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** IndividualDetail */
+        IndividualDetail: {
+            id: components["schemas"]["EntityId"];
+            /** Listings */
+            listings: components["schemas"]["Listing"][];
+            /** Names */
+            names: components["schemas"]["Name"][];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            entity_type: "individual";
+            /** Date Of Birth */
+            date_of_birth?: string | null;
+            place_of_birth?: components["schemas"]["NonEmpty"] | null;
+            /**
+             * Nationalities
+             * @default []
+             */
+            nationalities: components["schemas"]["CountryCode"][];
+            /** @description Only when a list states it */
+            country_of_residence?: components["schemas"]["CountryCode"] | null;
+            /** Control Relationships */
+            control_relationships: components["schemas"]["ControlRelationship"][];
+        };
+        /** @description ISO 639-1 */
+        LanguageCode: string;
+        /** Lei */
+        Lei: {
+            /** Value */
+            value: string;
+            /** @description How the GLEIF record was matched to the Entity, and when */
+            source: components["schemas"]["NonEmpty"];
+            /** @description The legal name on the GLEIF record, which may have moved on */
+            gleif_legal_name: components["schemas"]["NonEmpty"];
+        };
+        /** Listing */
+        Listing: {
+            list: components["schemas"]["SanctionsList"];
+            entry_id: components["schemas"]["NonEmpty"];
+            /**
+             * Programmes
+             * @description OFAC programme codes or the UK regime
+             */
+            programmes: components["schemas"]["NonEmpty"][];
+            /**
+             * Designation Date
+             * Format: date
+             */
+            designation_date: string;
+            verified: components["schemas"]["Verification"];
+        };
+        /**
+         * ListingRef
+         * @description Points at one of the Entity's own Listings: the source of a name, address, identifier or BIC.
+         */
+        ListingRef: {
+            list: components["schemas"]["SanctionsList"];
+            entry_id: components["schemas"]["NonEmpty"];
+        };
+        /** Name */
+        Name: {
+            value: components["schemas"]["NonEmpty"];
+            source_type: components["schemas"]["NameSourceType"];
+            script: components["schemas"]["Script"];
+            script_source: components["schemas"]["ScriptSource"];
+            /** @description Only when the list states it */
+            language?: components["schemas"]["LanguageCode"] | null;
+            listing: components["schemas"]["ListingRef"];
+        };
+        /** @enum {string} */
+        NameSourceType: "primary" | "primary_variation" | "aka" | "fka" | "nka";
+        /** @enum {string} */
+        NameVariant: "exact" | "alias" | "native_script" | "transliteration" | "fuzzed";
+        NonEmpty: string;
+        /** @enum {string} */
+        Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
+        /** RegistrationNumber */
+        RegistrationNumber: {
+            value: components["schemas"]["NonEmpty"];
+            /** @description The identifier type as the list names it, e.g. `Tax ID No.` */
+            kind: components["schemas"]["NonEmpty"];
+            country?: components["schemas"]["CountryCode"] | null;
+            listing: components["schemas"]["ListingRef"];
+        };
+        /** @enum {string} */
+        SanctionsList: "ofac_sdn" | "uk";
+        /** @enum {string} */
+        Script: "latin" | "cyrillic" | "arabic" | "han";
+        /** @enum {string} */
+        ScriptSource: "stated" | "derived";
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+        /**
+         * Verification
+         * @description The list snapshot a Listing was last checked against.
+         */
+        Verification: {
+            /**
+             * Snapshot Date
+             * Format: date
+             */
+            snapshot_date: string;
+            source_file: components["schemas"]["NonEmpty"];
         };
     };
     responses: never;
@@ -120,6 +402,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GeneratorVersion"];
+                };
+            };
+        };
+    };
+    list_entities: {
+        parameters: {
+            query?: {
+                entity_type?: components["schemas"]["EntityType"] | null;
+                list?: components["schemas"]["SanctionsList"] | null;
+                country?: components["schemas"]["CountryCode"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitySummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_entity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

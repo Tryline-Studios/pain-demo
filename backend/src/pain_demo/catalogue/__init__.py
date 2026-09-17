@@ -1,11 +1,9 @@
-"""The Entity Catalogue.
+"""The Entity Catalogue (spec section 3): the curated Sanctioned Entities shipped with the app.
 
-The catalogue itself (entities, Control Relationships, loading and startup validation) arrives with its own ticket.
-Until then this package only carries the snapshot date that the Generator Version reports.
+One TOML file per Entity under `entities/`, the Control Relationships in `control_relationships.toml`, validated
+by `load_catalogue` at startup.
 """
 
-from datetime import date
-from typing import Final
+from pain_demo.catalogue.loader import Catalogue, CatalogueError, load_catalogue
 
-SNAPSHOT_DATE: Final = date(2026, 9, 17)
-"""The date the Entity Catalogue's Listings were last checked against the OFAC SDN and UK Sanctions List."""
+__all__ = ["Catalogue", "CatalogueError", "load_catalogue"]

@@ -1,0 +1,35 @@
+# Roman Abramovich: UK-only; no OFAC file lists him. Ultimate beneficial owner of evraz-plc
+# (control_relationships.toml).
+id = "roman-abramovich"
+entity_type = "individual"
+date_of_birth = 1966-10-24
+place_of_birth = "Saratov, Russia"
+nationalities = ["RU", "IL", "PT"]
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0270"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-10
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Roman Arkadyevich ABRAMOVICH"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0270" }
+
+[[names]]
+value = "Roman ABRAMOVICH"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0270" }
+
+[[names]]
+value = "Роман Аркадьевич АБРАМОВИЧ"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0270" }

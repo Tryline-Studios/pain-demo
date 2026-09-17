@@ -1,0 +1,63 @@
+# Russian Agricultural Bank: UK-only, and its Listing carries no BIC; the only BIC comes from GLEIF.
+id = "russian-agricultural-bank"
+entity_type = "bank"
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1073"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-24
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Russian Agricultural Bank"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1073" }
+
+[[names]]
+value = "JSC Rosselkhozbank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1073" }
+
+[[names]]
+value = "RusAg"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1073" }
+
+[[names]]
+value = "Россельхозбанк"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+language = "ru"
+listing = { list = "uk", entry_id = "RUS1073" }
+
+[[addresses]]
+lines = ["0 Bld. 2 Presnenskaya Emb. (Moscow City, IQ-quarter Complex)"]
+city = "Moscow"
+postal_code = "123112"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS1073" }
+
+[[addresses]]
+lines = ["3, Gagarinsky Pereulok"]
+city = "Moscow"
+postal_code = "119034"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS1073" }
+
+[lei]
+value = "253400J0PTWKFG782T93"
+gleif_legal_name = 'Акционерное общество "Российский Сельскохозяйственный банк"'
+source = "GLEIF lei-records filter[fulltext]=Россельхозбанк on 2026-09-16; registeredAs 1027700342890 (entity ACTIVE, registration ISSUED)"
+
+[[bics]]
+value = "RUAGRUMMXXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 253400J0PTWKFG782T93"
+verified_date = 2026-08-28
