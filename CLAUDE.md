@@ -1,10 +1,18 @@
 # CLAUDE.md
 
-Sample ISO 20022 pain.001 generator for testing a sanctions Screening Tool. See `README.md` for what it is and `CONTEXT.md` for the domain language. Use the glossary terms (Sample File, Message Version, Entity Catalogue, Placement, Name Variant, Answer Key, Seed, ...) in code, issues and conversation.
+Sample ISO 20022 pain.001 generator for testing a sanctions Screening Tool. See `README.md` for what it is and `CONTEXT.md` for the domain language. Use the glossary terms (Sample File, Message Version, Entity Catalogue, Placement, Name Variant, Answer Key, Seed, Generator Version, ...) in code, issues and conversation.
 
-## Current phase: planning
+## Current phase: build
 
-There is no application code yet. The design is tracked as a wayfinder map on GitHub Issues (the issue labelled `wayfinder:map` in `Tryline-Studios/pain-demo`), with decision tickets as sub-issues. The destination is a build-ready spec, not an implementation. Don't start building unless asked.
+The build-ready spec is `docs/spec.md`; it is the source of truth for behaviour, and every section names the ticket it came from. Work is cut into GitHub issues labelled `ready-for-agent` on `Tryline-Studios/pain-demo`, each linking the spec sections it implements and listing its acceptance criteria and blockers. Pick a ticket, implement it on a branch, keep `just check` and `just test` green, open a PR. The design map (the issue labelled `wayfinder:map`) is history now; do not reopen settled decisions there.
+
+## Working in the backend
+
+- `backend/` is a uv src-layout project, package `pain_demo`, Python 3.13 pinned. Run everything through the root `justfile`: `just setup` (deps and prek hooks), `just check` (ruff, ty, OpenAPI drift), `just test`, `just dev` (native API with reload), `just openapi` (regenerate `backend/openapi.json`; run it after any route or model change or CI fails on drift).
+- Tests are pytest under `backend/tests`, in-process through FastAPI's test client. Warnings are errors. Test at public seams (HTTP, `Settings`, log output), not internals.
+- The `app.py` factory wires the skeleton: `Settings` (`PAIN_DEMO_` prefix, `settings.py`), structlog (`logging.py`), the request id and one-event-per-request middleware (`request_context.py`), the 1 MB body cap (`body_limit.py`) and RFC 9457 problem details (`problems.py`). New endpoints go in `api/v1/<tag>.py` routers with snake_case `operation_id`s and one of the tags `sample-files`, `catalogue`, `meta`.
+- Raise `HTTPException` or let request validation fail; the problem handlers shape every error. Never write an error body by hand.
+- The Generator Version block lives in `version.py`; the five generator libraries (`pain001`, `Faker`, `schwifty`, `iuliia`, `rapidfuzz`) are pinned exactly and excluded from Dependabot. Bump them only via the upgrade procedure in spec section 15.4.
 
 ## Settled constraints
 
