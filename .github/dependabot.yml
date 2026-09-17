@@ -1,0 +1,39 @@
+# Tooling and frameworks only (spec section 2.4). The five generator pins are upgraded by hand through
+# `just upgrade-generators`, because their output feeds the Seed contract.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /backend
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: pain001
+      - dependency-name: Faker
+      - dependency-name: schwifty
+      - dependency-name: iuliia
+      - dependency-name: rapidfuzz
+    groups:
+      tooling:
+        patterns:
+          - ruff
+          - ty
+          - prek
+          - pytest*
+          - httpx2
+      frameworks:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - ruff
+          - ty
+          - prek
+          - pytest*
+          - httpx2
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"

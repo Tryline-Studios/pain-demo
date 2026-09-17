@@ -1,0 +1,119 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "pain-demo",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Compose healthcheck",
+        "operationId": "get_health",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/version": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "The Generator Version block",
+        "operationId": "get_version",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GeneratorVersion": {
+        "properties": {
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "git_sha": {
+            "type": "string",
+            "title": "Git Sha"
+          },
+          "pain001": {
+            "type": "string",
+            "title": "Pain001"
+          },
+          "faker": {
+            "type": "string",
+            "title": "Faker"
+          },
+          "schwifty": {
+            "type": "string",
+            "title": "Schwifty"
+          },
+          "iuliia": {
+            "type": "string",
+            "title": "Iuliia"
+          },
+          "rapidfuzz": {
+            "type": "string",
+            "title": "Rapidfuzz"
+          },
+          "catalogue_snapshot": {
+            "type": "string",
+            "format": "date",
+            "title": "Catalogue Snapshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "git_sha",
+          "pain001",
+          "faker",
+          "schwifty",
+          "iuliia",
+          "rapidfuzz",
+          "catalogue_snapshot"
+        ],
+        "title": "GeneratorVersion",
+        "description": "Recorded in every Answer Key and returned by `GET /version`; key order is the wire order."
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "Health"
+      }
+    }
+  }
+}

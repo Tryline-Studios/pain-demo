@@ -745,7 +745,7 @@ Structured logs via `structlog` (ordinary pin, Dependabot allowed). JSON lines i
 
 ### 14.2 Request id
 
-Accept an incoming `X-Request-Id` or generate a UUID. Echo it as a response header, put it in the problem details `instance` on every error, and bind it to every log line of that request.
+Accept an incoming `X-Request-Id` (kept when it is 1 to 128 characters of `[A-Za-z0-9._:-]`, otherwise replaced) or generate a UUID. Echo it as a response header, put it in the problem details `instance` on every error, and bind it to every log line of that request.
 
 ### 14.3 One event per request
 
@@ -823,6 +823,7 @@ Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Stu
 |---|---|---|
 | `PAIN_DEMO_LOG_FORMAT` | `console` when stdout is a TTY, else `json` | log renderer |
 | `PAIN_DEMO_LOG_LEVEL` | `INFO` | `DEBUG` adds the corpus.build scenario and build report per request |
+| `PAIN_DEMO_GIT_SHA` | the checkout's `HEAD`, else `unknown` | the commit reported in the Generator Version; the image build sets it because the container has no `.git` (added by the walking-skeleton ticket, [#23](https://github.com/Tryline-Studios/pain-demo/issues/23)) |
 
 Not configurable (code constants): the 100-transaction cap; the default countries, amount range and currencies; Placement, Name Variant, intermediary slot and remittance element weights; the background rates for optional roles; the fuzz budget and the 0.85 similarity threshold; the transliteration scheme set; the legal-form dictionary; the Exposure city lists; the 1 MB body limit.
 
