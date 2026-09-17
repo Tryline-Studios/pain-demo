@@ -1,0 +1,212 @@
+# Sberbank: on both lists; the OFAC Listing carries the BIC. Parent of sberbank-europe (control_relationships.toml).
+id = "sberbank"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "17018"
+programmes = ["UKRAINE-EO13662", "RUSSIA-EO14024"]
+designation_date = 2022-04-06
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "RUS0256"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-01
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+# Names: the Latin primary names first, so the display name is the first primary.
+[[names]]
+value = "PUBLIC JOINT STOCK COMPANY SBERBANK OF RUSSIA"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "PJSC Sberbank (Public Joint-Stock Company Sberbank)"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0256" }
+
+[[names]]
+value = "ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО СБЕРБАНК РОССИИ"
+source_type = "primary"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Sberbank Rossii"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Sberbank Rossii OAO"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Otkrytoe Aktsionernoe Obshchestvo Sberbank Rossii"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Sberbank of Russia"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "PJSC Sberbank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Open Joint Stock Company Sberbank of Russia"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "OJSC Sberbank of Russia"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Joint Stock Commercial Savings Bank of the Russian Federation"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Joint Stock Commercial Savings Bank of the Russian Soviet Federative Socialist Republic"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "Sberbank of RSFSR"
+source_type = "fka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "ПАО Сбербанк"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[names]]
+value = "PJSC Sberbank of Russia"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0256" }
+
+[[names]]
+value = "Sberbank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0256" }
+
+[[names]]
+value = "Sberbank of Russia"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0256" }
+
+[[names]]
+value = "ПАО Сбербанк"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS0256" }
+
+[[addresses]]
+lines = ["19 ul. Vavilova"]
+city = "Moscow"
+postal_code = "117312"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[addresses]]
+lines = ["C305/306A Lufthansa Centre 50 Liangmaqiao Rd.", "Chaoyang District"]
+city = "Beijing"
+postal_code = "100027"
+country = "CN"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[addresses]]
+lines = ["upper ground floor and fourth floor, Birla Tower", "25-Barakhamba Road"]
+city = "New Delhi"
+postal_code = "110001"
+country = "IN"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[addresses]]
+lines = ["81-B, 8th Floor, 5th North Avenue, Maker Maxity", "Bandra Kurla Complex, Bandra East"]
+city = "Mumbai"
+region = "Maharashtra"
+postal_code = "400051"
+country = "IN"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[addresses]]
+lines = ["19 Vavilova St."]
+city = "Moscow"
+postal_code = "117997"
+country = "RU"
+listing = { list = "uk", entry_id = "RUS0256" }
+
+[lei]
+value = "549300WE6TAF5EEWQS81"
+gleif_legal_name = 'Публичное акционерное общество "Сбербанк России"'
+source = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv for SABRRUMM; GLEIF lei-records filter[entity.registeredAs]=1027700132195 on 2026-09-16 (entity ACTIVE, registration ISSUED)"
+
+[[registration_numbers]]
+value = "1027700132195"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[registration_numbers]]
+value = "7707083893"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+
+[[registration_numbers]]
+value = "1027700132195"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS0256" }
+
+[[bics]]
+value = "SABRRUMM"
+listing = { list = "ofac_sdn", entry_id = "17018" }
+verified_date = 2026-09-14
+
+[[bics]]
+value = "SABRINDDXXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 549300WE6TAF5EEWQS81"
+verified_date = 2026-08-28

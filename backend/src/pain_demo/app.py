@@ -1,9 +1,14 @@
 """FastAPI application factory."""
 
+from pathlib import Path
+
+import structlog
 from fastapi import FastAPI
 
+from pain_demo.api.v1 import catalogue as catalogue_api
 from pain_demo.api.v1 import meta
 from pain_demo.body_limit import BodyLimitMiddleware
+from pain_demo.catalogue import DEFAULT_ROOT, Catalogue, CatalogueError, load_catalogue
 from pain_demo.log_config import configure_logging
 from pain_demo.problems import install_problem_handlers
 from pain_demo.request_context import RequestContextMiddleware
@@ -11,18 +16,33 @@ from pain_demo.settings import Settings
 from pain_demo.version import app_version, generator_version
 
 API_PREFIX = "/api/v1"
+CATALOGUE_INVALID_EXIT_CODE = 1
+
+log = structlog.get_logger("pain_demo.startup")
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, catalogue_root: Path = DEFAULT_ROOT) -> FastAPI:
     settings = settings or Settings()
     configure_logging(settings)
+    catalogue = _load_catalogue_or_exit(catalogue_root)
 
     app = FastAPI(title="pain-demo", version=app_version())
     app.state.settings = settings
-    app.state.generator_version = generator_version(git_sha=settings.git_sha)
+    app.state.catalogue = catalogue
+    app.state.generator_version = generator_version(catalogue.snapshot_date, git_sha=settings.git_sha)
     install_problem_handlers(app)
     app.include_router(meta.router, prefix=API_PREFIX)
+    app.include_router(catalogue_api.router, prefix=API_PREFIX)
     # Added innermost first: the request context wraps everything else.
     app.add_middleware(BodyLimitMiddleware)
     app.add_middleware(RequestContextMiddleware, quiet_paths=frozenset({str(app.url_path_for("get_health"))}))
     return app
+
+
+def _load_catalogue_or_exit(root: Path) -> Catalogue:
+    """Startup validation (spec 3.3 and 14.5): a malformed catalogue is logged at CRITICAL and stops the process."""
+    try:
+        return load_catalogue(root)
+    except CatalogueError as error:
+        log.critical("catalogue_invalid", root=str(root), problems=error.problems)
+        raise SystemExit(CATALOGUE_INVALID_EXIT_CODE) from error

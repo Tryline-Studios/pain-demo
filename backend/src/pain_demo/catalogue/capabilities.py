@@ -1,0 +1,62 @@
+"""What an Entity supports: Name Variants (spec 7.6) and Placements (spec 6.1), as `GET /entities` publishes them.
+
+`transliteration` joins the supported set with its own ticket, once the scheme collision check exists.
+"""
+
+from typing import Literal
+
+from pain_demo.catalogue.schema import Entity, EntityType, Name
+
+type NameVariant = Literal["exact", "alias", "native_script", "transliteration", "fuzzed"]
+type Placement = Literal[
+    "debtor",
+    "debtor_agent",
+    "creditor",
+    "creditor_agent",
+    "ultimate_debtor",
+    "ultimate_creditor",
+    "intermediary_agent_1",
+    "intermediary_agent_2",
+    "intermediary_agent_3",
+    "remittance",
+]
+
+MAX_NAME_LENGTH = 140
+"""`Nm` is `Max140Text`: longer names are never candidates for any variant."""
+
+LEGAL_ENTITIES: frozenset[EntityType] = frozenset({"bank", "corporate"})
+EVERY_TYPE: frozenset[EntityType] = frozenset({"individual", *LEGAL_ENTITIES})
+BANK_ONLY: frozenset[EntityType] = frozenset({"bank"})
+
+PLACEMENT_ELIGIBILITY: dict[Placement, frozenset[EntityType]] = {
+    "debtor": EVERY_TYPE,
+    "debtor_agent": BANK_ONLY,
+    "creditor": EVERY_TYPE,
+    "creditor_agent": BANK_ONLY,
+    "ultimate_debtor": EVERY_TYPE,
+    "ultimate_creditor": EVERY_TYPE,
+    "intermediary_agent_1": BANK_ONLY,
+    "intermediary_agent_2": BANK_ONLY,
+    "intermediary_agent_3": BANK_ONLY,
+    "remittance": EVERY_TYPE,
+}
+"""The spec 6.1 table, in Placement enum order."""
+
+
+def candidate_names(entity: Entity) -> list[Name]:
+    return [name for name in entity.names if len(name.value) <= MAX_NAME_LENGTH]
+
+
+def supported_name_variants(entity: Entity) -> list[NameVariant]:
+    names = candidate_names(entity)
+    variants: list[NameVariant] = ["exact"]
+    if any(name.script == "latin" and name.source_type != "primary" for name in names):
+        variants.append("alias")
+    if any(name.script != "latin" for name in names):
+        variants.append("native_script")
+    variants.append("fuzzed")
+    return variants
+
+
+def supported_placements(entity_type: EntityType) -> list[Placement]:
+    return [placement for placement, eligible in PLACEMENT_ELIGIBILITY.items() if entity_type in eligible]

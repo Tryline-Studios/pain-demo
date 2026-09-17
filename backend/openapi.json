@@ -46,10 +46,540 @@
           }
         }
       }
+    },
+    "/api/v1/entities": {
+      "get": {
+        "tags": [
+          "catalogue"
+        ],
+        "summary": "The Entity Catalogue, one summary per Entity",
+        "operationId": "list_entities",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/EntityType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Type"
+            }
+          },
+          {
+            "name": "list",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SanctionsList"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "List"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CountryCode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitySummary"
+                  },
+                  "title": "Response List Entities"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/entities/{entity_id}": {
+      "get": {
+        "tags": [
+          "catalogue"
+        ],
+        "summary": "One Entity with every sourced fact",
+        "operationId": "get_entity",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "Address": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/NonEmpty"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Lines"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NonEmpty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "region": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NonEmpty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NonEmpty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "country": {
+            "$ref": "#/components/schemas/CountryCode"
+          },
+          "listing": {
+            "$ref": "#/components/schemas/ListingRef"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "lines",
+          "country",
+          "listing"
+        ],
+        "title": "Address"
+      },
+      "BankDetail": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "listings": {
+            "items": {
+              "$ref": "#/components/schemas/Listing"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Listings"
+          },
+          "names": {
+            "items": {
+              "$ref": "#/components/schemas/Name"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Names"
+          },
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            },
+            "type": "array",
+            "title": "Addresses",
+            "default": []
+          },
+          "lei": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Lei"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registration_numbers": {
+            "items": {
+              "$ref": "#/components/schemas/RegistrationNumber"
+            },
+            "type": "array",
+            "title": "Registration Numbers",
+            "default": []
+          },
+          "entity_type": {
+            "type": "string",
+            "const": "bank",
+            "title": "Entity Type"
+          },
+          "bics": {
+            "items": {
+              "$ref": "#/components/schemas/Bic"
+            },
+            "type": "array",
+            "title": "Bics",
+            "description": "May be empty: such a Bank is placed by name and address only",
+            "default": []
+          },
+          "control_relationships": {
+            "items": {
+              "$ref": "#/components/schemas/ControlRelationship"
+            },
+            "type": "array",
+            "title": "Control Relationships"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "listings",
+          "names",
+          "entity_type",
+          "control_relationships"
+        ],
+        "title": "BankDetail"
+      },
+      "Bic": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "pattern": "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$",
+            "title": "Value"
+          },
+          "listing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ListingRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "citation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NonEmpty"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "e.g. the GLEIF BIC-to-LEI mapping file"
+          },
+          "verified_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Verified Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value",
+          "verified_date"
+        ],
+        "title": "Bic",
+        "description": "Either the Listing that carries the BIC or an external non-sanctions citation, never both."
+      },
+      "ControlRelationship": {
+        "properties": {
+          "controller": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "controlled": {
+            "$ref": "#/components/schemas/EntityId",
+            "description": "Always a Legal Entity"
+          },
+          "role": {
+            "$ref": "#/components/schemas/ControlRole"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ControlStatus"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NonEmpty",
+            "description": "The Listing and the words it uses"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "controller",
+          "controlled",
+          "role",
+          "status",
+          "as_of",
+          "source"
+        ],
+        "title": "ControlRelationship"
+      },
+      "ControlRole": {
+        "type": "string",
+        "enum": [
+          "ultimate_beneficial_owner",
+          "controlling_shareholder",
+          "director",
+          "officer",
+          "parent_company"
+        ]
+      },
+      "ControlStatus": {
+        "type": "string",
+        "enum": [
+          "current",
+          "former",
+          "as_listed"
+        ]
+      },
+      "CorporateDetail": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "listings": {
+            "items": {
+              "$ref": "#/components/schemas/Listing"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Listings"
+          },
+          "names": {
+            "items": {
+              "$ref": "#/components/schemas/Name"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Names"
+          },
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            },
+            "type": "array",
+            "title": "Addresses",
+            "default": []
+          },
+          "lei": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Lei"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registration_numbers": {
+            "items": {
+              "$ref": "#/components/schemas/RegistrationNumber"
+            },
+            "type": "array",
+            "title": "Registration Numbers",
+            "default": []
+          },
+          "entity_type": {
+            "type": "string",
+            "const": "corporate",
+            "title": "Entity Type"
+          },
+          "control_relationships": {
+            "items": {
+              "$ref": "#/components/schemas/ControlRelationship"
+            },
+            "type": "array",
+            "title": "Control Relationships"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "listings",
+          "names",
+          "entity_type",
+          "control_relationships"
+        ],
+        "title": "CorporateDetail"
+      },
+      "CountryCode": {
+        "type": "string",
+        "pattern": "^[A-Z]{2}$",
+        "description": "ISO 3166-1 alpha-2"
+      },
+      "EntityDetail": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/BankDetail"
+          },
+          {
+            "$ref": "#/components/schemas/CorporateDetail"
+          },
+          {
+            "$ref": "#/components/schemas/IndividualDetail"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "entity_type",
+          "mapping": {
+            "bank": "#/components/schemas/BankDetail",
+            "corporate": "#/components/schemas/CorporateDetail",
+            "individual": "#/components/schemas/IndividualDetail"
+          }
+        }
+      },
+      "EntityId": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      },
+      "EntitySummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "lists": {
+            "items": {
+              "$ref": "#/components/schemas/SanctionsList"
+            },
+            "type": "array",
+            "title": "Lists"
+          },
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Countries",
+            "description": "A Legal Entity's address countries; an Individual's nationalities and country of residence"
+          },
+          "name_variants": {
+            "items": {
+              "$ref": "#/components/schemas/NameVariant"
+            },
+            "type": "array",
+            "title": "Name Variants"
+          },
+          "placements": {
+            "items": {
+              "$ref": "#/components/schemas/Placement"
+            },
+            "type": "array",
+            "title": "Placements"
+          },
+          "has_bic": {
+            "type": "boolean",
+            "title": "Has Bic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entity_type",
+          "display_name",
+          "lists",
+          "countries",
+          "name_variants",
+          "placements",
+          "has_bic"
+        ],
+        "title": "EntitySummary"
+      },
+      "EntityType": {
+        "type": "string",
+        "enum": [
+          "individual",
+          "bank",
+          "corporate"
+        ]
+      },
       "GeneratorVersion": {
         "properties": {
           "app_version": {
@@ -100,6 +630,19 @@
         "title": "GeneratorVersion",
         "description": "Recorded in every Answer Key and returned by `GET /version`; key order is the wire order."
       },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
       "Health": {
         "properties": {
           "status": {
@@ -113,6 +656,371 @@
           "status"
         ],
         "title": "Health"
+      },
+      "IndividualDetail": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/EntityId"
+          },
+          "listings": {
+            "items": {
+              "$ref": "#/components/schemas/Listing"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Listings"
+          },
+          "names": {
+            "items": {
+              "$ref": "#/components/schemas/Name"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Names"
+          },
+          "entity_type": {
+            "type": "string",
+            "const": "individual",
+            "title": "Entity Type"
+          },
+          "date_of_birth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Of Birth"
+          },
+          "place_of_birth": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NonEmpty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nationalities": {
+            "items": {
+              "$ref": "#/components/schemas/CountryCode"
+            },
+            "type": "array",
+            "title": "Nationalities",
+            "default": []
+          },
+          "country_of_residence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when a list states it"
+          },
+          "control_relationships": {
+            "items": {
+              "$ref": "#/components/schemas/ControlRelationship"
+            },
+            "type": "array",
+            "title": "Control Relationships"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "listings",
+          "names",
+          "entity_type",
+          "control_relationships"
+        ],
+        "title": "IndividualDetail"
+      },
+      "LanguageCode": {
+        "type": "string",
+        "pattern": "^[a-z]{2}$",
+        "description": "ISO 639-1"
+      },
+      "Lei": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]{18}[0-9]{2}$",
+            "title": "Value"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NonEmpty",
+            "description": "How the GLEIF record was matched to the Entity, and when"
+          },
+          "gleif_legal_name": {
+            "$ref": "#/components/schemas/NonEmpty",
+            "description": "The legal name on the GLEIF record, which may have moved on"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value",
+          "source",
+          "gleif_legal_name"
+        ],
+        "title": "Lei"
+      },
+      "Listing": {
+        "properties": {
+          "list": {
+            "$ref": "#/components/schemas/SanctionsList"
+          },
+          "entry_id": {
+            "$ref": "#/components/schemas/NonEmpty"
+          },
+          "programmes": {
+            "items": {
+              "$ref": "#/components/schemas/NonEmpty"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Programmes",
+            "description": "OFAC programme codes or the UK regime"
+          },
+          "designation_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Designation Date"
+          },
+          "verified": {
+            "$ref": "#/components/schemas/Verification"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "list",
+          "entry_id",
+          "programmes",
+          "designation_date",
+          "verified"
+        ],
+        "title": "Listing"
+      },
+      "ListingRef": {
+        "properties": {
+          "list": {
+            "$ref": "#/components/schemas/SanctionsList"
+          },
+          "entry_id": {
+            "$ref": "#/components/schemas/NonEmpty"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "list",
+          "entry_id"
+        ],
+        "title": "ListingRef",
+        "description": "Points at one of the Entity's own Listings: the source of a name, address, identifier or BIC."
+      },
+      "Name": {
+        "properties": {
+          "value": {
+            "$ref": "#/components/schemas/NonEmpty"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/NameSourceType"
+          },
+          "script": {
+            "$ref": "#/components/schemas/Script"
+          },
+          "script_source": {
+            "$ref": "#/components/schemas/ScriptSource"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LanguageCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when the list states it"
+          },
+          "listing": {
+            "$ref": "#/components/schemas/ListingRef"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value",
+          "source_type",
+          "script",
+          "script_source",
+          "listing"
+        ],
+        "title": "Name"
+      },
+      "NameSourceType": {
+        "type": "string",
+        "enum": [
+          "primary",
+          "primary_variation",
+          "aka",
+          "fka",
+          "nka"
+        ]
+      },
+      "NameVariant": {
+        "type": "string",
+        "enum": [
+          "exact",
+          "alias",
+          "native_script",
+          "transliteration",
+          "fuzzed"
+        ]
+      },
+      "NonEmpty": {
+        "type": "string",
+        "minLength": 1
+      },
+      "Placement": {
+        "type": "string",
+        "enum": [
+          "debtor",
+          "debtor_agent",
+          "creditor",
+          "creditor_agent",
+          "ultimate_debtor",
+          "ultimate_creditor",
+          "intermediary_agent_1",
+          "intermediary_agent_2",
+          "intermediary_agent_3",
+          "remittance"
+        ]
+      },
+      "RegistrationNumber": {
+        "properties": {
+          "value": {
+            "$ref": "#/components/schemas/NonEmpty"
+          },
+          "type": {
+            "$ref": "#/components/schemas/NonEmpty",
+            "description": "The identifier type as the list names it, e.g. `Tax ID No.`"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "listing": {
+            "$ref": "#/components/schemas/ListingRef"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value",
+          "type",
+          "listing"
+        ],
+        "title": "RegistrationNumber"
+      },
+      "SanctionsList": {
+        "type": "string",
+        "enum": [
+          "ofac_sdn",
+          "uk"
+        ]
+      },
+      "Script": {
+        "type": "string",
+        "enum": [
+          "latin",
+          "cyrillic",
+          "arabic",
+          "han"
+        ]
+      },
+      "ScriptSource": {
+        "type": "string",
+        "enum": [
+          "stated",
+          "derived"
+        ]
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Verification": {
+        "properties": {
+          "snapshot_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Snapshot Date"
+          },
+          "source_file": {
+            "$ref": "#/components/schemas/NonEmpty"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "snapshot_date",
+          "source_file"
+        ],
+        "title": "Verification",
+        "description": "The list snapshot a Listing was last checked against."
       }
     }
   }

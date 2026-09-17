@@ -1,0 +1,42 @@
+# Evraz PLC: UK-only; OFAC lists Russian subsidiaries instead (see evraz-ntmk). Parent of evraz-ntmk and
+# controlled by roman-abramovich (control_relationships.toml).
+id = "evraz-plc"
+entity_type = "corporate"
+
+[[listings]]
+list = "uk"
+entry_id = "RUS1027"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-05-05
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Evraz PLC"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1027" }
+
+[[names]]
+value = "Евраз"
+source_type = "aka"
+script = "cyrillic"
+script_source = "derived"
+listing = { list = "uk", entry_id = "RUS1027" }
+
+[[addresses]]
+lines = ["2 Portman Street"]
+city = "London"
+postal_code = "W1H 6DU"
+country = "GB"
+listing = { list = "uk", entry_id = "RUS1027" }
+
+[lei]
+value = "5493005B7DAN39RXLK23"
+gleif_legal_name = "EVRAZ PLC"
+source = "GLEIF lei-records filter[entity.registeredAs]=07784342 on 2026-09-16 (entity ACTIVE, registration LAPSED)"
+
+[[registration_numbers]]
+value = "07784342"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "RUS1027" }

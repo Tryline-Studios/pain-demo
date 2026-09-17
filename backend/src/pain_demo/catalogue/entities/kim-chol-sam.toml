@@ -1,0 +1,49 @@
+# Kim Chol Sam: on both lists; the UK non-Latin name is Han script (the source labels its language Korean) and the
+# source's surrounding brackets are dropped as a list artefact. His role at Daedong Credit Bank is recorded once that Bank joins the catalogue.
+id = "kim-chol-sam"
+entity_type = "individual"
+date_of_birth = 1971-03-11
+nationalities = ["KP"]
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "16084"
+programmes = ["NPWMD"]
+designation_date = 2013-06-27
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "DPR0226"
+programmes = ["The Democratic People's Republic of Korea (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2016-11-30
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "KIM Chol Sam"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "16084" }
+
+[[names]]
+value = "KIM CHOL SAM"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0226" }
+
+[[names]]
+value = "Jin Tiesan"
+source_type = "aka"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "DPR0226" }
+
+[[names]]
+value = "金铁三"
+source_type = "aka"
+script = "han"
+script_source = "derived"
+language = "ko"
+listing = { list = "uk", entry_id = "DPR0226" }

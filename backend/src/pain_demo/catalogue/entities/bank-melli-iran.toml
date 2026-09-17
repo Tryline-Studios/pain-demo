@@ -1,0 +1,267 @@
+# Bank Melli Iran: on both lists; neither Listing carries a BIC, so every BIC comes from GLEIF's mapping of its
+# lapsed LEI. The UK source prints the non-Latin name with a trailing comma, dropped here as a list artefact.
+id = "bank-melli-iran"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "25578"
+programmes = ["IFSR", "IRAN", "SDGT"]
+designation_date = 2018-11-05
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[listings]]
+list = "uk"
+entry_id = "INU0300"
+programmes = ["The Iran (Sanctions) (Nuclear) (EU Exit) Regulations 2019"]
+designation_date = 2025-09-29
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+
+[[names]]
+value = "Bank Melli Iran"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[names]]
+value = "Bank Melli"
+source_type = "primary"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[[names]]
+value = "Bank Melli"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[names]]
+value = "Melli Bank"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[names]]
+value = "National Bank of Iran"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[names]]
+value = "Bank Melli Iran"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[[names]]
+value = "Melli Bank"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[[names]]
+value = "National Bank of Iran"
+source_type = "primary_variation"
+script = "latin"
+script_source = "derived"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[[names]]
+value = "بانک ملی ایران"
+source_type = "aka"
+script = "arabic"
+script_source = "derived"
+language = "fa"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[[addresses]]
+lines = ["Ferdowsi Avenue - PO Box 11365-171"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["43 Avenue Montaigne"]
+city = "Paris"
+postal_code = "75008"
+country = "FR"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["Room 704-6, Wheelock Hse", "20 Pedder St"]
+country = "HK"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["Bank Melli Iran Bldg, 111 St 24", "929 Arasat"]
+city = "Baghdad"
+country = "IQ"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 2643", "Ruwi"]
+city = "Muscat"
+postal_code = "112"
+country = "OM"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 2656", "Liva Street"]
+city = "Abu Dhabi"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 248", "Hamad Bin Abdulla St"]
+city = "Fujairah"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 1888, Clock Tower", "Industrial Rd, Al Ain Club Bldg", "Al Ain"]
+city = "Abu Dhabi"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 1894", "Baniyas St, Deira"]
+city = "Dubai"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 5270", "Oman Street Al Nakheel"]
+city = "Ras Al-Khaimah"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 459", "Al Borj St"]
+city = "Sharjah"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 3093, Ahmed Seddiqui Bldg", "Khalid Bin El-Walid St, Bur-Dubai"]
+city = "Dubai"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 1894", "Al Wasl Rd, Jumeirah"]
+city = "Dubai"
+country = "AE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["Postfach 112 129", "Holzbruecke 2"]
+city = "Hamburg"
+postal_code = "20421"
+country = "DE"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["23 Nobel Avenue"]
+city = "Baku"
+country = "AZ"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["Bank Melli Iran Building", "Ferdowsi Avenue"]
+city = "Tehran"
+postal_code = "11365-144"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["No. 136 Mirdamad Boulevard", "Opposite Al-ghadir Mosque"]
+city = "Tehran"
+country = "IR"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["Al Ashar Estiqlal Street - Hal Al Zohor"]
+city = "Basra"
+country = "IQ"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["98a Kensington High Street"]
+city = "London"
+postal_code = "W8 4SG"
+country = "GB"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["767 5th Ave, 44th Fl"]
+city = "New York"
+region = "NY"
+postal_code = "10153"
+country = "US"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["PO Box 1420"]
+city = "New York"
+region = "NY"
+postal_code = "10153"
+country = "US"
+listing = { list = "ofac_sdn", entry_id = "25578" }
+
+[[addresses]]
+lines = ["Ferdowsi Avenue", "P.O Box 11365-171"]
+city = "Tehran"
+country = "IR"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[lei]
+value = "549300DK3GGPVDIPPV39"
+gleif_legal_name = "BANK MELLI IRAN"
+source = "GLEIF lei-records filter[fulltext]=Bank Melli on 2026-09-16; registeredAs 60, legal address IR (entity ACTIVE, registration LAPSED)"
+
+[[registration_numbers]]
+value = "60"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[[registration_numbers]]
+value = "FC005874"
+type = "Business registration number"
+listing = { list = "uk", entry_id = "INU0300" }
+
+[[bics]]
+value = "MELIAEA1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 549300DK3GGPVDIPPV39"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "MELIAZ21XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 549300DK3GGPVDIPPV39"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "MELIFRP1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 549300DK3GGPVDIPPV39"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "MELIIQB1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 549300DK3GGPVDIPPV39"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "MELIIRT1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 549300DK3GGPVDIPPV39"
+verified_date = 2026-08-28
+
+[[bics]]
+value = "MELIOMR1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 549300DK3GGPVDIPPV39"
+verified_date = 2026-08-28

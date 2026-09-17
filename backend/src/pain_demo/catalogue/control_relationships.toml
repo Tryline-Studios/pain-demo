@@ -1,0 +1,26 @@
+# Control Relationships between catalogue Entities (spec section 3.3). `as_of` is the UK entry's last-updated date
+# or the OFAC file date; `source` quotes the Listing's own words.
+
+[[relationships]]
+controller = "roman-abramovich"
+controlled = "evraz-plc"
+role = "ultimate_beneficial_owner"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS0270 statement of reasons: "ABRAMOVICH is involved in obtaining a benefit from or supporting the Government of Russia by owning or controlling directly or indirectly: (i) Evraz plc"; position "Stakeholder in Evraz PLC and Norilsk Nickel"'
+
+[[relationships]]
+controller = "sberbank"
+controlled = "sberbank-europe"
+role = "parent_company"
+status = "current"
+as_of = 2026-09-14
+source = 'OFAC SDN_ADVANCED.XML ProfileRelationship: 18716 SBERBANK EUROPE AG "Owned or Controlled By" 17018, Former="false"'
+
+[[relationships]]
+controller = "evraz-plc"
+controlled = "evraz-ntmk"
+role = "parent_company"
+status = "current"
+as_of = 2025-04-09
+source = 'UK RUS1027 statement of reasons: "Evraz plc is the UK-incorporated holding company ... (2) owning or controlling directly or indirectly the following subsidiaries - JSC Evraz NTMK"; OFAC UID 50054 is the same plant, matched by name'

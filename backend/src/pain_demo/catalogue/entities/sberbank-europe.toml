@@ -1,0 +1,52 @@
+# Sberbank Europe AG: OFAC-only. GLEIF has renamed the record to its liquidation name; the LEI stays with that
+# name recorded (spec 3.3). Subsidiary of sberbank (control_relationships.toml).
+id = "sberbank-europe"
+entity_type = "bank"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "18716"
+programmes = ["UKRAINE-EO13662", "RUSSIA-EO14024"]
+designation_date = 2022-04-06
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "SBERBANK EUROPE AG"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "18716" }
+
+[[addresses]]
+lines = ["Schwarzenbergplatz 3"]
+city = "Vienna"
+postal_code = "1010"
+country = "AT"
+listing = { list = "ofac_sdn", entry_id = "18716" }
+
+[lei]
+value = "529900IZ8TASAYR3A694"
+gleif_legal_name = "MeSoFa Vermögensverwaltungs AG in Abwicklung"
+source = "GLEIF lei-records filter[fulltext]=Sberbank Europe on 2026-09-16 matched a former name; registeredAs 161285i equals the OFAC Registration Number FN 161285 i (entity ACTIVE, registration LAPSED)"
+
+[[registration_numbers]]
+value = "FN 161285 i"
+type = "Registration Number"
+country = "AT"
+listing = { list = "ofac_sdn", entry_id = "18716" }
+
+[[registration_numbers]]
+value = "ATU55795009"
+type = "Tax ID No."
+country = "AT"
+listing = { list = "ofac_sdn", entry_id = "18716" }
+
+[[bics]]
+value = "SABRATWW"
+listing = { list = "ofac_sdn", entry_id = "18716" }
+verified_date = 2026-09-14
+
+[[bics]]
+value = "VOINATW1XXX"
+citation = "GLEIF BIC-to-LEI mapping lei-bic-20260828T000000.csv, mapped to LEI 529900IZ8TASAYR3A694"
+verified_date = 2026-08-28

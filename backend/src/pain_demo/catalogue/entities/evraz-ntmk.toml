@@ -1,0 +1,45 @@
+# Evraz NTMK: OFAC-only. No LEI: the GLEIF record for its registration number now belongs to a renamed
+# legal entity, so the match is not clear (spec 3.3). Subsidiary of evraz-plc (control_relationships.toml).
+id = "evraz-ntmk"
+entity_type = "corporate"
+
+[[listings]]
+list = "ofac_sdn"
+entry_id = "50054"
+programmes = ["RUSSIA-EO14024"]
+designation_date = 2024-08-23
+verified = { snapshot_date = 2026-09-14, source_file = "SDN_ADVANCED.XML" }
+
+[[names]]
+value = "AKTSIONERNOE OBSHCHESTVO EVRAZ NIZHNETAGILSKI METALLURGICHESKI KOMBINAT"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "50054" }
+
+[[names]]
+value = "Joint Stock Company Evraz Nizhny Tagil Metallurgical Plant"
+source_type = "aka"
+script = "latin"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "50054" }
+
+[[addresses]]
+lines = ["d.1, ul. Metallurgov"]
+city = "Nizhni Tagil"
+region = "Sverdlovsk region"
+postal_code = "622025"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "50054" }
+
+[[registration_numbers]]
+value = "1026601367539"
+type = "Registration Number"
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "50054" }
+
+[[registration_numbers]]
+value = "6623000680"
+type = "Tax ID No."
+country = "RU"
+listing = { list = "ofac_sdn", entry_id = "50054" }

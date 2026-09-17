@@ -7,8 +7,6 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from pain_demo.catalogue import SNAPSHOT_DATE
-
 APP_DISTRIBUTION = "pain-demo"
 UNKNOWN_GIT_SHA = "unknown"
 
@@ -47,8 +45,8 @@ def git_sha_from_checkout() -> str:
     return sha if completed.returncode == 0 and sha else UNKNOWN_GIT_SHA
 
 
-def generator_version(git_sha: str | None = None) -> GeneratorVersion:
-    """Build the block from the installed distributions and the Entity Catalogue snapshot."""
+def generator_version(catalogue_snapshot: date, git_sha: str | None = None) -> GeneratorVersion:
+    """Build the block from the installed distributions and the loaded Entity Catalogue's snapshot date."""
     return GeneratorVersion(
         app_version=app_version(),
         git_sha=git_sha or git_sha_from_checkout(),
@@ -57,5 +55,5 @@ def generator_version(git_sha: str | None = None) -> GeneratorVersion:
         schwifty=importlib.metadata.version("schwifty"),
         iuliia=importlib.metadata.version("iuliia"),
         rapidfuzz=importlib.metadata.version("rapidfuzz"),
-        catalogue_snapshot=SNAPSHOT_DATE,
+        catalogue_snapshot=catalogue_snapshot,
     )
