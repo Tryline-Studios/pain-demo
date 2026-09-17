@@ -1,5 +1,5 @@
-# Kim Chol Sam: on both lists; the UK non-Latin name is Han script stored verbatim, brackets included, though the
-# source labels its language Korean. His role at Daedong Credit Bank is recorded once that Bank joins the catalogue.
+# Kim Chol Sam: on both lists; the UK non-Latin name is Han script (the source labels its language Korean) and the
+# source's surrounding brackets are dropped as a list artefact. His role at Daedong Credit Bank is recorded once that Bank joins the catalogue.
 id = "kim-chol-sam"
 entity_type = "individual"
 date_of_birth = 1971-03-11
@@ -41,7 +41,7 @@ script_source = "derived"
 listing = { list = "uk", entry_id = "DPR0226" }
 
 [[names]]
-value = "(金铁三)"
+value = "金铁三"
 source_type = "aka"
 script = "han"
 script_source = "derived"

@@ -1,5 +1,5 @@
 # Bank Melli Iran: on both lists; neither Listing carries a BIC, so every BIC comes from GLEIF's mapping of its
-# lapsed LEI. The UK non-Latin name is stored verbatim, trailing comma included, as the source prints it.
+# lapsed LEI. The UK source prints the non-Latin name with a trailing comma, dropped here as a list artefact.
 id = "bank-melli-iran"
 entity_type = "bank"
 
@@ -74,7 +74,7 @@ script_source = "derived"
 listing = { list = "uk", entry_id = "INU0300" }
 
 [[names]]
-value = "بانک ملی ایران,"
+value = "بانک ملی ایران"
 source_type = "aka"
 script = "arabic"
 script_source = "derived"
