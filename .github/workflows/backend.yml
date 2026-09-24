@@ -15,7 +15,7 @@ jobs:
         recipe: [backend-lint, backend-typecheck, backend-test, openapi-check]
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.1.0
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           working-directory: backend
       - uses: extractions/setup-just@v4
