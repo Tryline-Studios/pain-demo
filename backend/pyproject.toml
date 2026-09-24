@@ -23,7 +23,7 @@ dev = [
     "prek",
     "pytest",
     "ruff",
-    "ty==0.0.81",
+    "ty==0.0.82",
 ]
 
 [build-system]
