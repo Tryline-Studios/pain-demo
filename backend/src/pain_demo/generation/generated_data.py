@@ -137,7 +137,7 @@ class GeneratedData:
                 self._party(tx_stream("ultimate_creditor"), country, with_address=False) if ultimate_creditor else None
             ),
             intermediary_agents=(
-                (self._agent(intermediary_stream, intermediary_stream.choice(request.countries))[0],)
+                (self.clean_agent(intermediary_stream, intermediary_stream.choice(request.countries))[0],)
                 if intermediary
                 else ()
             ),
@@ -170,15 +170,15 @@ class GeneratedData:
             ),
         )
 
-    def _agent(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, CleanBank]:
+    def clean_agent(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, CleanBank]:
         bank = rng.choice(self.clean_banks.for_country(country))
         return Agent(bic=bank.bic, name=bank.name, routing_number=bank.routing_number), bank
 
     def _bank_and_account(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, Account]:
-        agent, bank = self._agent(rng, country)
+        agent, bank = self.clean_agent(rng, country)
         profile = COUNTRIES[country]
-        digits = profile.account_digits
-        account_code = {} if digits is None else {"account_code": _digits(rng, digits)}
+        length = profile.account_digits
+        account_code = {} if length is None else {"account_code": digits(rng, length)}
         if not profile.iban:
             return agent, OtherAccount(account_code["account_code"])
         iban = IBAN.random(country, random=rng, use_registry=False, bank_code=bank.bank_code, **account_code)
@@ -195,14 +195,14 @@ def _redraw(draw: Callable[[], str], refused: Callable[[str], bool]) -> str:
     raise RuntimeError(msg)
 
 
-def _digits(rng: random.Random, length: int) -> str:
+def digits(rng: random.Random, length: int) -> str:
     return "".join(rng.choices(string.digits, k=length))
 
 
 def _remittance(rng: random.Random, *, structured: bool) -> Remittance:
     if structured:
-        return Remittance(creditor_reference=creditor_reference(_digits(rng, 12)))
-    return Remittance(unstructured=rng.choice(REMITTANCE_TEMPLATES).format(n=_digits(rng, 6)))
+        return Remittance(creditor_reference=creditor_reference(digits(rng, 12)))
+    return Remittance(unstructured=rng.choice(REMITTANCE_TEMPLATES).format(n=digits(rng, 6)))
 
 
 def creditor_reference(body: str) -> str:

@@ -560,7 +560,9 @@
             "$ref": "#/components/schemas/Summary"
           },
           "hits": {
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/Hit"
+            },
             "type": "array",
             "title": "Hits"
           },
@@ -1394,6 +1396,229 @@
         ],
         "title": "Health"
       },
+      "Hit": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "file",
+              "transaction"
+            ],
+            "title": "Scope"
+          },
+          "transaction_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Number",
+            "description": "Absent for scope file"
+          },
+          "end_to_end_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End To End Id",
+            "description": "Absent for scope file"
+          },
+          "xpath": {
+            "type": "string",
+            "title": "Xpath"
+          },
+          "entity": {
+            "$ref": "#/components/schemas/HitEntity"
+          },
+          "placement": {
+            "$ref": "#/components/schemas/Placement"
+          },
+          "rendering_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "name_and_bic",
+                  "bic_only",
+                  "name_only"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rendering Mode",
+            "description": "Agents only"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HitName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bic": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HitBic"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lei": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lei"
+          },
+          "address_from_listing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address From Listing"
+          },
+          "triggers": {
+            "items": {
+              "$ref": "#/components/schemas/Trigger"
+            },
+            "type": "array",
+            "title": "Triggers"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "named",
+              "drawn"
+            ],
+            "title": "Origin"
+          },
+          "paired_with": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paired With"
+          },
+          "displaced": {
+            "type": "null",
+            "title": "Displaced"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "scope",
+          "xpath",
+          "entity",
+          "placement",
+          "name",
+          "bic",
+          "lei",
+          "address_from_listing",
+          "triggers",
+          "origin"
+        ],
+        "title": "Hit",
+        "description": "One Placement of a Sanctioned Entity (spec 11.3), in wire order. `element` (remittance) arrives later."
+      },
+      "HitBic": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "listing",
+              "gleif"
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "source"
+        ],
+        "title": "HitBic"
+      },
+      "HitEntity": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "listings": {
+            "items": {
+              "$ref": "#/components/schemas/ListingRef"
+            },
+            "type": "array",
+            "title": "Listings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entity_type",
+          "listings"
+        ],
+        "title": "HitEntity"
+      },
+      "HitName": {
+        "properties": {
+          "variant": {
+            "$ref": "#/components/schemas/NameVariant"
+          },
+          "rendered": {
+            "type": "string",
+            "title": "Rendered"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NameSource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant",
+          "rendered",
+          "source"
+        ],
+        "title": "HitName"
+      },
       "IndividualDetail": {
         "properties": {
           "id": {
@@ -1655,6 +1880,31 @@
           "listing"
         ],
         "title": "Name"
+      },
+      "NameSource": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "type": {
+            "$ref": "#/components/schemas/NameSourceType"
+          },
+          "script": {
+            "$ref": "#/components/schemas/Script"
+          },
+          "listing": {
+            "$ref": "#/components/schemas/ListingRef"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "type",
+          "script",
+          "listing"
+        ],
+        "title": "NameSource"
       },
       "NameSourceType": {
         "type": "string",
@@ -1953,6 +2203,37 @@
           "PT",
           "US"
         ]
+      },
+      "Trigger": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "name",
+              "bic",
+              "lei"
+            ],
+            "title": "Kind"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "listed_on": {
+            "items": {
+              "$ref": "#/components/schemas/SanctionsList"
+            },
+            "type": "array",
+            "title": "Listed On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "value",
+          "listed_on"
+        ],
+        "title": "Trigger"
       },
       "UploadedFile": {
         "properties": {

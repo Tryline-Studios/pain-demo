@@ -10,8 +10,10 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
+from pain_demo.catalogue import Catalogue
 from pain_demo.generation.clean_banks import CleanBankList
 from pain_demo.generation.generated_data import GeneratedData
+from pain_demo.generation.hits import Hit, place_hits, summary_counts
 from pain_demo.generation.request import EffectiveRequest, MessageVersion
 from pain_demo.generation.screening import NameScreen
 from pain_demo.renderer import render
@@ -72,7 +74,7 @@ class AnswerKey(BaseModel):
     request: EffectiveRequest
     file: FileFacts
     summary: Summary
-    hits: list[Any]
+    hits: list[Hit]
     exposures: list[Any]
     transactions: list[AnswerKeyTransaction]
     warnings: list[str]
@@ -116,10 +118,16 @@ def provenance_comment(seed: str, generator: GeneratorVersion) -> str:
 
 
 def generate(
-    request: EffectiveRequest, clean_banks: CleanBankList, screen: NameScreen, generator: GeneratorVersion
+    request: EffectiveRequest,
+    catalogue: Catalogue,
+    clean_banks: CleanBankList,
+    screen: NameScreen,
+    generator: GeneratorVersion,
 ) -> GeneratedSampleFile:
     """Blocking: run it in a worker thread."""
-    model = GeneratedData(request, clean_banks, screen).sample_file_model()
+    data = GeneratedData(request, clean_banks, screen)
+    model, hits = place_hits(data.sample_file_model(), request, catalogue, clean_banks, data)
+    file_hit_ids = [hit.id for hit in hits if hit.scope == "file"]
     rendered = render(model)
     declaration, _, body = rendered.xml.decode("utf-8").partition("\n")
     xml = f"{declaration}\n{provenance_comment(request.seed, generator)}\n{body}"
@@ -133,14 +141,19 @@ def generate(
             created_at=model.created_at,
             execution_date=model.execution_date,
             transaction_count=len(model.transactions),
-            hit_count=0,
+            hit_count=len(hits),
             sha256=hashlib.sha256(xml.encode("utf-8")).hexdigest(),
         ),
-        summary=Summary(),
-        hits=[],
+        summary=Summary(**summary_counts(hits, catalogue)),
+        hits=hits,
         exposures=[],
         transactions=[
-            AnswerKeyTransaction(number=number, end_to_end_id=tx.end_to_end_id, hit_ids=[])
+            AnswerKeyTransaction(
+                number=number,
+                end_to_end_id=tx.end_to_end_id,
+                # A sanctioned Debtor or Debtor Agent touches every transaction, so a tool may rightly alert on each.
+                hit_ids=[*file_hit_ids, *(hit.id for hit in hits if hit.transaction_number == number)],
+            )
             for number, tx in enumerate(model.transactions, start=1)
         ],
         warnings=[f"{path} dropped: not in {request.message_version}" for path in rendered.dropped],
