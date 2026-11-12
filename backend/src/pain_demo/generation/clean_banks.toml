@@ -1,0 +1,1763 @@
+# The Clean Bank List (spec section 4): the real, non-sanctioned banks Generated Data draws agents and accounts from.
+# Everything above the United States marker is written by `just build-clean-banks` from schwifty's bank registry
+# (schwifty 2026.7.3) minus every bank matching the Entity Catalogue by BIC or name; do not edit it by hand.
+# The United States section is hand-maintained: schwifty has no US registry.
+
+[[banks]]
+country = "AT"
+bank_code = "18120"
+bic = "PABXATW1XXX"
+name = "A1 Bank AG"
+
+[[banks]]
+country = "AT"
+bank_code = "19140"
+bic = "GUTBATWWXXX"
+name = "Bank Gutmann Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "19380"
+bic = "DENEATW1XXX"
+name = "Bankhaus Denzel Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "19390"
+bic = "BMASAT21XXX"
+name = "BMW Austria Bank GmbH"
+
+[[banks]]
+country = "AT"
+bank_code = "19675"
+bic = "COBAATWXXXX"
+name = "Commerzbank AG Niederlassung Wien"
+
+[[banks]]
+country = "AT"
+bank_code = "20602"
+bic = "DOSPAT2DXXX"
+name = "Dornbirner Sparkasse Bank AG"
+
+[[banks]]
+country = "AT"
+bank_code = "51000"
+bic = "EHBBAT2EXXX"
+name = "HYPO-BANK BURGENLAND Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "19360"
+bic = "INGBATWWXXX"
+name = "ING Austria Branch of ING Bank N.V."
+
+[[banks]]
+country = "AT"
+bank_code = "19460"
+bic = "BLFLATWWXXX"
+name = "LGT Bank AG, Zweigniederlassung Österreich"
+
+[[banks]]
+country = "AT"
+bank_code = "15000"
+bic = "OBKLAT2LXXX"
+name = "Oberbank AG"
+
+[[banks]]
+country = "AT"
+bank_code = "19170"
+bic = "PABAAT2LXXX"
+name = "PARTNER BANK AKTIENGESELLSCHAFT"
+
+[[banks]]
+country = "AT"
+bank_code = "19930"
+bic = "CENBATWWXXX"
+name = "Raiffeisen Digital Bank AG"
+
+[[banks]]
+country = "AT"
+bank_code = "37438"
+bic = "RANMAT21XXX"
+name = "RAIFFEISENBANK HOHENEMS eGen"
+
+[[banks]]
+country = "AT"
+bank_code = "35000"
+bic = "RVSAAT2SXXX"
+name = "Raiffeisenverband Salzburg eGen"
+
+[[banks]]
+country = "AT"
+bank_code = "19200"
+bic = "SCHOATWWXXX"
+name = "Schoellerbank Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "20601"
+bic = "SPBRAT2BXXX"
+name = "Sparkasse Bregenz Bank Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "20330"
+bic = "SPPBAT21XXX"
+name = "Sparkasse Eferding-Peuerbach-Waizenkirchen"
+
+[[banks]]
+country = "AT"
+bank_code = "20219"
+bic = "SPHEAT21XXX"
+name = "Sparkasse Herzogenburg-Neulengbach Bank Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "20317"
+bic = "SPLAAT21XXX"
+name = "Sparkasse Lambach Bank Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "20326"
+bic = "SPNKAT21XXX"
+name = "Sparkasse Neuhofen Bank Aktiengesellschaft"
+
+[[banks]]
+country = "AT"
+bank_code = "20245"
+bic = "SPPOAT21XXX"
+name = "Sparkasse Pottenstein N.Ö."
+
+[[banks]]
+country = "AT"
+bank_code = "20333"
+bic = "SPRHAT21XXX"
+name = "Sparkasse Ried im Innkreis-Haag am Hausruck"
+
+[[banks]]
+country = "AT"
+bank_code = "43510"
+bic = "ABVRATW1XXX"
+name = "start:bausparkasse AG"
+
+[[banks]]
+country = "AT"
+bank_code = "11000"
+bic = "BKAUATWWXXX"
+name = "UniCredit Bank Austria AG"
+
+[[banks]]
+country = "AT"
+bank_code = "37434"
+bic = "RANJAT2BXXX"
+name = "Walser Raiffeisen Bank Aktiengesellschaft"
+
+[[banks]]
+country = "BE"
+bank_code = "509"
+bic = "ABNABE2AIPC"
+name = "ABN AMRO Bank N.V."
+
+[[banks]]
+country = "BE"
+bank_code = "116"
+bic = "ATMNBE32XXX"
+name = "Atlantic Money NV/SA"
+
+[[banks]]
+country = "BE"
+bank_code = "150"
+bic = "BCMCBEBB"
+name = "Bancontact Payconiq Company"
+
+[[banks]]
+country = "BE"
+bank_code = "605"
+bic = "BKCHBEBB"
+name = "Bank of China (Europe) SA Brussels Branch"
+
+[[banks]]
+country = "BE"
+bank_code = "664"
+bic = "BCDMBEBB"
+name = "Banque Chaabi du Maroc"
+
+[[banks]]
+country = "BE"
+bank_code = "968"
+bic = "ENIBBEBB"
+name = "Banque Eni"
+
+[[banks]]
+country = "BE"
+bank_code = "050"
+bic = "GKCCBEBB"
+name = "BELFIUS BANK"
+
+[[banks]]
+country = "BE"
+bank_code = "000"
+bic = "GEBABEBB"
+name = "BNP Paribas Fortis"
+
+[[banks]]
+country = "BE"
+bank_code = "675"
+bic = "BYBBBEBB"
+name = "Byblos Bank Europe"
+
+[[banks]]
+country = "BE"
+bank_code = "906"
+bic = "CEKVBE88"
+name = "Centrale Kredietverlening (C.K.V.)"
+
+[[banks]]
+country = "BE"
+bank_code = "586"
+bic = "CFFRBEB1"
+name = "Crédit Foncier de France"
+
+[[banks]]
+country = "BE"
+bank_code = "610"
+bic = "DEUTBEBE"
+name = "Deutsche Bank AG"
+
+[[banks]]
+country = "BE"
+bank_code = "926"
+bic = "EBPBBEB1"
+name = "Ebury Partners Belgium"
+
+[[banks]]
+country = "BE"
+bank_code = "687"
+bic = "MGTCBEBE"
+name = "Euroclear Bank"
+
+[[banks]]
+country = "BE"
+bank_code = "924"
+bic = "FMMSBEB1"
+name = "Fimaser"
+
+[[banks]]
+country = "BE"
+bank_code = "115"
+bic = "PAUIBE22"
+name = "HR Pay Solutions"
+
+[[banks]]
+country = "BE"
+bank_code = "607"
+bic = "ICBKBEBB"
+name = "Industrial and Commercial Bank of China (Europe)"
+
+[[banks]]
+country = "BE"
+bank_code = "400"
+bic = "KREDBEBB"
+name = "KBC Bank"
+
+[[banks]]
+country = "BE"
+bank_code = "876"
+bic = "MBWMBEBB"
+name = "MeDirect Bank S.A."
+
+[[banks]]
+country = "BE"
+bank_code = "100"
+bic = "NBBEBEBB203"
+name = "Nationale Bank van België"
+
+[[banks]]
+country = "BE"
+bank_code = "974"
+bic = "PESOBEB1"
+name = "PPS EU SA"
+
+[[banks]]
+country = "BE"
+bank_code = "176"
+bic = "BSCHBEBBRET"
+name = "Santander Consumer Finance – Succursale en Belgique/Bijkantoor in België"
+
+[[banks]]
+country = "BE"
+bank_code = "189"
+bic = "SMBCBEBB"
+name = "Sumitomo Mitsui Banking Corporation (SMBC)"
+
+[[banks]]
+country = "BE"
+bank_code = "643"
+bic = "BMPBBEBB"
+name = "UniCredit SA/NV"
+
+[[banks]]
+country = "BE"
+bank_code = "510"
+bic = "VAPEBE22"
+name = "VAN DE PUT & CO Privaatbankiers"
+
+[[banks]]
+country = "DE"
+bank_code = "39020000"
+bic = "AABSDE31XXX"
+name = "Aachener Bausparkasse"
+
+[[banks]]
+country = "DE"
+bank_code = "50012800"
+bic = "ALTEDEFAXXX"
+name = "ALTE LEIPZIGER Bauspar"
+
+[[banks]]
+country = "DE"
+bank_code = "50120600"
+bic = "COMMDEFFXXX"
+name = "Bank of Communications Frankfurt branch"
+
+[[banks]]
+country = "DE"
+bank_code = "79330111"
+bic = "FLESDEMMXXX"
+name = "Bankhaus Max Flessa"
+
+[[banks]]
+country = "DE"
+bank_code = "37010600"
+bic = "BNPADEFFXXX"
+name = "BNP Paribas Niederlassung Deutschland"
+
+[[banks]]
+country = "DE"
+bank_code = "10040010"
+bic = "COBADEFFXXX"
+name = "Commerzbank, CC SP"
+
+[[banks]]
+country = "DE"
+bank_code = "12030000"
+bic = "BYLADEM1001"
+name = "Deutsche Kreditbank Berlin"
+
+[[banks]]
+country = "DE"
+bank_code = "50228899"
+bic = "EFIBDEFFXXX"
+name = "FIB Frankfurt International Bank"
+
+[[banks]]
+country = "DE"
+bank_code = "30130200"
+bic = "UGBIDEDDXXX"
+name = "GarantiBank International"
+
+[[banks]]
+country = "DE"
+bank_code = "10017997"
+bic = "HOLVDEB1XXX"
+name = "Holvi Payment Services Zweigniederlassung Deutschland"
+
+[[banks]]
+country = "DE"
+bank_code = "16010300"
+bic = "ILBXDE8XXXX"
+name = "Investitionsbank des Landes Brandenburg"
+
+[[banks]]
+country = "DE"
+bank_code = "61150020"
+bic = "ESSLDE66XXX"
+name = "Kreissparkasse Esslingen-Nürtingen"
+
+[[banks]]
+country = "DE"
+bank_code = "10050500"
+bic = "LBSODEB1BLN"
+name = "LBS Landesbausparkasse NordOst"
+
+[[banks]]
+country = "DE"
+bank_code = "70010800"
+bic = "KHMIDEMMXXX"
+name = "Middle East Bank, Munich Branch"
+
+[[banks]]
+country = "DE"
+bank_code = "50110900"
+bic = "MNBIDEF1XXX"
+name = "Navy Federal Credit Union - Overseas Military Bank"
+
+[[banks]]
+country = "DE"
+bank_code = "50320000"
+bic = "OWHBDEFFXXX"
+name = "OWH"
+
+[[banks]]
+country = "DE"
+bank_code = "50330200"
+bic = "MHBFDEFFXXX"
+name = "Raisin Bank"
+
+[[banks]]
+country = "DE"
+bank_code = "52420300"
+bic = "SHBKDEFFXXX"
+name = "SHINHAN BANK EUROPE"
+
+[[banks]]
+country = "DE"
+bank_code = "35050000"
+bic = "DUISDE33XXX"
+name = "Sparkasse Duisburg"
+
+[[banks]]
+country = "DE"
+bank_code = "30550000"
+bic = "WELADEDNXXX"
+name = "Sparkasse Neuss"
+
+[[banks]]
+country = "DE"
+bank_code = "24150001"
+bic = "BRLADE21CUX"
+name = "Stadtsparkasse Cuxhaven"
+
+[[banks]]
+country = "DE"
+bank_code = "70012600"
+bic = "SUSKDEM1XXX"
+name = "Südtiroler Sparkasse Niederlassung München"
+
+[[banks]]
+country = "DE"
+bank_code = "37020400"
+bic = "TOBADE33XXX"
+name = "TOYOTA Kreditbank"
+
+[[banks]]
+country = "DE"
+bank_code = "70012300"
+bic = "VBANDEMMXXX"
+name = "V-Bank"
+
+[[banks]]
+country = "DE"
+bank_code = "64090100"
+bic = "VBRTDE6RXXX"
+name = "Volksbank Reutlingen -alt-"
+
+[[banks]]
+country = "ES"
+bank_code = "0241"
+bic = "PRDVESM1"
+name = "A&G BANCA PRIVADA, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "1462"
+bic = "ASSCESM1"
+name = "ASSOCIATES CAPITAL CORPORATION, PLC. S.E."
+
+[[banks]]
+country = "ES"
+bank_code = "1550"
+bic = "ETICES21"
+name = "BANCA POPOLARE ETICA SCPA, SUCURSAL EN ESPAÑA"
+
+[[banks]]
+country = "ES"
+bank_code = "0234"
+bic = "CCOCESMM"
+name = "BANCO CAMINOS, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "0091"
+bic = "ALACESM1"
+name = "BANCO DE ALBACETE, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "0041"
+bic = "CAIXESBB"
+name = "BANCO DE JEREZ, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "0155"
+bic = "BRASESMM"
+name = "BANCO DO BRASIL AG, SUCURSAL EN ESPAÑA"
+
+[[banks]]
+country = "ES"
+bank_code = "0488"
+bic = "BFASESMM"
+name = "BANCO FINANCIERO Y DE AHORROS, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "0121"
+bic = "OCBAESM1"
+name = "BANCO OCCIDENTAL, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "0125"
+bic = "BAOFESM1"
+name = "BANCOFAR, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "1525"
+bic = "BCDMESMM"
+name = "BANQUE CHAABI DU MAROC, S.E."
+
+[[banks]]
+country = "ES"
+bank_code = "0129"
+bic = "INALESM1"
+name = "BBVA BANCO DE FINANCIACION, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "0149"
+bic = "BNPAESMS"
+name = "BNP PARIBAS S.A., S.E."
+
+[[banks]]
+country = "ES"
+bank_code = "2035"
+bic = "CSPAES2L"
+name = "CAJA DE AHORROS Y MONTE DE PIEDAD DE LEON"
+
+[[banks]]
+country = "ES"
+bank_code = "0237"
+bic = "CSURES2C"
+name = "CAJASUR BANCO, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "1472"
+bic = "UCSSESM1"
+name = "CREDIT AGRICOLE LEASING & FACTORING, S.E."
+
+[[banks]]
+country = "ES"
+bank_code = "0019"
+bic = "DEUTESBB"
+name = "DEUTSCHE BANK, S.A.E."
+
+[[banks]]
+country = "ES"
+bank_code = "0239"
+bic = "EVOBESMM"
+name = "EVO BANCO S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "0162"
+bic = "MIDLESMM"
+name = "HSBC BANK PLC, S.E."
+
+[[banks]]
+country = "ES"
+bank_code = "1465"
+bic = "INGDESMM"
+name = "ING BANK N.V. SUCURSAL EN ESPAÑA"
+
+[[banks]]
+country = "ES"
+bank_code = "2006"
+bic = "UCJAES2M"
+name = "MONTE DE PIEDAD Y CAJA DE AHORROS DE ALMERIA"
+
+[[banks]]
+country = "ES"
+bank_code = "1464"
+bic = "NFFSESM1"
+name = "NEWCOURT FINANCE (FRANCE) S.N.C., S.E."
+
+[[banks]]
+country = "ES"
+bank_code = "0196"
+bic = "WELAESMM"
+name = "PORTIGON AG, S.E."
+
+[[banks]]
+country = "ES"
+bank_code = "0036"
+bic = "SABNESMM"
+name = "SANTANDER INVESTMENT, S.A."
+
+[[banks]]
+country = "ES"
+bank_code = "1491"
+bic = "TRIOESMM"
+name = "TRIODOS BANK, N.V., S.E."
+
+[[banks]]
+country = "FR"
+bank_code = "16338"
+bic = "AFOPFR21XXX"
+name = "AFONE PAIEMENT"
+
+[[banks]]
+country = "FR"
+bank_code = "12548"
+bic = "AXABFRPPXXX"
+name = "AXA BANQUE"
+
+[[banks]]
+country = "FR"
+bank_code = "12579"
+bic = "BPSMFRPPXXX"
+name = "BANQUE BCP"
+
+[[banks]]
+country = "FR"
+bank_code = "44149"
+bic = "ESCBFRPPXXX"
+name = "BANQUE D'ESCOMPTE"
+
+[[banks]]
+country = "FR"
+bank_code = "14628"
+bic = "GRCSFRP1XXX"
+name = "BANQUE DU GROUPE CASINO"
+
+[[banks]]
+country = "FR"
+bank_code = "11438"
+bic = "HRFRFRP1XXX"
+name = "BANQUE HOTTINGUER"
+
+[[banks]]
+country = "FR"
+bank_code = "17959"
+bic = "BAMYFR22"
+name = "BANQUE MICHEL INCHAUSPE"
+
+[[banks]]
+country = "FR"
+bank_code = "10468"
+bic = "RALPFR2GXXX"
+name = "BANQUE RHONE-ALPES"
+
+[[banks]]
+country = "FR"
+bank_code = "30004"
+bic = "BNPAFRPPIFN"
+name = "BNP PARIBAS"
+
+[[banks]]
+country = "FR"
+bank_code = "18359"
+bic = "CPMEFRPPXXX"
+name = "BPIFRANCE FINANCEMENT"
+
+[[banks]]
+country = "FR"
+bank_code = "16560"
+bic = "CCMOFR21XXX"
+name = "CAISSE DE CREDIT MUNICIPAL DE BORDEAUX"
+
+[[banks]]
+country = "FR"
+bank_code = "19870"
+bic = "SOAPFR22XXX"
+name = "CARREFOUR BANQUE"
+
+[[banks]]
+country = "FR"
+bank_code = "17629"
+bic = "COBAFRPXXXX"
+name = "COMMERZBANK"
+
+[[banks]]
+country = "FR"
+bank_code = "30076"
+bic = "NORDFRPP"
+name = "CREDIT DU NORD"
+
+[[banks]]
+country = "FR"
+bank_code = "10278"
+bic = "CMCIFR2A"
+name = "CREDIT MUTUEL"
+
+[[banks]]
+country = "FR"
+bank_code = "13580"
+bic = "FACFFRPP"
+name = "FACTOFRANCE"
+
+[[banks]]
+country = "FR"
+bank_code = "30056"
+bic = "CCFRFRPP"
+name = "HSBC FRANCE"
+
+[[banks]]
+country = "FR"
+bank_code = "30003"
+bic = "SOGEFRPPHPO"
+name = "Inter Europe Conseil SAS"
+
+[[banks]]
+country = "FR"
+bank_code = "16478"
+bic = "CRNPFRP1XXX"
+name = "LA BANQUE POSTALE LEASING ET FACTORING"
+
+[[banks]]
+country = "FR"
+bank_code = "13369"
+bic = "BMMMFR2AXXX"
+name = "MARTIN MAUREL"
+
+[[banks]]
+country = "FR"
+bank_code = "30478"
+bic = "MONTFRPPXXX"
+name = "MONTE PASCHI BANQUE SA"
+
+[[banks]]
+country = "FR"
+bank_code = "17448"
+bic = "SFPEFRP2"
+name = "OKALI"
+
+[[banks]]
+country = "FR"
+bank_code = "21833"
+bic = "PRNSFRP1XXX"
+name = "PREPAID FINANCIAL SERVICES LTD"
+
+[[banks]]
+country = "FR"
+bank_code = "17418"
+bic = "SNNNFR22"
+name = "SHINE"
+
+[[banks]]
+country = "FR"
+bank_code = "21570"
+bic = "STFEFR21XXX"
+name = "STE FIRE DE LA NEF"
+
+[[banks]]
+country = "GB"
+bank_code = "FTSB"
+bic = "FTSBGB2L"
+name = "ABN AMRO BANK N.V. UK BRANCH (FORMELY KNOWN AS FORTIS BANK (NEDERLAND) N.V. LONDON)"
+
+[[banks]]
+country = "GB"
+bank_code = "BOFA"
+bic = "BOFAGB22VAM"
+name = "BANK OF AMERICA, N.A. LONDON"
+
+[[banks]]
+country = "GB"
+bank_code = "BARC"
+bic = "BARCGB22XXX"
+name = "BARCLAYS BANK PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "BUKB"
+bic = "BUKBGB22"
+name = "BARCLAYS BANK UK PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "CLJU"
+bic = "CLJUGB21XXX"
+name = "Clear Junction Limited"
+
+[[banks]]
+country = "GB"
+bank_code = "CLYD"
+bic = "CLYDGB2S"
+name = "CLYDESDALE BANK PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "COUT"
+bic = "COUTGB22XXX"
+name = "COUTTS & COMPANY"
+
+[[banks]]
+country = "GB"
+bank_code = "DEUT"
+bic = "DEUTGB2LXXX"
+name = "DEUTSCHE BANK AG"
+
+[[banks]]
+country = "GB"
+bank_code = "HLFX"
+bic = "HLFXGB21N85"
+name = "HALIFAX (A TRADING NAME OF BANK OF SCOTLAND PLC)"
+
+[[banks]]
+country = "GB"
+bank_code = "MIDL"
+bic = "MIDLGB22XXX"
+name = "HSBC BANK PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "CHAS"
+bic = "CHASGB2LXXX"
+name = "JPMORGAN CHASE BANK, N.A"
+
+[[banks]]
+country = "GB"
+bank_code = "BOFS"
+bic = "LOYDGB2L"
+name = "LLOYDS BANK PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "MONZ"
+bic = "MONZGB2LXXX"
+name = "MONZO BANK LIMITED"
+
+[[banks]]
+country = "GB"
+bank_code = "NWBK"
+bic = "NWBKGB2LXXX"
+name = "NATIONAL WESTMINSTER BANK PUBLIC LIMITED COMPANY"
+
+[[banks]]
+country = "GB"
+bank_code = "DABA"
+bic = "DABAGB2B231"
+name = "NORTHERN BANK LIMITED T/A DANSKE BA"
+
+[[banks]]
+country = "GB"
+bank_code = "VEBA"
+bic = "VEBAGB2LXXX"
+name = "NOVEBA LIMITED"
+
+[[banks]]
+country = "GB"
+bank_code = "PAED"
+bic = "PAEDGB21XXX"
+name = "PAYSEND PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "PRTC"
+bic = "PRTCGB21"
+name = "PREPAY TECHNOLOGIES LIMITED"
+
+[[banks]]
+country = "GB"
+bank_code = "REVO"
+bic = "REVOGB21XXX"
+name = "REVOLUT LTD"
+
+[[banks]]
+country = "GB"
+bank_code = "ABBY"
+bic = "ABBYGB2LXXX"
+name = "SANTANDER UK PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "SRLG"
+bic = "SRLGGB3L"
+name = "STARLING BANK LIMITED"
+
+[[banks]]
+country = "GB"
+bank_code = "CPBK"
+bic = "CPBKGB21CAR"
+name = "THE CO-OPERATIVE BANK PLC"
+
+[[banks]]
+country = "GB"
+bank_code = "RBOS"
+bic = "RBOSGB2LXXX"
+name = "THE ROYAL BANK OF SCOTLAND PUBLIC LIMITED COMPANY"
+
+[[banks]]
+country = "GB"
+bank_code = "TRWI"
+bic = "TRWIGB22"
+name = "TRANSFERWISE LIMITED"
+
+[[banks]]
+country = "GB"
+bank_code = "YORK"
+bic = "YORKGB22XXX"
+name = "VIRGIN MONEY (31 CLYDESDALE BANK)"
+
+[[banks]]
+country = "IE"
+bank_code = "AIBK"
+bic = "AIBKIE2DXXX"
+name = "Allied Irish Banks, p.l.c."
+
+[[banks]]
+country = "IE"
+bank_code = "BOFA"
+bic = "BOFAIE3XXXX"
+name = "Bank of America Europe Designated Activity Company"
+
+[[banks]]
+country = "IE"
+bank_code = "BOFI"
+bic = "BOFIIE2D"
+name = "Bank Of Ireland"
+
+[[banks]]
+country = "IE"
+bank_code = "BOFM"
+bic = "BOFMIE2DXXX"
+name = "Bank of Montreal"
+
+[[banks]]
+country = "IE"
+bank_code = "BARC"
+bic = "BARCIE2DXXX"
+name = "Barclays Bank Ireland PLC"
+
+[[banks]]
+country = "IE"
+bank_code = "BUNQ"
+bic = "BUNQIE22XXX"
+name = "bunq B.V."
+
+[[banks]]
+country = "IE"
+bank_code = "IRCE"
+bic = "IRCEIE2DXXX"
+name = "Central Bank of Ireland"
+
+[[banks]]
+country = "IE"
+bank_code = "CITI"
+bic = "CITIIE2XXXX"
+name = "Citibank Europe plc"
+
+[[banks]]
+country = "IE"
+bank_code = "DBIL"
+bic = "DBILIE2DXXX"
+name = "Dell Bank International Designated Activity Company"
+
+[[banks]]
+country = "IE"
+bank_code = "EBSI"
+bic = "EBSIIE2DXXX"
+name = "EBS d.a.c."
+
+[[banks]]
+country = "IE"
+bank_code = "USBK"
+bic = "USBKIE22XXX"
+name = "Elavon Financial Services Designated Activity Company"
+
+[[banks]]
+country = "IE"
+bank_code = "HEIN"
+bic = "HEINIE21XXX"
+name = "Hewlett-Packard International Bank Designated Activity Company"
+
+[[banks]]
+country = "IE"
+bank_code = "BCIT"
+bic = "BCITIE2DXXX"
+name = "Intesa Sanpaolo Bank Ireland P.L.C."
+
+[[banks]]
+country = "IE"
+bank_code = "IVES"
+bic = "IVESIE2DXXX"
+name = "Investec Europe Limited"
+
+[[banks]]
+country = "IE"
+bank_code = "CHAS"
+bic = "CHASIE4L"
+name = "J.P. Morgan Bank Luxembourg S.A. Dublin Branch"
+
+[[banks]]
+country = "IE"
+bank_code = "JPMB"
+bic = "JPMBIE2DXXX"
+name = "JP Morgan Bank Dublin plc"
+
+[[banks]]
+country = "IE"
+bank_code = "ICON"
+bic = "ICONIE2DXXX"
+name = "KBC Bank Ireland plc"
+
+[[banks]]
+country = "IE"
+bank_code = "MODR"
+bic = "MODRIE22"
+name = "Modulr Finance B.V."
+
+[[banks]]
+country = "IE"
+bank_code = "PPSE"
+bic = "PPSEIE22XXX"
+name = "Paysafe Prepaid Services Limited"
+
+[[banks]]
+country = "IE"
+bank_code = "IPBS"
+bic = "IPBSIE2DXXX"
+name = "Permanent TSB Group Holdings plc"
+
+[[banks]]
+country = "IE"
+bank_code = "REVO"
+bic = "REVOIE23"
+name = "Revolut Bank UAB"
+
+[[banks]]
+country = "IE"
+bank_code = "NOSC"
+bic = "NOSCIE2XXXX"
+name = "Scotiabank (Ireland) Designated Activity Company"
+
+[[banks]]
+country = "IE"
+bank_code = "SUMU"
+bic = "SUMUIE22"
+name = "SumUp Limited"
+
+[[banks]]
+country = "IE"
+bank_code = "ULSB"
+bic = "ULSBIE2DXXX"
+name = "Ulster Bank Ireland DAC"
+
+[[banks]]
+country = "IE"
+bank_code = "UNCR"
+bic = "UNCRIE2DXXX"
+name = "UniCredit Bank Ireland plc"
+
+[[banks]]
+country = "IT"
+bank_code = "03097"
+bic = "AARBITR1"
+name = "AAREAL BANK AG"
+
+[[banks]]
+country = "IT"
+bank_code = "03045"
+bic = "AKROITMM"
+name = "BANCA AKROS S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "03110"
+bic = "FARBIT22"
+name = "BANCA CREDIFARMA S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "05142"
+bic = "BCPTITNN"
+name = "\"BANCA DI CREDITO POPOLARE\", SOCIETA' COOPERATIVA PER AZIONI"
+
+[[banks]]
+country = "IT"
+bank_code = "03075"
+bic = "BGENIT2T"
+name = "BANCA GENERALI SPA"
+
+[[banks]]
+country = "IT"
+bank_code = "07090"
+bic = "ICRAITR1"
+name = "BANCA MALATESTIANA - CREDITO COOPERATIVO - SOCIETA' COOPERATIVA"
+
+[[banks]]
+country = "IT"
+bank_code = "05297"
+bic = "BPFRIT31"
+name = "BANCA POPOLARE DEL FRUSINATE SOCIETA' COOPERATIVA PER AZIONI"
+
+[[banks]]
+country = "IT"
+bank_code = "05232"
+bic = "BLJAIT3L"
+name = "BANCA POPOLARE DI LAJATICO SOCIETA' COOPERATIVA PER AZIONI"
+
+[[banks]]
+country = "IT"
+bank_code = "03025"
+bic = "PROFITMM"
+name = "BANCA PROFILO SPA"
+
+[[banks]]
+country = "IT"
+bank_code = "03158"
+bic = "BSISITMM"
+name = "BANCA SISTEMA S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "05584"
+bic = "BAPPIT22"
+name = "BANCO BPM SPA"
+
+[[banks]]
+country = "IT"
+bank_code = "03387"
+bic = "BCDMITM1"
+name = "BANQUE CHAABI DU MAROC - IN ABBREVIATO, B.C.D.M."
+
+[[banks]]
+country = "IT"
+bank_code = "03647"
+bic = "BUNQITM2"
+name = "BUNQ B.V."
+
+[[banks]]
+country = "IT"
+bank_code = "03301"
+bic = "IMCOIT2A"
+name = "CASSA DEI RISPARMI DI MILANO E DELLA LOMBARDIA S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "03488"
+bic = "LOMCITMM"
+name = "CASSA LOMBARDA - S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "06045"
+bic = "CRBZIT2B"
+name = "CR DI BOLZANO SPA"
+
+[[banks]]
+country = "IT"
+bank_code = "03032"
+bic = "BACRIT21"
+name = "CREDITO EMILIANO S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "03006"
+bic = "ARABITRR"
+name = "EUROPE ARAB BANK PLC - MILAN BRANCH"
+
+[[banks]]
+country = "IT"
+bank_code = "03151"
+bic = "HYPTIT2B"
+name = "HYPO TIROL BANK ITALIA S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "01010"
+bic = "BCITITMM"
+name = "Intesa Sanpaolo S.p.A."
+
+[[banks]]
+country = "IT"
+bank_code = "10631"
+bic = "BAMEITMM"
+name = "MEDIOBANCA - BANCA DI CREDITO FINANZIARIO S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "03259"
+bic = "CIPBITMM"
+name = "NORDEST BANCA S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "05652"
+bic = "SFSPIT21"
+name = "SANFELICE 1893 BANCA POPOLARE SOCIETA' COOPERATIVA PER AZIONI"
+
+[[banks]]
+country = "IT"
+bank_code = "03273"
+bic = "CRDRIT2F"
+name = "SOLUTION BANK S.P.A."
+
+[[banks]]
+country = "IT"
+bank_code = "10636"
+bic = "TWOSITMM"
+name = "UNICREDIT BANCA MEDIOCREDITO S.P.A."
+
+[[banks]]
+country = "NL"
+bank_code = "ABNA"
+bic = "ABNANL2A"
+name = "ABN AMRO BANK N.V."
+
+[[banks]]
+country = "NL"
+bank_code = "ADYB"
+bic = "ADYBNL2A"
+name = "ADYEN"
+
+[[banks]]
+country = "NL"
+bank_code = "ANDL"
+bic = "ANDLNL2A"
+name = "ANADOLUBANK"
+
+[[banks]]
+country = "NL"
+bank_code = "BNGH"
+bic = "BNGHNL2G"
+name = "BANK NEDERLANDSE GEMEENTEN"
+
+[[banks]]
+country = "NL"
+bank_code = "BOFS"
+bic = "BOFSNL21002"
+name = "BANK OF SCOTLAND, AMSTERDAM"
+
+[[banks]]
+country = "NL"
+bank_code = "BINK"
+bic = "BINKNL21"
+name = "BINCKBANK, PROF"
+
+[[banks]]
+country = "NL"
+bank_code = "BNPA"
+bic = "BNPANL2A"
+name = "BNP PARIBAS"
+
+[[banks]]
+country = "NL"
+bank_code = "ISAE"
+bic = "ISAENL2A"
+name = "CACEIS BANK, Netherlands Branch"
+
+[[banks]]
+country = "NL"
+bank_code = "CITI"
+bic = "CITINL2X"
+name = "CITIBANK INTERNATIONAL"
+
+[[banks]]
+country = "NL"
+bank_code = "FBHL"
+bic = "FBHLNL2A"
+name = "CREDIT EUROPE BANK"
+
+[[banks]]
+country = "NL"
+bank_code = "DEUT"
+bic = "DEUTNL2A"
+name = "DEUTSCHE BANK (bij alle SEPA-transacties)"
+
+[[banks]]
+country = "NL"
+bank_code = "FNOM"
+bic = "FNOMNL22"
+name = "FINOM Payments B.V."
+
+[[banks]]
+country = "NL"
+bank_code = "UGBI"
+bic = "UGBINL2A"
+name = "GARANTIBANK INTERNATIONAL"
+
+[[banks]]
+country = "NL"
+bank_code = "ICEP"
+bic = "ICEPNL21"
+name = "ICEPAY"
+
+[[banks]]
+country = "NL"
+bank_code = "GILL"
+bic = "GILLNL2A"
+name = "INSINGERGILISSEN"
+
+[[banks]]
+country = "NL"
+bank_code = "KRED"
+bic = "KREDNL2X"
+name = "KBC BANK"
+
+[[banks]]
+country = "NL"
+bank_code = "LPLN"
+bic = "LPLNNL2F"
+name = "LEASEPLAN CORPORATION"
+
+[[banks]]
+country = "NL"
+bank_code = "MHCB"
+bic = "MHCBNL2A"
+name = "MIZUHO BANK EUROPE NV"
+
+[[banks]]
+country = "NL"
+bank_code = "NNBA"
+bic = "NNBANL2G"
+name = "NATIONALE-NEDERLANDEN BANK"
+
+[[banks]]
+country = "NL"
+bank_code = "DELE"
+bic = "DELENL22"
+name = "OYENS & VAN EEGHEN - part of Delen Private Bank"
+
+[[banks]]
+country = "NL"
+bank_code = "REVO"
+bic = "REVONL22"
+name = "REVOLUT BANK UAB"
+
+[[banks]]
+country = "NL"
+bank_code = "SOGE"
+bic = "SOGENL2A"
+name = "SOCIETE GENERALE"
+
+[[banks]]
+country = "NL"
+bank_code = "SWNB"
+bic = "SWNBNL22"
+name = "SWAN"
+
+[[banks]]
+country = "NL"
+bank_code = "VTPS"
+bic = "VTPSNL2R"
+name = "VITESSE PSP"
+
+[[banks]]
+country = "NL"
+bank_code = "WOFT"
+bic = "WOFTNL22"
+name = "World First Netherlands B.V."
+
+[[banks]]
+country = "PL"
+bank_code = "81380008"
+bic = "SPAYPLP1XXX"
+name = "ABS Bank Spółdzielczy"
+
+[[banks]]
+country = "PL"
+bank_code = "10600005"
+bic = "BPHKPLPKXXX"
+name = "Bank BPH Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "11600006"
+bic = "BIGBPLPWXXX"
+name = "Bank Millennium Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "13200006"
+bic = "POCZPLP4XXX"
+name = "Bank Pocztowy Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "85890006"
+bic = "SRZKPLPKXXX"
+name = "Bank Spółdzielczy Rzemiosła w Krakowie"
+
+[[banks]]
+country = "PL"
+bank_code = "86220006"
+bic = "SPBUPLP1XXX"
+name = "Bank Spółdzielczy w Bieczu"
+
+[[banks]]
+country = "PL"
+bank_code = "89071063"
+bic = "SPLYPLP1XXX"
+name = "Bank Spółdzielczy w Leśnicy"
+
+[[banks]]
+country = "PL"
+bank_code = "88080006"
+bic = "SPZLPLP1XXX"
+name = "Bank Spółdzielczy w Mszanie Dolnej"
+
+[[banks]]
+country = "PL"
+bank_code = "81261020"
+bic = "SPOCPLP1XXX"
+name = "Bank Spółdzielczy w Skoczowie"
+
+[[banks]]
+country = "PL"
+bank_code = "16000003"
+bic = "PPABPLPKXXX"
+name = "BNP Paribas Bank Polska Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "23900004"
+bic = "CAIXPLPWXXX"
+name = "CAIXABANK, S.A. (SPÓŁKA AKCYJNA) ODDZIAŁ W POLSCE"
+
+[[banks]]
+country = "PL"
+bank_code = "19400008"
+bic = "AGRIPLPRXXX"
+name = "Credit Agricole Bank Polska Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "18800009"
+bic = "DEUTPLPXXXX"
+name = "Deutsche Bank Polska Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "10900004"
+bic = "WBKPPLPPXXX"
+name = "Erste Bank Polska Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "29700004"
+bic = "IBKOPLPW"
+name = "IBK Bank Polska Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "26200006"
+bic = "ICBKPLPWXXX"
+name = "Industrial and Commercial Bank of China (Europe) S.A. (Spółka Akcyjna) Oddział w Polsce"
+
+[[banks]]
+country = "PL"
+bank_code = "84410001"
+bic = "KRSPPLPKXXX"
+name = "Krakowski Bank Spółdzielczy"
+
+[[banks]]
+country = "PL"
+bank_code = "80091062"
+bic = "MAPNPLP1XXX"
+name = "Mazowiecki Bank Spółdzielczy w Łomiankach"
+
+[[banks]]
+country = "PL"
+bank_code = "11400000"
+bic = "BREXPLPWXXX"
+name = "mBank Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "18700006"
+bic = "NESBPLPWXXX"
+name = "Nest Bank Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "16800007"
+bic = "IVSEPLPPXXX"
+name = "PLUS BANK Spółka Akcyjna"
+
+[[banks]]
+country = "PL"
+bank_code = "27900008"
+bic = "RCBWPLPW"
+name = "Raiffeisen Bank International AG (Spółka Akcyjna) Oddział w Polsce"
+
+[[banks]]
+country = "PL"
+bank_code = "23700008"
+bic = "ESSEPLPWXXX"
+name = "Skandinaviska Enskilda Banken AB (Spółka Akcyjna) - Oddział w Polsce"
+
+[[banks]]
+country = "PL"
+bank_code = "70030006"
+bic = "SKOKPLPWXXX"
+name = "Spółdzielcza Kasa Oszczędnościowo-Kredytowa ENERGIA"
+
+[[banks]]
+country = "PL"
+bank_code = "29100006"
+bic = "BMPBPLPPXXX"
+name = "UniCredit S.A. Spółka Akcyjna Oddział w Polsce"
+
+[[banks]]
+country = "PT"
+bank_code = "0170"
+bic = "CAGLPTPLXXX"
+name = "ABANCA CORPORACIÓN BANCARIA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0023"
+bic = "ACTVPTPLXXX"
+name = "BANCO ACTIVOBANK, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0079"
+bic = "BPNPPTPLXXX"
+name = "BANCO BIC PORTUGUÊS, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0010"
+bic = "BBPIPTPL"
+name = "BANCO BPI S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0193"
+bic = "CTTVPTPLXXX"
+name = "BANCO CTT, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0275"
+bic = "BSABPTPLXXX"
+name = "BANCO DE SABADELL, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0086"
+bic = "EFISPTPLXXX"
+name = "BANCO EFISA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0235"
+bic = "BLJCPTPTXXX"
+name = "BANCO L.J. CARREGOSA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0064"
+bic = "BPGPPTPLXXX"
+name = "BANCO PORTUGUÊS DE GESTÃO S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0018"
+bic = "TOTAPTPL"
+name = "BANCO SANTANDER TOTTA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0547"
+bic = "BAUUPTP1XXX"
+name = "BANKINTER GESTÃO DE ATIVOS, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0032"
+bic = "BARCPTPCXXX"
+name = "BARCLAYS BANK IRELAND PLC"
+
+[[banks]]
+country = "PT"
+bank_code = "0063"
+bic = "BNFIPTPLXXX"
+name = "BISON BANK, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0034"
+bic = "BNPAPTPLXXX"
+name = "BNP PARIBAS"
+
+[[banks]]
+country = "PT"
+bank_code = "0045"
+bic = "CCCMPTPLXXX"
+name = "CAIXA CENTRAL DE CRÉDITO AGRÍCOLA MÚTUO"
+
+[[banks]]
+country = "PT"
+bank_code = "0059"
+bic = "CEMAPTP2XXX"
+name = "CAIXA ECONÓMICA DA MISERICÓRDIA DE ANGRA DO HEROÍSMO, CAIXA ECONÓMICA BANCÁRIA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0036"
+bic = "MPIOPTPL"
+name = "CAIXA ECONÓMICA MONTEPIO GERAL, CAIXA ECONÓMICA BANCÁRIA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0169"
+bic = "CITIPTPXXXX"
+name = "CITIBANK EUROPE PLC"
+
+[[banks]]
+country = "PT"
+bank_code = "0225"
+bic = "DBRCPTP1XXX"
+name = "DIF BROKER - SOCIEDADE FINANCEIRA DE CORRETAGEM, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0816"
+bic = "EFIIPTP1XXX"
+name = "GNB - SOCIEDADE GESTORA DE FUNDOS DE INVESTIMENTO IMOBILIÁRIO, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0313"
+bic = "GBSCPTP1XXX"
+name = "GOLDEN BROKER - SOCIEDADE CORRETORA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0500"
+bic = "BBRUPTPLXXX"
+name = "ING BANK NV"
+
+[[banks]]
+country = "PT"
+bank_code = "0407"
+bic = "FIVRPTP1XXX"
+name = "MONTEPIO VALOR - SOCIEDADE GESTORA DE FUNDOS DE INVESTIMENTO, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0777"
+bic = "FICCPTP1XXX"
+name = "PATRIS - SOCIEDADE CORRETORA, S.A."
+
+[[banks]]
+country = "PT"
+bank_code = "0260"
+bic = "CCIEPTPXXXX"
+name = "ST. GALLER KANTONALBANK, AG"
+
+# --- United States (hand-maintained; each entry also carries its ABA routing number) ---
+# There is no US registry in schwifty, so these are curated by hand: large national banks, each with its head-office
+# SWIFT BIC and the ABA routing number used for `Othr/Id` accounts (spec 4.5). Check them with `just verify-clean-banks`.
+
+[[banks]]
+country = "US"
+bank_code = "021000021"
+bic = "CHASUS33"
+name = "JPMorgan Chase Bank, N.A."
+routing_number = "021000021"
+
+[[banks]]
+country = "US"
+bank_code = "026009593"
+bic = "BOFAUS3N"
+name = "Bank of America, N.A."
+routing_number = "026009593"
+
+[[banks]]
+country = "US"
+bank_code = "121000248"
+bic = "WFBIUS6S"
+name = "Wells Fargo Bank, N.A."
+routing_number = "121000248"
+
+[[banks]]
+country = "US"
+bank_code = "021000089"
+bic = "CITIUS33"
+name = "Citibank, N.A."
+routing_number = "021000089"
+
+[[banks]]
+country = "US"
+bank_code = "091000022"
+bic = "USBKUS44"
+name = "U.S. Bank National Association"
+routing_number = "091000022"
+
+[[banks]]
+country = "US"
+bank_code = "043000096"
+bic = "PNCCUS33"
+name = "PNC Bank, N.A."
+routing_number = "043000096"
+
+[[banks]]
+country = "US"
+bank_code = "053101121"
+bic = "BRBTUS33"
+name = "Truist Bank"
+routing_number = "053101121"
+
+[[banks]]
+country = "US"
+bank_code = "031101266"
+bic = "NRTHUS33"
+name = "TD Bank, N.A."
+routing_number = "031101266"
+
+[[banks]]
+country = "US"
+bank_code = "021001088"
+bic = "MRMDUS33"
+name = "HSBC Bank USA, N.A."
+routing_number = "021001088"
+
+[[banks]]
+country = "US"
+bank_code = "042000314"
+bic = "FTBCUS3C"
+name = "Fifth Third Bank, N.A."
+routing_number = "042000314"
+
+[[banks]]
+country = "US"
+bank_code = "041001039"
+bic = "KEYBUS33"
+name = "KeyBank National Association"
+routing_number = "041001039"
+
+[[banks]]
+country = "US"
+bank_code = "011500120"
+bic = "CTZIUS33"
+name = "Citizens Bank, N.A."
+routing_number = "011500120"
+
+[[banks]]
+country = "US"
+bank_code = "062000019"
+bic = "UPNBUS44"
+name = "Regions Bank"
+routing_number = "062000019"
+
+[[banks]]
+country = "US"
+bank_code = "044000024"
+bic = "HUNTUS33"
+name = "The Huntington National Bank"
+routing_number = "044000024"
+
+[[banks]]
+country = "US"
+bank_code = "021000018"
+bic = "IRVTUS3N"
+name = "The Bank of New York Mellon"
+routing_number = "021000018"

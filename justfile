@@ -68,6 +68,11 @@ openapi:
 openapi-check:
     uv run python -m pain_demo.openapi --check
 
+# Rewrite the IBAN-country section of the Clean Bank List from schwifty's registry minus catalogue matches; review the diff
+[working-directory: 'backend']
+build-clean-banks:
+    uv run python -m pain_demo.generation.build_clean_banks
+
 # --- frontend ---
 
 [working-directory: 'frontend']
