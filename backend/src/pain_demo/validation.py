@@ -3,7 +3,6 @@
 import hashlib
 import itertools
 import re
-import threading
 from enum import StrEnum
 
 from lxml import etree
@@ -17,7 +16,6 @@ _PARSER_POSITION = re.compile(r", line \d+, column \d+$")
 MAX_PROBLEMS = 100
 MAX_ELEMENTS = 500_000
 """Above the richest realistic 10 MB pain.001 (about 400,000 elements) and well below a flood (about 1.3 million)."""
-_SCHEMA_LOCKS: dict[str, threading.Lock] = {version: threading.Lock() for version in MESSAGE_VERSIONS}
 _ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
 _EXPECTED = re.compile(r"Expected is (?:one of )?\( (.*) \)")
 _PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
@@ -137,13 +135,12 @@ def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
 
 
 def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
-    schema = renderer.schema(version)
-    # One compiled schema is shared by every request thread, and its error log is per schema, not per call.
-    with _SCHEMA_LOCKS[version]:
-        schema.validate(root)
-        # shortcut: lxml offers no error cap, so libxml2 logs every XSD error with a sibling-counting path; 40k
-        # errors (a 6 MB file of bad transactions) take about 10 s under this lock. Cap elements up front if that bites.
-        return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
+    schema = renderer.schema(version)  # this thread's own, so concurrent uploads never wait for each other
+    schema.validate(root)
+    # shortcut: lxml offers no error cap and records every XSD error with a path that walks the preceding siblings,
+    # so a hostile file under MAX_ELEMENTS can take tens of seconds, on its own worker thread only. Bound the
+    # validation itself (a killable worker process or a time budget) if that bites.
+    return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
 
 
 def _path(find: etree.XPathDocumentEvaluator, lxml_path: str) -> str | None:

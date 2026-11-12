@@ -3,6 +3,7 @@
 import hashlib
 import time
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -449,3 +450,18 @@ def test_a_message_at_the_element_limit_is_validated(client: TestClient) -> None
     report = client.post(URL, content=with_ustrd(ELEMENT_LIMIT - 24, b"<Ustrd>x</Ustrd>"), headers=XML).json()
 
     assert (report["valid"], report["problems"], report["transaction_count"]) == (True, [], 1)
+
+
+def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(client: TestClient) -> None:
+    slow = with_ustrd(50_000, b"<Ustrd/>")  # 50,000 sibling XSD errors: a couple of seconds
+
+    with ThreadPoolExecutor(1) as pool:
+        slow_report = pool.submit(client.post, URL, content=slow, headers=XML)
+        time.sleep(0.5)  # let the slow upload reach the XSD layer
+        started = time.perf_counter()
+        quick = client.post(URL, content=pain001(), headers=XML)
+        waited = time.perf_counter() - started
+
+        assert quick.json()["valid"] is True
+        assert waited < 1  # a few ms on its own; waiting for the slow one would take over 1.5 s
+        assert slow_report.result().json()["truncated"] is True

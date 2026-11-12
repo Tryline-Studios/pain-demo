@@ -5,9 +5,9 @@ explicitly, and returns the XML bytes plus the elements the version fitter dropp
 in a worker thread.
 """
 
-import functools
 import importlib.resources
 import re
+import threading
 from dataclasses import dataclass
 from typing import Any
 
@@ -42,11 +42,19 @@ class RenderResult:
     """Element paths the version fitter dropped, deduplicated, in first-seen order. None carries a Placement."""
 
 
-@functools.cache
+_THREAD = threading.local()
+
+
 def schema(message_version: str) -> etree.XMLSchema:
-    """pain001's bundled XSD for a Message Version (pain.001.001.03 to .13), compiled once and reused."""
-    xsd = importlib.resources.files(pain001) / "templates" / message_version / f"{message_version}.xsd"
-    return etree.XMLSchema(etree.fromstring(xsd.read_bytes()))
+    """pain001's bundled XSD for a Message Version (pain.001.001.03 to .13), compiled once per thread and reused.
+
+    An XMLSchema's error log belongs to the schema, not the call, so threads never share one; compiling takes ms.
+    """
+    schemas: dict[str, etree.XMLSchema] = _THREAD.__dict__.setdefault("schemas", {})
+    if message_version not in schemas:
+        xsd = importlib.resources.files(pain001) / "templates" / message_version / f"{message_version}.xsd"
+        schemas[message_version] = etree.XMLSchema(etree.fromstring(xsd.read_bytes()))
+    return schemas[message_version]
 
 
 def placement_drops(dropped: list[str]) -> list[str]:
