@@ -22,6 +22,7 @@ from pain_demo.settings import Settings
 CATALOGUE = load_catalogue()
 CLEAN_BICS = {bank.bic for bank in load_clean_banks(CATALOGUE).banks}
 PARTIES = {"debtor", "creditor", "ultimate_debtor", "ultimate_creditor"}
+NOT_AGENTS = {*PARTIES, "remittance"}
 FIXED = {"created_at": "2026-11-12T09:30:00Z", "execution_date": "2026-11-13"}
 PMT_INF = "/Document/CstmrCdtTrfInitn/PmtInf"
 
@@ -132,7 +133,7 @@ def test_hits_are_eligible_one_per_transaction_and_distinct_until_the_catalogue_
     assert len(CATALOGUE.entities) == 50
     assert set(Counter(hit["entity"]["id"] for hit in hits).values()) == {2, 3}
     for hit in hits:
-        assert hit["entity"]["entity_type"] == "bank" or hit["placement"] in PARTIES, hit
+        assert hit["entity"]["entity_type"] == "bank" or hit["placement"] in NOT_AGENTS, hit
 
 
 def test_hits_are_ordered_file_level_first_then_by_transaction(full: dict) -> None:
@@ -278,7 +279,7 @@ def test_a_sanctioned_debtors_account_is_always_in_its_listing_country(client: T
 
 def test_a_sanctioned_bank_as_agent_carries_its_bic_lei_and_address_and_services_an_account_at_home(full: dict) -> None:
     document = tree(full)
-    agents = [hit for hit in full["answer_key"]["hits"] if hit["placement"] not in PARTIES]
+    agents = [hit for hit in full["answer_key"]["hits"] if hit["placement"] not in NOT_AGENTS]
     assert {hit["placement"] for hit in agents} >= {"debtor_agent", "creditor_agent", "intermediary_agent_1"}
     # A sanctioned Debtor elsewhere keeps its own account (spec 6.9).
     (debtor,) = [hit for hit in full["answer_key"]["hits"] if hit["placement"] == "debtor"]
@@ -337,7 +338,7 @@ def test_a_bank_without_a_catalogue_bic_is_placed_by_name_only(tmp_path: Path) -
         envelope = generate(client, seed="no-bic", transaction_count=5, hit_count=7, message_version="pain.001.001.13")
 
     document = tree(envelope)
-    agents = [hit for hit in envelope["answer_key"]["hits"] if hit["placement"] not in PARTIES]
+    agents = [hit for hit in envelope["answer_key"]["hits"] if hit["placement"] not in NOT_AGENTS]
     assert agents
     for hit in agents:
         assert (hit["rendering_mode"], hit["bic"]) == ("name_only", None)
@@ -423,15 +424,22 @@ def test_placements_and_name_variants_follow_the_spec_weights(client: TestClient
         return hit["name"]["variant"] if field == "variant" else hit[field]
 
     # Debtor and Debtor Agent fill once per file and are redrawn after, so compare transaction-level shares only:
-    # parties 35/15/15 over 65; Banks 40 and 30 over 40 + 30 + 10 * 65/75 for their transaction-level party roles.
+    # parties 35/25/15/15 over 90; Banks 40, 30 and 5 over 40 + 30 + 5 + 10 * 65/75 for their transaction-level party
+    # roles.
     transaction_level = [h for h in hits if h["scope"] == "transaction"]
     parties = shares([h for h in transaction_level if h["entity"]["entity_type"] != "bank"], "placement")
-    expected_parties = {"creditor": 35 / 65, "ultimate_creditor": 15 / 65, "ultimate_debtor": 15 / 65}
+    expected_parties = {
+        "creditor": 35 / 90,
+        "remittance": 25 / 90,
+        "ultimate_creditor": 15 / 90,
+        "ultimate_debtor": 15 / 90,
+    }
     for placement, share in expected_parties.items():
         assert parties[placement] == pytest.approx(share, abs=0.07), parties
     banks = shares([h for h in transaction_level if h["entity"]["entity_type"] == "bank"], "placement")
-    bank_total = 40 + 30 + 10 * 65 / 75
+    bank_total = 40 + 30 + 5 + 10 * 65 / 75
     assert banks["creditor_agent"] == pytest.approx(40 / bank_total, abs=0.07), banks
+    assert banks["remittance"] == pytest.approx(5 / bank_total, abs=0.04), banks
     intermediaries = sum(share for placement, share in banks.items() if placement.startswith("intermediary"))
     assert intermediaries == pytest.approx(30 / bank_total, abs=0.07), banks
     assert banks["intermediary_agent_1"] > banks["intermediary_agent_2"] > banks["intermediary_agent_3"] > 0

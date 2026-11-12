@@ -11,6 +11,7 @@ const COLUMNS: [string, (hit: Hit) => string | number | null | undefined][] = [
   ["End-to-end id", (hit) => hit.end_to_end_id],
   ["XPath", (hit) => hit.xpath],
   ["Placement", (hit) => hit.placement],
+  ["Element", (hit) => hit.element],
   ["Rendering mode", (hit) => hit.rendering_mode],
   ["Entity", (hit) => hit.entity.id],
   ["Name Variant", (hit) => hit.name?.variant],

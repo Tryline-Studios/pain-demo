@@ -131,6 +131,9 @@ export const xmlWithHits = `<?xml version='1.0' encoding='UTF-8'?>
         <Cdtr>
           <Nm>John Doe</Nm>
         </Cdtr>
+        <RmtInf>
+          <Ustrd>Invoice 447102 payment to T-BANK</Ustrd>
+        </RmtInf>
       </CdtTrfTxInf>
     </PmtInf>
   </CstmrCdtTrfInitn>
@@ -165,7 +168,7 @@ function tBankHit(id: string, transaction: number): components["schemas"]["Hit"]
   };
 }
 
-/** A file-level Debtor Hit and a Creditor Agent Hit in each of two transactions. */
+/** A file-level Debtor Hit, a Creditor Agent Hit in transaction 1 and a remittance mention in transaction 2. */
 export const generatedWithHits: components["schemas"]["GeneratedSampleFile"] = {
   sample_file: { ...generated.sample_file, xml: xmlWithHits },
   answer_key: {
@@ -205,7 +208,16 @@ export const generatedWithHits: components["schemas"]["GeneratedSampleFile"] = {
         displaced: null,
       },
       tBankHit("h2", 1),
-      tBankHit("h3", 2),
+      {
+        ...tBankHit("h3", 2),
+        xpath: "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[2]/RmtInf/Ustrd",
+        placement: "remittance",
+        element: "ustrd",
+        rendering_mode: undefined,
+        bic: null,
+        address_from_listing: null,
+        triggers: [{ kind: "name", value: "T-BANK", listed_on: ["ofac_sdn"] }],
+      },
     ],
     transactions: [
       { number: 1, end_to_end_id: "E2E-1", hit_ids: ["h1", "h2"] },

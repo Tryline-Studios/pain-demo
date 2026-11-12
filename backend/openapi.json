@@ -1444,6 +1444,17 @@
           "placement": {
             "$ref": "#/components/schemas/Placement"
           },
+          "element": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RemittanceElement"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Remittance only"
+          },
           "rendering_mode": {
             "anyOf": [
               {
@@ -1551,7 +1562,7 @@
           "displaced"
         ],
         "title": "Hit",
-        "description": "One Placement of a Sanctioned Entity (spec 11.3), in wire order. `element` (remittance) arrives later."
+        "description": "One Placement of a Sanctioned Entity (spec 11.3), in wire order."
       },
       "HitBic": {
         "properties": {
@@ -2053,6 +2064,15 @@
           "listing"
         ],
         "title": "RegistrationNumber"
+      },
+      "RemittanceElement": {
+        "type": "string",
+        "enum": [
+          "ustrd",
+          "addtl_rmt_inf",
+          "invcr",
+          "invcee"
+        ]
       },
       "RequestValidationProblem": {
         "properties": {

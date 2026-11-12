@@ -66,6 +66,12 @@ class Remittance:
     unstructured: str | None = None
     creditor_reference: str | None = None
     """An ISO 11649 `RF` creditor reference, rendered as structured remittance."""
+    additional: str | None = None
+    """`Strd/AddtlRmtInf`; with the invoicer and invoicee it shares the one `Strd` block."""
+    invoicer: str | None = None
+    """`Strd/Invcr/Nm`."""
+    invoicee: str | None = None
+    """`Strd/Invcee/Nm`."""
 
 
 @dataclass(frozen=True)
