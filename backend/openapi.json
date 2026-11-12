@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "pain-demo",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "paths": {
     "/api/v1/sample-files": {
@@ -971,6 +971,13 @@
             "minimum": 1.0,
             "title": "Transaction Count"
           },
+          "hit_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Hit Count",
+            "description": "Sanctioned Entities placed as drawn Hits; at most the transaction count plus two",
+            "default": 0
+          },
           "countries": {
             "items": {
               "$ref": "#/components/schemas/SupportedCountry"
@@ -1269,6 +1276,13 @@
             ],
             "title": "Transaction Count",
             "description": "Absent means 10"
+          },
+          "hit_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Hit Count",
+            "description": "Sanctioned Entities placed as drawn Hits; at most the transaction count plus two",
+            "default": 0
           },
           "countries": {
             "items": {

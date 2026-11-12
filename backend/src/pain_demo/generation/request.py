@@ -1,6 +1,7 @@
 """The generation request (spec 5.1, 5.5, 12.4) and its Effective Request (spec 5.7).
 
-Only the generation settings exist so far; Hits, Supplied Data and Exposures arrive with their own tickets.
+Only the generation settings and the Hit Count exist so far; named Hits, Supplied Data and Exposures arrive with
+their own tickets.
 """
 
 import secrets
@@ -70,6 +71,9 @@ class GenerationRequest(BaseModel):
     transaction_count: TransactionCount | None = Field(
         default=None, description=f"Absent means {DEFAULT_TRANSACTION_COUNT}"
     )
+    hit_count: int = Field(
+        default=0, ge=0, description="Sanctioned Entities placed as drawn Hits; at most the transaction count plus two"
+    )
     countries: list[SupportedCountry] = Field(
         default=list(DEFAULT_COUNTRIES),
         min_length=1,
@@ -89,6 +93,18 @@ class GenerationRequest(BaseModel):
             msg = "amount_max must not be below amount_min"
             raise ValueError(msg)
         return amount_max
+
+    @field_validator("hit_count")
+    @classmethod
+    def _hit_cap(cls, hit_count: int, info: ValidationInfo) -> int:
+        """Two file-level Placements (Debtor, Debtor Agent) plus one Hit per transaction (spec 6.3)."""
+        if "transaction_count" not in info.data:
+            return hit_count  # transaction_count failed its own validation
+        cap = (info.data["transaction_count"] or DEFAULT_TRANSACTION_COUNT) + 2
+        if hit_count > cap:
+            msg = f"hit_count must not exceed the transaction count plus two ({cap})"
+            raise ValueError(msg)
+        return hit_count
 
     def resolve(self) -> "EffectiveRequest":
         """Resolve every default (spec 5.7). Replaying the result reproduces the Sample File byte for byte."""

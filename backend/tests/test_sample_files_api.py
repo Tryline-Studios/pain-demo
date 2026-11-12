@@ -89,6 +89,7 @@ def test_the_effective_request_resolves_every_default(client: TestClient) -> Non
     assert re.fullmatch(r"MSG-[0-9A-F]{12}", request["message_id"])
     assert request["created_at"]
     assert request["execution_date"]
+    assert request["hit_count"] == 0
 
 
 def test_a_transaction_is_the_same_whether_the_file_holds_10_or_100(client: TestClient) -> None:
@@ -306,7 +307,10 @@ def test_no_generated_party_name_resembles_a_catalogue_name(client: TestClient) 
         ({"amount_min": "100", "amount_max": "99.99"}, "amount_max", "value_error"),
         ({"message_version": "pain.001.001.02"}, "message_version", "literal_error"),
         ({"message_id": "M" * 36}, "message_id", "string_too_long"),
-        ({"hit_count": 1}, "hit_count", "extra_forbidden"),
+        ({"hit_count": -1}, "hit_count", "greater_than_equal"),
+        ({"transaction_count": 3, "hit_count": 6}, "hit_count", "value_error"),
+        ({"hit_count": 13}, "hit_count", "value_error"),
+        ({"hits": []}, "hits", "extra_forbidden"),
     ],
 )
 def test_invalid_settings_are_422_problems_naming_the_field(
