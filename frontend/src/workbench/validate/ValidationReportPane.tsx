@@ -1,7 +1,12 @@
+import { useState } from "react";
+import type { components } from "@/api/schema";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { Tile } from "@/workbench/Tile";
 import { ProblemRail } from "@/workbench/validate/ProblemRail";
+import { SourceView } from "@/workbench/validate/SourceView";
 import type { Validation } from "@/workbench/validate/useValidation";
+
+type ValidationProblem = components["schemas"]["ValidationProblem"];
 
 /** The right pane in Validate mode: summary tiles, the file line and the problems (spec 17.9). */
 export function ValidationReportPane({ validation }: { validation: Validation }) {
@@ -39,16 +44,29 @@ export function ValidationReportPane({ validation }: { validation: Validation })
               <p className="font-medium text-lg">No problems found</p>
             </div>
           ) : (
-            // The source view (spec 17.9) goes to the left of the rail.
             <div className="flex flex-col gap-3">
               {report.truncated ? (
                 <p className="text-muted-foreground text-sm">Only the first 100 problems are shown.</p>
               ) : null}
-              <ProblemRail problems={report.problems} />
+              {/* Keyed by submission so a new report starts at the top with no line marked. */}
+              <SourceAndRail key={validation.submittedAt} source={validation.source} problems={report.problems} />
             </div>
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/** The source view with the problem rail on its right; clicking a problem scrolls the source to its line. */
+function SourceAndRail({ source, problems }: { source: string; problems: ValidationProblem[] }) {
+  const [target, setTarget] = useState<{ line: number } | null>(null);
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <SourceView source={source} problems={problems} target={target} />
+      <div className="lg:max-h-[70vh] lg:overflow-auto">
+        <ProblemRail problems={problems} onJump={(line) => setTarget({ line })} />
+      </div>
     </div>
   );
 }

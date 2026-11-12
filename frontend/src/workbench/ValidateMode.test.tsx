@@ -233,4 +233,111 @@ describe("Validate mode", () => {
     expect(problem).toHaveTextContent("1 field failed validation");
     expect(problem).toHaveTextContent("file: Field required");
   });
+
+  describe("source view", () => {
+    // Twelve lines with CRLF endings, as a Windows editor saves them; the report's lines count from 1.
+    const source = Array.from({ length: 12 }, (_, at) => `<L${at + 1}/>`).join("\r\n");
+    const twoOnLineNine: ValidationReport = {
+      ...invalidReport,
+      problems: [
+        ...invalidReport.problems.slice(0, 1),
+        {
+          line: 9,
+          column: 2,
+          tag: "Cd",
+          path: "/Document/CstmrCdtTrfInitn/PmtInf[1]/DbtrAcct/Tp/Cd",
+          code: "unexpected_element",
+          cause: null,
+          message: "Cd is not expected here",
+        },
+        ...invalidReport.problems.slice(1),
+      ],
+    };
+
+    function sourceView() {
+      return within(report()).getByRole("list", { name: "Source" });
+    }
+
+    function sourceLine(line: number) {
+      const item = within(sourceView())
+        .getAllByRole("listitem")
+        .find((candidate) => candidate.firstElementChild?.textContent?.startsWith(`${line}<`));
+      if (item === undefined) {
+        throw new Error(`line ${line} is not rendered`);
+      }
+      return item;
+    }
+
+    it("shows the validated file with line numbers and every problem inline under its line", async () => {
+      answerWith(twoOnLineNine);
+      const user = await openValidate();
+
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([source], "batch.xml"));
+
+      await within(report()).findByRole("list", { name: "Source" });
+      expect(within(sourceView()).getAllByRole("listitem")).toHaveLength(12);
+      expect(sourceLine(1)).toHaveTextContent(/^1<L1\/>$/);
+      expect(sourceLine(8)).toHaveTextContent(/^8<L8\/>$/);
+      const nine = sourceLine(9);
+      expect(nine).toHaveTextContent("invalid_value");
+      expect(nine).toHaveTextContent("Cd 'SAVING' on line 9 is not one of the allowed values");
+      expect(nine).toHaveTextContent("unexpected_element");
+      expect(nine).toHaveTextContent("Cd is not expected here");
+      expect(sourceLine(12)).toHaveTextContent("BIC 'COBA12' on line 12 doesn't match the pattern");
+      expect(sourceView()).not.toHaveTextContent("dtd_not_allowed");
+    });
+
+    it("shows the pasted text", async () => {
+      answerWith(invalidReport);
+      const user = await openValidate();
+
+      fireEvent.change(screen.getByRole("textbox", { name: "Paste XML" }), { target: { value: source } });
+      await user.click(screen.getByRole("button", { name: "Validate pasted XML" }));
+
+      await within(report()).findByRole("list", { name: "Source" });
+      expect(sourceLine(12)).toHaveTextContent(/^12<L12\/>/);
+    });
+
+    it("jumps to a problem's line from the rail; a problem without a line has nothing to jump to", async () => {
+      answerWith(invalidReport);
+      const user = await openValidate();
+
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([source], "batch.xml"));
+      const rail = await within(report()).findByRole("list", { name: "Validation Problems" });
+
+      await user.click(within(rail).getByRole("button", { name: /pattern_mismatch/ }));
+      expect(sourceLine(12)).toHaveAttribute("aria-current", "location");
+      expect(sourceLine(9)).not.toHaveAttribute("aria-current");
+
+      const [, , noLine] = within(rail).getAllByRole("listitem") as [HTMLElement, HTMLElement, HTMLElement];
+      expect(within(noLine).queryByRole("button")).not.toBeInTheDocument();
+    });
+
+    it("renders only a window of a long source and jumps to its last line", async () => {
+      const lineCount = 300_000;
+      const long = Array.from({ length: lineCount }, (_, at) => `<Ln${at + 1}/>`).join("\n");
+      answerWith({
+        ...invalidReport,
+        problems: invalidReport.problems
+          .slice(0, 1)
+          .map((problem) => ({ ...problem, line: lineCount, message: "The last line is wrong" })),
+      });
+      const user = await openValidate();
+
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([long], "big.xml"));
+      await within(report()).findByRole("list", { name: "Source" });
+
+      expect(within(sourceView()).getAllByRole("listitem").length).toBeLessThan(200);
+      expect(sourceLine(1)).toBeInTheDocument();
+      expect(within(sourceView()).queryByText("The last line is wrong")).not.toBeInTheDocument();
+
+      const rail = within(report()).getByRole("list", { name: "Validation Problems" });
+      await user.click(within(rail).getByRole("button", { name: /invalid_value/ }));
+
+      expect(sourceLine(lineCount)).toHaveAttribute("aria-current", "location");
+      expect(sourceLine(lineCount)).toHaveTextContent("The last line is wrong");
+      expect(within(sourceView()).getAllByRole("listitem").length).toBeLessThan(200);
+      expect(within(sourceView()).queryByText(/^<Ln1\/>$/)).not.toBeInTheDocument();
+    });
+  });
 });
