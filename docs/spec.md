@@ -717,7 +717,7 @@ Source: [UI flow](https://github.com/Tryline-Studios/pain-demo/issues/12); conte
 
 ### 13.1 Layout: the Workbench
 
-One screen, no client-side router. A settings pane on the left with three collapsible sections (File, Data, Hits) and a sticky Generate button; the output on the right. The settings pane opens at 560px and is resizable by a drag handle between the panes (380px to 900px, remembered per browser via `localStorage`). Spacing is generous: wide gaps between fields, tall rows for named Hits.
+One screen, no client-side router. A Generate | Validate toggle at the top switches between generation (this section) and Upload Validation (section 17.9). A settings pane on the left with three collapsible sections (File, Data, Hits) and a sticky Generate button; the output on the right. The settings pane opens at 560px and is resizable by a drag handle between the panes (380px to 900px, remembered per browser via `localStorage`). Spacing is generous: wide gaps between fields, tall rows for named Hits.
 
 Prototype (throwaway, never merged): https://claude.ai/artifact/N5sTHZfmtRV7xch54Bjfjr, source on branch `prototype/ui-flow` at `frontend/prototype/ui-flow.html`. Variant B won; A (a wizard) lost on speed for repeat use, C (a transaction ledger) lost on discoverability of file-level settings, though its "click a cell to place a hit" idea could return as an alternative Hits editor.
 
@@ -907,10 +907,20 @@ The one INFO event per request (section 14.3) adds `message_version`, `valid`, p
 - Round trip: every golden Sample File (section 15.3) is uploaded and must come back valid.
 - An XXE and an entity-expansion fixture prove the parser hardening.
 
-### 17.9 Not yet specified
+### 17.9 Workbench
 
-- The Workbench screen for Upload Validation (API first).
-- Rules beyond the XSD. The Screening Tool's own parser is very strict; if Uploaded Messages that pass here fail there, a rule-set layer is the next decision.
+Source: [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-demo/issues/71).
+
+- **Mode switch.** A Generate | Validate toggle at the top of the Workbench. Generate is the screen of section 13. Validate keeps the same two panes and swaps their content.
+- **Input (left pane).** A drop zone that also opens a file picker (`.xml`, up to 10 MB), and a paste box with a "Validate pasted XML" button. A file is sent as multipart so its name is reported; pasted XML is sent as a raw `application/xml` body.
+- **Report (right pane).** Summary tiles: verdict, Message Version, transactions, problem count (`100+` when `truncated`) and encoding, then the file name, size and a short sha256. Below them, the Uploaded Message's source with line numbers: lines with a Validation Problem are highlighted and its `code` and `message` appear inline under the line. A problem rail on the right lists every problem with `code`, line, `message`, and the `path` and raw `cause`; clicking one scrolls the source to its line. Problems with no line (such as a `dtd_not_allowed` without one) appear in the rail only. A valid message shows "No problems found".
+- **Large files.** The source view is virtualised, rendering only the visible lines, so a 10 MB message shows every line. Whether that is a small dependency or a hand-rolled windowed list is left to the build ticket.
+- **Request problems.** A 413, 415 or 422 is shown as a problem block in the report area, like a 422 in section 13.3.
+- **From a generated Sample File.** Generate mode gains a "Validate this Sample File" action that switches to Validate with the generated XML loaded. It is built once generation exists.
+
+Prototype (throwaway, never merged): branch `prototype/upload-validation`, folder `frontend/src/workbench/prototype-validation/`. Variant A (the mode switch with tiles and a table) won, with B's source inspector replacing A's table. C (a tab of the output pane with problems grouped by code) lost.
+
+Rules beyond the XSD are out of scope: the Screening Tool validates against the pain.001.001.03 XSD, and its one known rejection (`DbtrAcct/Tp/Cd` set to `SAVING` instead of `SVGS`) is an XSD enumeration error this section already reports as `invalid_value`.
 
 ---
 
@@ -943,7 +953,7 @@ Every other ticket explicitly declined an ADR.
 | 14 Observability | [Observability: request logging and error reporting](https://github.com/Tryline-Studios/pain-demo/issues/17) |
 | 15 Testing and upgrades | [#5](https://github.com/Tryline-Studios/pain-demo/issues/5), [#15](https://github.com/Tryline-Studios/pain-demo/issues/15), [#14](https://github.com/Tryline-Studios/pain-demo/issues/14), [#6](https://github.com/Tryline-Studios/pain-demo/issues/6), [#13](https://github.com/Tryline-Studios/pain-demo/issues/13) |
 | 16 Configuration | [#5](https://github.com/Tryline-Studios/pain-demo/issues/5), [#17](https://github.com/Tryline-Studios/pain-demo/issues/17) |
-| 17 Upload Validation | [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-demo/issues/64) |
+| 17 Upload Validation | [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-demo/issues/64), [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-demo/issues/71) |
 
 Research branches (primary sources, never merged): `research/placements-per-message-version`, `research/seeded-fake-payment-data`, `research/sanctions-list-entry-shape`, `research/entity-catalogue-roster`. Prototype branch: `prototype/ui-flow`.
 
