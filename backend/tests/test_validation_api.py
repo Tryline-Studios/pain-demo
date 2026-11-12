@@ -1,6 +1,7 @@
 """Upload Validation through the HTTP seam (spec section 17)."""
 
 import hashlib
+import threading
 import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -9,6 +10,9 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from lxml import etree
+
+from pain_demo import renderer
 
 URL = "/api/v1/validations"
 XML = {"Content-Type": "application/xml"}
@@ -416,7 +420,9 @@ def test_exactly_one_hundred_problems_are_not_truncated(client: TestClient) -> N
 
 
 ELEMENT_LIMIT = 500_000
-"""Spec section 16; pain001() with an RmtInf holds 24 elements before its Ustrd lines."""
+"""Spec section 17.3, layer 4."""
+BASE_ELEMENTS = 24
+"""Elements in pain001() with an empty RmtInf, before any Ustrd lines."""
 
 
 def with_ustrd(lines: int, ustrd: bytes) -> bytes:
@@ -424,7 +430,7 @@ def with_ustrd(lines: int, ustrd: bytes) -> bytes:
 
 
 def test_a_message_over_the_element_limit_is_refused_before_the_xsd(client: TestClient) -> None:
-    content = with_ustrd(ELEMENT_LIMIT - 24 + 1, b"<Ustrd/>")  # each Ustrd empty, so an XSD error if it ran
+    content = with_ustrd(ELEMENT_LIMIT - BASE_ELEMENTS + 1, b"<Ustrd/>")  # each Ustrd empty, so an XSD error if it ran
 
     report = client.post(URL, content=content, headers=XML).json()
 
@@ -447,23 +453,44 @@ def test_a_message_over_the_element_limit_is_refused_before_the_xsd(client: Test
 
 
 def test_a_message_at_the_element_limit_is_validated(client: TestClient) -> None:
-    report = client.post(URL, content=with_ustrd(ELEMENT_LIMIT - 24, b"<Ustrd>x</Ustrd>"), headers=XML).json()
+    content = with_ustrd(ELEMENT_LIMIT - BASE_ELEMENTS, b"<Ustrd>x</Ustrd>")
+
+    report = client.post(URL, content=content, headers=XML).json()
 
     assert (report["valid"], report["problems"], report["transaction_count"]) == (True, [], 1)
 
 
-def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(client: TestClient) -> None:
-    def timed_post(content: bytes) -> tuple[dict[str, Any], float]:
-        started = time.perf_counter()
-        report = client.post(URL, content=content, headers=XML).json()
-        return report, time.perf_counter() - started
+def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real_schema = renderer.schema
+    slow_is_validating, quick_has_its_report = threading.Event(), threading.Event()
+    saw_quick_finish: list[bool] = []
 
+    class PausedSchema:
+        """The first upload's schema: its validation waits, inside the XSD layer, for the second upload's report."""
+
+        def __init__(self, version: str) -> None:
+            self.real = real_schema(version)
+
+        @property
+        def error_log(self) -> etree._ListErrorLog:
+            return self.real.error_log
+
+        def validate(self, root: etree._Element) -> bool:
+            slow_is_validating.set()
+            saw_quick_finish.append(quick_has_its_report.wait(5))
+            return self.real.validate(root)
+
+    def schema(version: str) -> object:
+        return real_schema(version) if slow_is_validating.is_set() else PausedSchema(version)
+
+    monkeypatch.setattr(renderer, "schema", schema)
     with ThreadPoolExecutor(1) as pool:
-        slow = pool.submit(timed_post, with_ustrd(50_000, b"<Ustrd/>"))  # 50,000 sibling XSD errors: seconds
-        time.sleep(0.5)  # let the slow upload reach the XSD layer
-        quick_report, quick_took = timed_post(pain001())
-        slow_report, slow_took = slow.result()
+        slow = pool.submit(client.post, URL, content=pain001(), headers=XML)
+        assert slow_is_validating.wait(5)
+        quick = client.post(URL, content=pain001(), headers=XML)
+        quick_has_its_report.set()
 
-    assert (quick_report["valid"], slow_report["truncated"]) == (True, True)
-    # Behind a shared lock the quick upload would wait out the rest of the slow one.
-    assert quick_took < (slow_took - 0.5) / 2
+    # Behind a shared schema lock the quick upload could only finish after the slow one's validation.
+    assert (quick.json()["valid"], slow.result().json()["valid"], saw_quick_finish) == (True, True, [True])
