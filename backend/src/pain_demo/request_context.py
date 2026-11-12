@@ -28,7 +28,9 @@ def request_id_of(request: Request) -> str:
 
 def add_log_fields(request: Request, **fields: object) -> None:
     """Adds fields to this request's one `request` log event (spec 14.3). Never pass bodies or customer data."""
-    request.scope["state"].setdefault("log_fields", {}).update(fields)
+    if not hasattr(request.state, "log_fields"):
+        request.state.log_fields = {}
+    request.state.log_fields.update(fields)
 
 
 class RequestContextMiddleware:
