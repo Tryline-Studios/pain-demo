@@ -122,18 +122,26 @@ def install_problem_handlers(app: FastAPI) -> None:
     app.add_exception_handler(Exception, handle_unexpected_error)
 
 
-PROBLEM_RESPONSES: dict[int | str, dict[str, Any]] = {
+UNEXPECTED_ERROR: dict[int | str, dict[str, Any]] = {
+    HTTPStatus.INTERNAL_SERVER_ERROR: {"model": Problem, "description": "An unexpected error"}
+}
+"""Declared on every operation."""
+
+VALIDATION_ERROR: dict[int | str, dict[str, Any]] = {
     HTTPStatus.UNPROCESSABLE_CONTENT: {
         "model": RequestValidationProblem,
         "description": "`validation_error`: the request does not fit the model",
     },
+}
+"""Declared on every operation with parameters or a body, which also stops FastAPI adding its own
+`HTTPValidationError` 422."""
+
+BUILD_FAILED: dict[int | str, dict[str, Any]] = {
     HTTPStatus.INTERNAL_SERVER_ERROR: {
         "model": Problem,
         "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
     },
 }
-"""Declared on every operation, which also stops FastAPI adding its own `HTTPValidationError` 422."""
-
 BODY_TOO_LARGE: dict[int | str, dict[str, Any]] = {
     HTTPStatus.REQUEST_ENTITY_TOO_LARGE: {"model": Problem, "description": "The request body is over the cap"}
 }

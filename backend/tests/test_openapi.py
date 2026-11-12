@@ -66,7 +66,30 @@ def test_the_transaction_cap_and_seed_length_are_published() -> None:
     assert seed["maxLength"] == 64
 
 
-def test_every_operation_describes_its_problem_responses() -> None:
+def test_every_operation_declares_only_the_problem_responses_it_can_return() -> None:
+    document = create_app().openapi()
+
+    declared = {
+        (path, method): {status for status in operation["responses"] if status >= "400"}
+        for path, methods in document["paths"].items()
+        for method, operation in methods.items()
+    }
+    assert declared == {
+        ("/api/v1/sample-files", "post"): {"413", "422", "500"},
+        ("/api/v1/message-versions", "get"): {"500"},
+        ("/api/v1/options", "get"): {"500"},
+        ("/api/v1/health", "get"): {"500"},
+        ("/api/v1/version", "get"): {"500"},
+        ("/api/v1/entities", "get"): {"422", "500"},
+        ("/api/v1/entities/{entity_id}", "get"): {"404", "422", "500"},
+        ("/api/v1/validations", "post"): {"413", "415", "422", "500"},
+    }
+    paths = document["paths"]
+    assert "build_failed" in paths["/api/v1/sample-files"]["post"]["responses"]["500"]["description"]
+    assert "build_failed" not in paths["/api/v1/options"]["get"]["responses"]["500"]["description"]
+
+
+def test_every_problem_response_is_problem_json() -> None:
     document = create_app().openapi()
 
     def ref(name: str) -> dict:
@@ -74,14 +97,11 @@ def test_every_operation_describes_its_problem_responses() -> None:
 
     for path, methods in document["paths"].items():
         for method, operation in methods.items():
-            responses = operation["responses"]
-            assert responses["422"]["content"] == ref("RequestValidationProblem"), (path, method)
-            assert responses["500"]["content"] == ref("Problem"), (path, method)
-            if method == "post":
-                assert responses["413"]["content"] == ref("Problem"), (path, method)
-            for status, response in responses.items():
-                if status >= "400":
-                    assert list(response["content"]) == ["application/problem+json"], (path, method, status)
+            for status, response in operation["responses"].items():
+                if status == "422":
+                    assert response["content"] == ref("RequestValidationProblem"), (path, method)
+                elif status >= "400":
+                    assert response["content"] == ref("Problem"), (path, method, status)
 
     schemas = document["components"]["schemas"]
     assert "HTTPValidationError" not in schemas

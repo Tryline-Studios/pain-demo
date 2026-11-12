@@ -18,7 +18,7 @@ from pain_demo.catalogue.schema import (
     Individual,
     SanctionsList,
 )
-from pain_demo.problems import Problem
+from pain_demo.problems import VALIDATION_ERROR, Problem
 
 router = APIRouter(tags=["catalogue"])
 
@@ -70,7 +70,12 @@ def catalogue_of(request: Request) -> Catalogue:
     return request.app.state.catalogue
 
 
-@router.get("/entities", operation_id="list_entities", summary="The Entity Catalogue, one summary per Entity")
+@router.get(
+    "/entities",
+    operation_id="list_entities",
+    summary="The Entity Catalogue, one summary per Entity",
+    responses=VALIDATION_ERROR,
+)
 def list_entities(
     request: Request,
     entity_type: Annotated[EntityType | None, Query()] = None,
@@ -90,7 +95,7 @@ def list_entities(
     "/entities/{entity_id}",
     operation_id="get_entity",
     summary="One Entity with every sourced fact",
-    responses={HTTPStatus.NOT_FOUND: {"model": Problem, "description": "No Entity with that id"}},
+    responses={HTTPStatus.NOT_FOUND: {"model": Problem, "description": "No Entity with that id"}, **VALIDATION_ERROR},
 )
 def get_entity(request: Request, entity_id: str) -> EntityDetail:
     catalogue = catalogue_of(request)

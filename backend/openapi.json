@@ -33,16 +33,6 @@
               }
             }
           },
-          "422": {
-            "description": "`validation_error`: the request does not fit the model",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
           "500": {
             "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
             "content": {
@@ -59,6 +49,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
                 }
               }
             }
@@ -88,18 +88,8 @@
               }
             }
           },
-          "422": {
-            "description": "`validation_error`: the request does not fit the model",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
           "500": {
-            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "description": "An unexpected error",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -129,18 +119,8 @@
               }
             }
           },
-          "422": {
-            "description": "`validation_error`: the request does not fit the model",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
           "500": {
-            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "description": "An unexpected error",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -170,18 +150,8 @@
               }
             }
           },
-          "422": {
-            "description": "`validation_error`: the request does not fit the model",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
           "500": {
-            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "description": "An unexpected error",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -211,18 +181,8 @@
               }
             }
           },
-          "422": {
-            "description": "`validation_error`: the request does not fit the model",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
           "500": {
-            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "description": "An unexpected error",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -306,22 +266,22 @@
               }
             }
           },
+          "500": {
+            "description": "An unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "422": {
             "description": "`validation_error`: the request does not fit the model",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -358,18 +318,8 @@
               }
             }
           },
-          "422": {
-            "description": "`validation_error`: the request does not fit the model",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
           "500": {
-            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "description": "An unexpected error",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -384,6 +334,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
                 }
               }
             }
@@ -434,18 +394,8 @@
               }
             }
           },
-          "422": {
-            "description": "`validation_error`: the request does not fit the model",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestValidationProblem"
-                }
-              }
-            }
-          },
           "500": {
-            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "description": "An unexpected error",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -470,6 +420,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
                 }
               }
             }

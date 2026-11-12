@@ -849,16 +849,7 @@ export interface operations {
                     "application/json": components["schemas"]["MessageVersionOption"][];
                 };
             };
-            /** @description `validation_error`: the request does not fit the model */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
-                };
-            };
-            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -887,16 +878,7 @@ export interface operations {
                     "application/json": components["schemas"]["Options"];
                 };
             };
-            /** @description `validation_error`: the request does not fit the model */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
-                };
-            };
-            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -925,16 +907,7 @@ export interface operations {
                     "application/json": components["schemas"]["Health"];
                 };
             };
-            /** @description `validation_error`: the request does not fit the model */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
-                };
-            };
-            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -963,16 +936,7 @@ export interface operations {
                     "application/json": components["schemas"]["GeneratorVersion"];
                 };
             };
-            /** @description `validation_error`: the request does not fit the model */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
-                };
-            };
-            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -1014,7 +978,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["RequestValidationProblem"];
                 };
             };
-            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -1063,7 +1027,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["RequestValidationProblem"];
                 };
             };
-            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -1127,7 +1091,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["RequestValidationProblem"];
                 };
             };
-            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;

@@ -13,7 +13,7 @@ from pain_demo.body_limit import BodyLimitMiddleware
 from pain_demo.catalogue import DEFAULT_ROOT, Catalogue, CatalogueError, load_catalogue
 from pain_demo.generation.clean_banks import DEFAULT_PATH, CleanBankList, CleanBankListError, load_clean_banks
 from pain_demo.log_config import configure_logging
-from pain_demo.problems import PROBLEM_RESPONSES, install_problem_handlers, problem_openapi
+from pain_demo.problems import UNEXPECTED_ERROR, install_problem_handlers, problem_openapi
 from pain_demo.request_context import RequestContextMiddleware
 from pain_demo.settings import Settings
 from pain_demo.version import app_version, generator_version
@@ -32,7 +32,7 @@ def create_app(
     catalogue = _load_catalogue_or_exit(catalogue_root)
     clean_banks = _load_clean_banks_or_exit(clean_banks_path, catalogue)
 
-    app = FastAPI(title="pain-demo", version=app_version(), responses=PROBLEM_RESPONSES)
+    app = FastAPI(title="pain-demo", version=app_version(), responses=UNEXPECTED_ERROR)
     app.state.settings = settings
     app.state.catalogue = catalogue
     app.state.clean_banks = clean_banks
