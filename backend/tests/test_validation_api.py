@@ -330,14 +330,16 @@ def test_a_valid_message_of_every_version_passes_the_xsd_and_counts_its_transact
             b"<FinInstnId/>",
             b"<FinInstnId><BIC>ABCD12</BIC></FinInstnId>",
             (7, "BIC", "/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BIC", "pattern_mismatch"),
-            "BIC 'ABCD12' on line 7 doesn't match the pattern [A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}",
+            "BIC 'ABCD12' on line 7 is not a valid BIC: expected 8 or 11 capital letters and digits, like DEUTDEFF "
+            "or DEUTDEFF500 (pattern [A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1})",
             id="pattern_mismatch",
         ),
         pytest.param(
             b'Ccy="EUR"',
             b'Ccy="eur"',
             (9, "InstdAmt", f"{TX}/Amt/InstdAmt", "pattern_mismatch"),
-            "InstdAmt attribute Ccy 'eur' on line 9 doesn't match the pattern [A-Z]{3,3}",
+            "InstdAmt attribute Ccy 'eur' on line 9 is not a currency code: expected three capital letters, like EUR "
+            "(pattern [A-Z]{3,3})",
             id="pattern_mismatch on an attribute",
         ),
         pytest.param(
@@ -546,3 +548,66 @@ def test_a_phone_number_without_its_country_code_says_how_to_write_one(
         f"and the number, like +1-123-456-7890 (pattern {PHONE_PATTERN})",
     )
     assert PHONE_PATTERN in problem["cause"]
+
+
+BIC_HINT = "is not a valid BIC: expected 8 or 11 capital letters and digits, like DEUTDEFF or DEUTDEFF500"
+BIC_2014 = "[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}"
+LEI_HINT = "is not a valid LEI: expected 20 capital letters or digits, the last two digits, like 5493001KJTIIGC8Y1R12"
+
+
+@pytest.mark.parametrize(
+    ("version", "old", "new", "message"),
+    [
+        pytest.param(
+            "09",
+            b"<FinInstnId/>",
+            b"<FinInstnId><BICFI>ABCD12</BICFI></FinInstnId>",
+            f"BICFI 'ABCD12' on line 7 {BIC_HINT} (pattern {BIC_2014})",
+            id="BICFIDec2014Identifier",
+        ),
+        pytest.param(
+            "09",
+            b"<Cdtr/>",
+            b"<Cdtr><Id><OrgId><AnyBIC>DEUT</AnyBIC></OrgId></Id></Cdtr>",
+            f"AnyBIC 'DEUT' on line 9 {BIC_HINT} (pattern {BIC_2014})",
+            id="AnyBICDec2014Identifier",
+        ),
+        pytest.param(
+            "03",
+            b"<IBAN>DE89370400440532013000</IBAN>",
+            b"<IBAN>DE89 3704 0044 0532 0130 00</IBAN>",
+            "IBAN 'DE89 3704 0044 0532 0130 00' on line 7 is not a valid IBAN: expected a two-letter country code, "
+            "two check digits and up to 30 letters or digits with no spaces, like DE89370400440532013000 "
+            "(pattern [A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30})",
+            id="IBAN2007Identifier",
+        ),
+        pytest.param(
+            "03",
+            b"<Cdtr/>",
+            b"<Cdtr><PstlAdr><Ctry>gb</Ctry></PstlAdr></Cdtr>",
+            "Ctry 'gb' on line 9 is not a country code: expected two capital letters, like GB (pattern [A-Z]{2,2})",
+            id="CountryCode",
+        ),
+        pytest.param(
+            "13",
+            b"<Cdtr/>",
+            b"<Cdtr><Id><OrgId><LEI>LEI123</LEI></OrgId></Id></Cdtr>",
+            f"LEI 'LEI123' on line 9 {LEI_HINT} (pattern [A-Z0-9]{{18,18}}[0-9]{{2,2}})",
+            id="LEIIdentifier",
+        ),
+        pytest.param(
+            "03",
+            b"<CreDtTm>2026-01-01T09:00:00</CreDtTm>",
+            b"<CreDtTm>2026-01-01 09:00</CreDtTm>",
+            "CreDtTm '2026-01-01 09:00' on line 4 is not a valid ISODateTime: expected YYYY-MM-DDThh:mm:ss, "
+            "like 2009-12-31T09:30:00",
+            id="ISODateTime",
+        ),
+    ],
+)
+def test_a_value_of_a_known_type_says_what_a_valid_one_looks_like(
+    client: TestClient, version: str, old: bytes, new: bytes, message: str
+) -> None:
+    (problem,) = problems_of(client, pain001(version).replace(old, new))
+
+    assert problem["message"] == message

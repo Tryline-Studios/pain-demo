@@ -26,11 +26,30 @@ _LENGTH = re.compile(r"length of '(\d+)'; this \w+ the allowed \w+ length of '(\
 _XS = "{http://www.w3.org/2001/XMLSchema}"
 _HINTS = [
     (re.compile(r"ISODate"), "a valid date", "YYYY-MM-DD, like 2009-12-31"),
+    (re.compile(r"ISODateTime"), "a valid date and time", "YYYY-MM-DDThh:mm:ss, like 2009-12-31T09:30:00"),
     (re.compile(r"ISOYear"), "a valid year", "YYYY, like 2009"),
     (
         re.compile(r"PhoneNumber"),
         "an international phone number",
         "+, a country code, a hyphen and the number, like +1-123-456-7890",
+    ),
+    (
+        re.compile(r"(Any)?BIC(FI)?(Dec2014)?Identifier"),
+        "a valid BIC",
+        "8 or 11 capital letters and digits, like DEUTDEFF or DEUTDEFF500",
+    ),
+    (
+        re.compile(r"IBAN2007Identifier"),
+        "a valid IBAN",
+        "a two-letter country code, two check digits and up to 30 letters or digits with no spaces, "
+        "like DE89370400440532013000",
+    ),
+    (re.compile(r"CountryCode"), "a country code", "two capital letters, like GB"),
+    (re.compile(r"Active(OrHistoric)?CurrencyCode"), "a currency code", "three capital letters, like EUR"),
+    (
+        re.compile(r"LEIIdentifier"),
+        "a valid LEI",
+        "20 capital letters or digits, the last two digits, like 5493001KJTIIGC8Y1R12",
     ),
 ]
 """XSD type families (names vary by Message Version), what a value of one is, and what a valid one looks like."""
