@@ -1,6 +1,4 @@
-import type { components } from "@/api/schema";
-
-type ValidationProblem = components["schemas"]["ValidationProblem"];
+import { problemKey, type ValidationProblem } from "@/workbench/validate/useValidation";
 
 /**
  * Every Validation Problem in report order: code, line, message, then the path and the parser's raw cause.
@@ -39,11 +37,7 @@ export function ProblemRail({
           </>
         );
         return (
-          <li
-            // Problems carry no id; this tuple is unique within one report.
-            key={`${line}:${problem.column}:${problem.code}:${problem.path}:${problem.message}`}
-            className="rounded-xl border bg-card text-sm"
-          >
+          <li key={problemKey(problem)} className="rounded-xl border bg-card text-sm">
             {line === null || line > lineCount ? (
               <div className="px-4 py-3">{body}</div>
             ) : (

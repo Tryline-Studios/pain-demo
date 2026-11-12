@@ -1,5 +1,13 @@
 import { useState } from "react";
 import { api } from "@/api/client";
+import type { components } from "@/api/schema";
+
+export type ValidationProblem = components["schemas"]["ValidationProblem"];
+
+/** A React key for a problem: problems carry no id, and this tuple is unique within one report. */
+export function problemKey(problem: ValidationProblem) {
+  return `${problem.line}:${problem.column}:${problem.code}:${problem.path}:${problem.message}`;
+}
 
 /**
  * `POST /api/v1/validations` through the generated client (spec 17.9). A file goes as multipart so the report

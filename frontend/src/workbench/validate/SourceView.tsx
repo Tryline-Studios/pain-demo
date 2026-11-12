@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { components } from "@/api/schema";
 import { cn } from "@/lib/utils";
-
-type ValidationProblem = components["schemas"]["ValidationProblem"];
+import { problemKey, type ValidationProblem } from "@/workbench/validate/useValidation";
 
 /** Every source line and every inline problem is one row of this many pixels, so offsets are plain sums. */
 const ROW = 20;
@@ -88,7 +86,7 @@ export function SourceView({
               </div>
               {lineProblems?.map((problem) => (
                 <div
-                  key={`${problem.column}:${problem.code}:${problem.path}:${problem.message}`}
+                  key={problemKey(problem)}
                   className="ml-16 h-5 whitespace-pre border-destructive border-l-2 pr-4 pl-3 font-sans text-destructive"
                 >
                   <code className="mr-2">{problem.code}</code>
