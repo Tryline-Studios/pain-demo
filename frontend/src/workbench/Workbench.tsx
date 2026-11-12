@@ -17,6 +17,15 @@ export function Workbench() {
   const { width, dragging, startResize, resizeByKey } = useSettingsPaneWidth();
   const [mode, setMode] = useState<(typeof MODES)[number]>("Generate");
   const validation = useValidation();
+  const panes = {
+    Generate: { inputLabel: "Settings", input: <SettingsPane />, outputLabel: "Output", output: <OutputPane /> },
+    Validate: {
+      inputLabel: "Message",
+      input: <ValidateInput validation={validation} />,
+      outputLabel: "Validation Report",
+      output: <ValidationReportPane validation={validation} />,
+    },
+  }[mode];
 
   const onHandleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (resizeByKey(event.key)) {
@@ -46,12 +55,8 @@ export function Workbench() {
           </button>
         ))}
       </div>
-      <aside
-        aria-label={mode === "Generate" ? "Settings" : "Message"}
-        className="min-w-0"
-        style={{ width: `${width}px` }}
-      >
-        {mode === "Generate" ? <SettingsPane /> : <ValidateInput validation={validation} />}
+      <aside aria-label={panes.inputLabel} className="min-w-0" style={{ width: `${width}px` }}>
+        {panes.input}
       </aside>
       {/* biome-ignore lint/a11y/useSemanticElements: an interactive resize handle; hr is non-interactive and cannot carry the grip */}
       <div
@@ -72,15 +77,9 @@ export function Workbench() {
       >
         <div className="mx-auto mt-[calc(50vh-2.5rem)] h-10 w-1 rounded-full bg-border" />
       </div>
-      {mode === "Generate" ? (
-        <section aria-label="Output" className="min-w-0">
-          <OutputPane />
-        </section>
-      ) : (
-        <section aria-label="Validation Report" className="min-w-0">
-          <ValidationReportPane validation={validation} />
-        </section>
-      )}
+      <section aria-label={panes.outputLabel} className="min-w-0">
+        {panes.output}
+      </section>
     </div>
   );
 }
