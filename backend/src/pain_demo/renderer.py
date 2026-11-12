@@ -16,7 +16,17 @@ import structlog
 from lxml import etree
 from pain001.corpus import BuildError, ScenarioError, build
 
-from pain_demo.generation.model import Account, Address, Agent, Iban, Party, Remittance, SampleFileModel, Transaction
+from pain_demo.generation.model import (
+    Account,
+    Address,
+    Agent,
+    Iban,
+    ListedAddress,
+    Party,
+    Remittance,
+    SampleFileModel,
+    Transaction,
+)
 
 _SCENARIO_ID = "xx.pain-demo.sample-file"
 """corpus.build requires a scenario id; it never reaches the output because every identifier is explicit."""
@@ -129,7 +139,9 @@ def _party(party: Party) -> dict[str, Any]:
     return {"name": party.name} | ({"address": _address(party.address)} if party.address else {})
 
 
-def _address(address: Address) -> dict[str, Any]:
+def _address(address: Address | ListedAddress) -> dict[str, Any]:
+    if isinstance(address, ListedAddress):
+        return {"form": "unstructured", "lines": list(address.lines), "country": address.country}
     return {
         "form": "structured",
         "street": address.street,
@@ -141,11 +153,15 @@ def _address(address: Address) -> dict[str, Any]:
 
 
 def _agent(agent: Agent) -> dict[str, Any]:
-    scenario: dict[str, Any] = {"bic": agent.bic, "name": agent.name}
+    scenario: dict[str, Any] = {"name": agent.name}
+    if agent.bic:
+        scenario["bic"] = agent.bic
     if agent.routing_number:
         scenario["clearing"] = {"system": {"code": "USABA"}, "member_id": agent.routing_number}
     if agent.lei:
         scenario["lei"] = agent.lei
+    if agent.address:
+        scenario["address"] = _address(agent.address)
     return scenario
 
 

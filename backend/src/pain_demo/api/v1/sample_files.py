@@ -58,14 +58,19 @@ async def generate_sample_file(
         request,
         message_version=effective.message_version,
         transaction_count=effective.transaction_count,
-        hit_count=0,
+        hit_count=effective.hit_count,
         named_hit_count=0,
         data_source="generated",
         seed=effective.seed,
     )
     try:
         generated = await run_in_threadpool(
-            sample_file.generate, effective, state.clean_banks, NameScreen(state.catalogue), state.generator_version
+            sample_file.generate,
+            effective,
+            state.catalogue,
+            state.clean_banks,
+            NameScreen(state.catalogue),
+            state.generator_version,
         )
     except RenderFailed as error:
         add_log_fields(request, outcome="build_failed")

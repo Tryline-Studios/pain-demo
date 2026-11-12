@@ -175,7 +175,7 @@ export interface components {
             file: components["schemas"]["FileFacts"];
             summary: components["schemas"]["Summary"];
             /** Hits */
-            hits: unknown[];
+            hits: components["schemas"]["Hit"][];
             /** Exposures */
             exposures: unknown[];
             /** Transactions */
@@ -333,6 +333,12 @@ export interface components {
             /** Transaction Count */
             transaction_count: number;
             /**
+             * Hit Count
+             * @description Sanctioned Entities placed as drawn Hits; at most the transaction count plus two
+             * @default 0
+             */
+            hit_count: number;
+            /**
              * Countries
              * @description The Debtor takes the first; creditors and their agents draw from all of them
              * @default [
@@ -447,6 +453,12 @@ export interface components {
              */
             transaction_count?: number | null;
             /**
+             * Hit Count
+             * @description Sanctioned Entities placed as drawn Hits; at most the transaction count plus two
+             * @default 0
+             */
+            hit_count: number;
+            /**
              * Countries
              * @description The Debtor takes the first; creditors and their agents draw from all of them
              * @default [
@@ -500,6 +512,80 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /**
+         * Hit
+         * @description One Placement of a Sanctioned Entity (spec 11.3), in wire order. `element` (remittance) arrives later.
+         */
+        Hit: {
+            /** Id */
+            id: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "file" | "transaction";
+            /**
+             * Transaction Number
+             * @description Absent for scope file
+             */
+            transaction_number?: number | null;
+            /**
+             * End To End Id
+             * @description Absent for scope file
+             */
+            end_to_end_id?: string | null;
+            /** Xpath */
+            xpath: string;
+            entity: components["schemas"]["HitEntity"];
+            placement: components["schemas"]["Placement"];
+            /**
+             * Rendering Mode
+             * @description Agents only
+             */
+            rendering_mode?: ("name_and_bic" | "bic_only" | "name_only") | null;
+            name: components["schemas"]["HitName"] | null;
+            bic: components["schemas"]["HitBic"] | null;
+            /** Lei */
+            lei: string | null;
+            /** Address From Listing */
+            address_from_listing: string | null;
+            /** Triggers */
+            triggers: components["schemas"]["Trigger"][];
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "named" | "drawn";
+            /** Paired With */
+            paired_with: string | null;
+            /** Displaced */
+            displaced: null;
+        };
+        /** HitBic */
+        HitBic: {
+            /** Value */
+            value: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "listing" | "gleif";
+        };
+        /** HitEntity */
+        HitEntity: {
+            /** Id */
+            id: string;
+            entity_type: components["schemas"]["EntityType"];
+            /** Listings */
+            listings: components["schemas"]["ListingRef"][];
+        };
+        /** HitName */
+        HitName: {
+            variant: components["schemas"]["NameVariant"];
+            /** Rendered */
+            rendered: string;
+            source: components["schemas"]["NameSource"];
         };
         /** IndividualDetail */
         IndividualDetail: {
@@ -584,6 +670,14 @@ export interface components {
             script_source: components["schemas"]["ScriptSource"];
             /** @description Only when the list states it */
             language?: components["schemas"]["LanguageCode"] | null;
+            listing: components["schemas"]["ListingRef"];
+        };
+        /** NameSource */
+        NameSource: {
+            /** Value */
+            value: string;
+            type: components["schemas"]["NameSourceType"];
+            script: components["schemas"]["Script"];
             listing: components["schemas"]["ListingRef"];
         };
         /** @enum {string} */
@@ -718,6 +812,18 @@ export interface components {
         };
         /** @enum {string} */
         SupportedCountry: "GB" | "IE" | "DE" | "FR" | "IT" | "ES" | "NL" | "BE" | "PL" | "AT" | "PT" | "US";
+        /** Trigger */
+        Trigger: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "name" | "bic" | "lei";
+            /** Value */
+            value: string;
+            /** Listed On */
+            listed_on: components["schemas"]["SanctionsList"][];
+        };
         /** UploadedFile */
         UploadedFile: {
             /** Name */

@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   defaultFileSettings,
+  Field,
   FileSection,
   type FileSettings,
   generationRequest,
+  INPUT,
 } from "@/workbench/generate/FileSection";
 import type { Generation } from "@/workbench/generate/useGeneration";
 
@@ -36,11 +38,19 @@ export function SettingsPane({ generation }: { generation: Generation }) {
   // Only what the user changed; everything else follows the API's defaults once they load.
   const [changed, setChanged] = useState<Partial<FileSettings>>({});
   const settings = options.data === undefined ? undefined : { ...defaultFileSettings(options.data), ...changed };
+  // Undefined until the user touches it, so the API's default (no Hits) applies.
+  const [hitCount, setHitCount] = useState<string>();
+  // The API's limit (spec 12.4); an unreadable transaction count is left for the API to reject.
+  const hitLimit = Number(settings?.transaction_count) + 2;
+  const hitCountTooHigh = hitCount !== undefined && Number(hitCount) > hitLimit;
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (settings !== undefined) {
-      generation.generate(generationRequest(changed));
+    if (settings !== undefined && !hitCountTooHigh) {
+      generation.generate({
+        ...generationRequest(changed),
+        ...(hitCount === undefined ? {} : { hit_count: Number(hitCount) }),
+      });
     }
   };
 
@@ -70,10 +80,30 @@ export function SettingsPane({ generation }: { generation: Generation }) {
         <p className="text-muted-foreground text-sm">Supplied Data arrives with its own tickets.</p>
       </Section>
       <Section title="Hits" hint="Hit Count and named Hits">
-        <p className="text-muted-foreground text-sm">Hits arrive with the Entity Catalogue.</p>
+        <Field label="Hit Count">
+          <input
+            type="number"
+            className={INPUT}
+            min={0}
+            max={Number.isFinite(hitLimit) ? hitLimit : undefined}
+            value={hitCount ?? "0"}
+            aria-invalid={hitCountTooHigh}
+            onChange={(e) => setHitCount(e.target.value)}
+          />
+        </Field>
+        {hitCountTooHigh ? (
+          <p className="text-destructive text-sm">
+            At most {hitLimit} Hits for {settings?.transaction_count} transactions.
+          </p>
+        ) : null}
       </Section>
       <div className="sticky bottom-6 mt-2">
-        <Button type="submit" size="lg" className="w-full" disabled={settings === undefined || generation.isPending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={settings === undefined || hitCountTooHigh || generation.isPending}
+        >
           {generation.isPending ? "Generating…" : "Generate"}
         </Button>
       </div>

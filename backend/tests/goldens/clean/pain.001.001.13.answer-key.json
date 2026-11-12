@@ -3,7 +3,7 @@
   "seed": "golden-clean",
   "message_version": "pain.001.001.13",
   "generator": {
-    "app_version": "0.1.0",
+    "app_version": "0.2.0",
     "git_sha": "golden",
     "pain001": "0.0.70",
     "faker": "40.39.0",
@@ -19,6 +19,7 @@
     "execution_date": "2026-01-05",
     "message_id": "MSG-B06C0CB80A48",
     "transaction_count": 10,
+    "hit_count": 0,
     "countries": [
       "GB",
       "DE",
@@ -36,7 +37,7 @@
     "execution_date": "2026-01-05",
     "transaction_count": 10,
     "hit_count": 0,
-    "sha256": "23c4cb502a71f1c65f7d1d0fd813d73846960f4392f602080b5e4eb1dd0adaaf"
+    "sha256": "717f7431d33c395edb0f06f4a7d6c1bb6ba25e5bda06037f3ec9b01057ee9efb"
   },
   "summary": {
     "by_placement": {},

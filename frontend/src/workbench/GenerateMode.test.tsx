@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueries } from "@/test/render";
-import { generated, sampleXml, server } from "@/test/server";
+import { generated, generatedWithHits, sampleXml, server } from "@/test/server";
 import { Workbench } from "@/workbench/Workbench";
 
 async function openFileSection() {
@@ -93,7 +93,7 @@ describe("Generate mode: generating", () => {
 
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(bodies).toEqual([{}]);
   });
 
@@ -105,7 +105,7 @@ describe("Generate mode: generating", () => {
     await user.type(screen.getByRole("spinbutton", { name: "Transactions" }), "3");
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(bodies).toEqual([{ transaction_count: 3 }]);
   });
 
@@ -119,7 +119,7 @@ describe("Generate mode: generating", () => {
     await user.click(chip("Currencies", "EUR"));
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(bodies).toEqual([{}]);
   });
 
@@ -131,7 +131,7 @@ describe("Generate mode: generating", () => {
     await user.click(screen.getByRole("button", { name: "Make US Debtor" }));
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(screen.getByText("Debtor country: US")).toBeInTheDocument();
     for (const code of ["GB", "DE", "US"]) {
       expect(chip("Countries", code)).toHaveAttribute("aria-pressed", "true");
@@ -190,6 +190,7 @@ describe("Generate mode: generating", () => {
     expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("0");
     expect(within(output()).getByRole("group", { name: "Version" })).toHaveTextContent("pain.001.001.09");
     expect(within(output()).queryByText("No Sample File yet")).not.toBeInTheDocument();
+    await user.click(within(output()).getByRole("tab", { name: "XML" }));
     expect(within(output()).getByRole("tabpanel")).toHaveTextContent('seed="echoed-seed"');
 
     await user.click(within(output()).getByRole("tab", { name: "Warnings (1)" }));
@@ -339,5 +340,164 @@ describe("Generate mode: downloads", () => {
     expect(new Uint8Array(await (saved[0]?.blob.arrayBuffer() ?? Promise.resolve(new ArrayBuffer(0))))).toEqual(
       new Uint8Array([80, 75, 3, 4]),
     );
+  });
+});
+
+describe("Generate mode: Hits", () => {
+  async function generateWithHits() {
+    server.use(http.post("/api/v1/sample-files", () => HttpResponse.json(generatedWithHits)));
+    const user = await openFileSection();
+    await user.click(generateButton());
+    await within(output()).findByRole("group", { name: "Seed" });
+    return user;
+  }
+
+  it("opens on the Answer Key table, one row per Hit", async () => {
+    await generateWithHits();
+
+    expect(within(output()).getByRole("tab", { name: "Answer Key", selected: true })).toBeInTheDocument();
+    const rows = within(within(output()).getByRole("tabpanel")).getAllByRole("row");
+    expect(rows.map((row) => [...row.children].map((cell) => cell.textContent))).toEqual([
+      [
+        "Hit",
+        "Scope",
+        "Transaction",
+        "End-to-end id",
+        "XPath",
+        "Placement",
+        "Rendering mode",
+        "Entity",
+        "Name Variant",
+        "Rendered name",
+        "BIC",
+        "LEI",
+        "Triggers",
+        "Lists",
+      ],
+      [
+        "h1",
+        "file",
+        "",
+        "",
+        "/Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Nm",
+        "debtor",
+        "",
+        "daedong-credit-bank",
+        "exact",
+        "DAEDONG CREDIT BANK",
+        "",
+        "",
+        "name",
+        "ofac_sdn, uk",
+      ],
+      [
+        "h2",
+        "transaction",
+        "1",
+        "E2E-1",
+        "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[1]/CdtrAgt/FinInstnId/Nm",
+        "creditor_agent",
+        "name_and_bic",
+        "t-bank",
+        "exact",
+        "T-BANK",
+        "TICSRUMM",
+        "",
+        "name, bic",
+        "ofac_sdn",
+      ],
+      [
+        "h3",
+        "transaction",
+        "2",
+        "E2E-2",
+        "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[2]/CdtrAgt/FinInstnId/Nm",
+        "creditor_agent",
+        "name_and_bic",
+        "t-bank",
+        "exact",
+        "T-BANK",
+        "TICSRUMM",
+        "",
+        "name, bic",
+        "ofac_sdn",
+      ],
+    ]);
+    // The XPath column is cut to fit; the full path is its tooltip.
+    expect(within(output()).getByRole("cell", { name: "/Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Nm" })).toHaveAttribute(
+      "title",
+      "/Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Nm",
+    );
+  });
+
+  it("says so when the Sample File has no Hits", async () => {
+    const user = await openFileSection();
+    await user.click(generateButton());
+
+    await within(output()).findByRole("tab", { name: "Answer Key", selected: true });
+    expect(within(output()).getByRole("tabpanel")).toHaveTextContent("No Hits");
+  });
+
+  it("shows the Hit Count in the Hits tile", async () => {
+    await generateWithHits();
+
+    expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("3");
+  });
+
+  it("posts the Hit Count the user set, limited to two more than the transactions", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+    await user.click(screen.getByRole("button", { name: "Hits" }));
+
+    const hitCount = screen.getByRole("spinbutton", { name: "Hit Count" });
+    expect(hitCount).toHaveValue(0);
+    expect(hitCount).toHaveAttribute("max", "12");
+    await user.clear(hitCount);
+    await user.type(hitCount, "3");
+    await user.click(generateButton());
+
+    await within(output()).findByRole("tab", { name: "Answer Key" });
+    expect(bodies).toEqual([{ hit_count: 3 }]);
+  });
+
+  it("holds Generate back while the Hit Count is above the limit", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+    await user.click(screen.getByRole("button", { name: "Hits" }));
+
+    await user.clear(screen.getByRole("spinbutton", { name: "Transactions" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Transactions" }), "3");
+    await user.clear(screen.getByRole("spinbutton", { name: "Hit Count" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Hit Count" }), "6");
+
+    expect(screen.getByText("At most 5 Hits for 3 transactions.")).toBeInTheDocument();
+    expect(generateButton()).toBeDisabled();
+
+    await user.clear(screen.getByRole("spinbutton", { name: "Hit Count" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Hit Count" }), "5");
+    await user.click(generateButton());
+
+    await within(output()).findByRole("tab", { name: "Answer Key" });
+    expect(bodies).toEqual([{ transaction_count: 3, hit_count: 5 }]);
+  });
+
+  it("highlights each Hit's name where its XPath points, not every copy of the text", async () => {
+    const user = await generateWithHits();
+
+    await user.click(within(output()).getByRole("tab", { name: "XML" }));
+
+    // The XML as shown, each highlight written as [id: text].
+    const shown = within(output()).getByRole("tabpanel").cloneNode(true) as HTMLElement;
+    for (const mark of shown.querySelectorAll("mark")) {
+      mark.replaceWith(`[${mark.title}: ${mark.textContent}]`);
+    }
+    const [header, first, second] = (shown.textContent ?? "").split("<CdtTrfTxInf>");
+    expect(header).toContain("<InitgPty>\n        <Nm>DAEDONG CREDIT BANK</Nm>");
+    expect(header).toContain("<Dbtr>\n        <Nm>[h1: DAEDONG CREDIT BANK]</Nm>");
+    expect(first).toContain("<Nm>[h2: T-BANK]</Nm>");
+    expect(first).toContain("<Nm>Jane Smith</Nm>");
+    expect(second).toContain("<Nm>[h3: T-BANK]</Nm>");
+    expect(shown.querySelectorAll("mark")).toHaveLength(0);
+    expect(shown.textContent?.match(/\[h\d/g)).toHaveLength(3);
   });
 });

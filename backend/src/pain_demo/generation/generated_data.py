@@ -10,11 +10,12 @@ import string
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import cast
 
 from faker import Faker
 from schwifty import IBAN
 
-from pain_demo.generation.clean_banks import CleanBank, CleanBankList, SupportedCountry
+from pain_demo.generation.clean_banks import IBAN_COUNTRIES, CleanBank, CleanBankList, SupportedCountry
 from pain_demo.generation.model import (
     Account,
     Address,
@@ -68,6 +69,8 @@ COUNTRIES: dict[SupportedCountry, CountryProfile] = {
     "US": CountryProfile("en_US", "USD", 10, iban=False),
 }
 MAX_REDRAWS = 1000
+ACCOUNT_IBAN_COUNTRIES = frozenset({"BY", "IR", *IBAN_COUNTRIES})
+"""Where an account is an IBAN (spec 6.9); everywhere else it is `Othr/Id`."""
 
 REMITTANCE_TEMPLATES = ("Invoice {n}", "Order {n}", "Contract {n} instalment", "Services rendered, ref {n}")
 
@@ -137,7 +140,7 @@ class GeneratedData:
                 self._party(tx_stream("ultimate_creditor"), country, with_address=False) if ultimate_creditor else None
             ),
             intermediary_agents=(
-                (self._agent(intermediary_stream, intermediary_stream.choice(request.countries))[0],)
+                (self.clean_agent(intermediary_stream, intermediary_stream.choice(request.countries))[0],)
                 if intermediary
                 else ()
             ),
@@ -170,19 +173,34 @@ class GeneratedData:
             ),
         )
 
-    def _agent(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, CleanBank]:
+    def clean_agent(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, CleanBank]:
         bank = rng.choice(self.clean_banks.for_country(country))
         return Agent(bic=bank.bic, name=bank.name, routing_number=bank.routing_number), bank
 
     def _bank_and_account(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, Account]:
-        agent, bank = self._agent(rng, country)
-        profile = COUNTRIES[country]
-        digits = profile.account_digits
-        account_code = {} if digits is None else {"account_code": _digits(rng, digits)}
-        if not profile.iban:
-            return agent, OtherAccount(account_code["account_code"])
-        iban = IBAN.random(country, random=rng, use_registry=False, bank_code=bank.bank_code, **account_code)
-        return agent, Iban(str(iban))
+        agent, bank = self.clean_agent(rng, country)
+        return agent, self.account(rng, country, bank.bank_code)
+
+    def account(self, rng: random.Random, country: str, bank_code: str | None) -> Account:
+        """A clean account in any `country` (spec 6.9): IBAN for BY, IR and the IBAN defaults, else `Othr/Id`.
+
+        Without a `bank_code`, an IBAN in one of the twelve countries takes a Clean Bank List bank's code.
+        """
+        if country == "IR":
+            # schwifty's IR spec has no bank or account positions and yields all zeros: BBAN 0 + bank + 18 digits.
+            return Iban(_iban("IR", "0" + digits(rng, 21)))
+        profile = COUNTRIES.get(country)  # one of the twelve clean countries, else None
+        if country in ACCOUNT_IBAN_COUNTRIES:
+            account_digits = profile.account_digits if profile else 16  # BY: 16 after the bank code and branch
+            if bank_code is None and profile:
+                bank_code = rng.choice(self.clean_banks.for_country(cast("SupportedCountry", country))).bank_code
+            codes = {"bank_code": bank_code} if bank_code else {}
+            if account_digits:
+                codes["account_code"] = digits(rng, account_digits)
+            return Iban(str(IBAN.random(country, random=rng, use_registry=False, **codes)))
+        if country == "RU":
+            return OtherAccount("40702810" + digits(rng, 12))  # 20 digits: balance account, currency, then the rest
+        return OtherAccount(digits(rng, (profile.account_digits or 10) if profile else 16))
 
 
 def _redraw(draw: Callable[[], str], refused: Callable[[str], bool]) -> str:
@@ -195,14 +213,19 @@ def _redraw(draw: Callable[[], str], refused: Callable[[str], bool]) -> str:
     raise RuntimeError(msg)
 
 
-def _digits(rng: random.Random, length: int) -> str:
+def _iban(country: str, bban: str) -> str:
+    numeric = int("".join(str(int(char, 36)) for char in bban + country + "00"))
+    return f"{country}{98 - numeric % 97:02d}{bban}"
+
+
+def digits(rng: random.Random, length: int) -> str:
     return "".join(rng.choices(string.digits, k=length))
 
 
 def _remittance(rng: random.Random, *, structured: bool) -> Remittance:
     if structured:
-        return Remittance(creditor_reference=creditor_reference(_digits(rng, 12)))
-    return Remittance(unstructured=rng.choice(REMITTANCE_TEMPLATES).format(n=_digits(rng, 6)))
+        return Remittance(creditor_reference=creditor_reference(digits(rng, 12)))
+    return Remittance(unstructured=rng.choice(REMITTANCE_TEMPLATES).format(n=digits(rng, 6)))
 
 
 def creditor_reference(body: str) -> str:

@@ -21,19 +21,29 @@ class Address:
 
 
 @dataclass(frozen=True)
+class ListedAddress:
+    """A Listing's address as the list gives it: free lines, rendered unstructured (spec 6.9)."""
+
+    lines: tuple[str, ...]
+    country: str
+
+
+@dataclass(frozen=True)
 class Party:
     name: str
-    address: Address | None = None
+    address: Address | ListedAddress | None = None
 
 
 @dataclass(frozen=True)
 class Agent:
-    bic: str
+    bic: str | None
+    """None renders the agent by name and address only (`name_only`)."""
     name: str
     routing_number: str | None = None
     """The ABA routing number of a US agent, rendered as its clearing system member id."""
     lei: str | None = None
-    """`FinInstnId/LEI`, which .03 to .08 cannot hold: the build drops it there with an Answer Key warning."""
+    """`FinInstnId/LEI`, which exists from .09: a Hit leaves it None before then rather than have the build drop it."""
+    address: ListedAddress | None = None
 
 
 @dataclass(frozen=True)
@@ -43,7 +53,7 @@ class Iban:
 
 @dataclass(frozen=True)
 class OtherAccount:
-    """`Othr/Id`: a US account number."""
+    """`Othr/Id`: a US account number, or a synthetic one where the country has no IBAN (spec 6.9)."""
 
     id: str
 

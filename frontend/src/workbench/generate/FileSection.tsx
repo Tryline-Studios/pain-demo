@@ -50,7 +50,7 @@ function toggle<T>(list: T[], item: T) {
   return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: the control is the child
     <label className="flex flex-col gap-2 text-sm">
@@ -91,7 +91,7 @@ function Chips<T extends string>({
   );
 }
 
-const INPUT = "h-10 rounded-md border bg-background px-3 text-sm";
+export const INPUT = "h-10 rounded-md border bg-background px-3 text-sm";
 
 /** Message Version, transactions, Seed, countries, amount range and currencies, all from the API (spec 13.2). */
 export function FileSection({
