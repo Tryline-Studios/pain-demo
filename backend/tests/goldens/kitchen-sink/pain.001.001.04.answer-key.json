@@ -1,0 +1,927 @@
+{
+  "answer_key_version": 1,
+  "seed": "golden-kitchen-sink",
+  "message_version": "pain.001.001.04",
+  "generator": {
+    "app_version": "0.3.0",
+    "git_sha": "golden",
+    "pain001": "0.0.70",
+    "faker": "40.39.0",
+    "schwifty": "2026.7.3",
+    "iuliia": "0.13.0",
+    "rapidfuzz": "3.14.6",
+    "catalogue_snapshot": "2026-09-14"
+  },
+  "request": {
+    "message_version": "pain.001.001.04",
+    "seed": "golden-kitchen-sink",
+    "created_at": "2026-01-02T09:00:00Z",
+    "execution_date": "2026-01-05",
+    "message_id": "MSG-1C32B4E33129",
+    "transaction_count": 12,
+    "hit_count": 12,
+    "countries": [
+      "GB",
+      "DE",
+      "FR",
+      "US"
+    ],
+    "currencies": [
+      "GBP",
+      "EUR",
+      "USD",
+      "CHF"
+    ],
+    "amount_min": "10.00",
+    "amount_max": "50000.00",
+    "hits": [
+      {
+        "entity": "rosneft",
+        "placement": "debtor",
+        "name_variant": "exact",
+        "transaction": null,
+        "rendering_mode": null,
+        "with_controller": false
+      },
+      {
+        "entity": "vtb-bank",
+        "placement": "debtor_agent",
+        "name_variant": null,
+        "transaction": null,
+        "rendering_mode": "bic_only",
+        "with_controller": false
+      },
+      {
+        "entity": "evraz-plc",
+        "placement": "creditor",
+        "name_variant": "transliteration",
+        "transaction": 1,
+        "rendering_mode": null,
+        "with_controller": true
+      },
+      {
+        "entity": "gazprombank",
+        "placement": "creditor_agent",
+        "name_variant": "alias",
+        "transaction": 2,
+        "rendering_mode": "name_only",
+        "with_controller": false
+      },
+      {
+        "entity": "igor-sechin",
+        "placement": "ultimate_debtor",
+        "name_variant": "native_script",
+        "transaction": 3,
+        "rendering_mode": null,
+        "with_controller": false
+      },
+      {
+        "entity": "sberbank",
+        "placement": "intermediary_agent_1",
+        "name_variant": "fuzzed",
+        "transaction": 4,
+        "rendering_mode": null,
+        "with_controller": false
+      },
+      {
+        "entity": "promsvyazbank",
+        "placement": "intermediary_agent_2",
+        "name_variant": "exact",
+        "transaction": 4,
+        "rendering_mode": null,
+        "with_controller": false
+      },
+      {
+        "entity": "bank-rossiya",
+        "placement": "intermediary_agent_3",
+        "name_variant": "alias",
+        "transaction": 4,
+        "rendering_mode": null,
+        "with_controller": false
+      },
+      {
+        "entity": "mahan-air",
+        "placement": "remittance",
+        "name_variant": "exact",
+        "transaction": 5,
+        "rendering_mode": null,
+        "with_controller": false
+      }
+    ],
+    "placements": null,
+    "name_variants": null,
+    "exposure_countries": [
+      "RU",
+      "BY",
+      "IR",
+      "KP",
+      "SY",
+      "VE"
+    ],
+    "exposure_count": 1,
+    "payment": {
+      "payment_information_id": "PMTINF-KITCHEN-SINK",
+      "debtor_account": {
+        "iban": "GB82WEST12345698765432"
+      }
+    },
+    "transactions": [
+      {},
+      {},
+      {},
+      {},
+      {},
+      {
+        "creditor": {
+          "name": "Supplied Creditor Ltd"
+        },
+        "amount": "1234.56",
+        "currency": "GBP",
+        "remittance": {
+          "unstructured": [
+            "Invoice 42"
+          ]
+        }
+      }
+    ]
+  },
+  "file": {
+    "message_id": "MSG-1C32B4E33129",
+    "created_at": "2026-01-02T09:00:00Z",
+    "execution_date": "2026-01-05",
+    "transaction_count": 12,
+    "hit_count": 12,
+    "sha256": "bc28deb278a4e96106fe46ded86c7a51530a3780c29545e3c7aa39509571a7fc"
+  },
+  "summary": {
+    "by_placement": {
+      "creditor": 2,
+      "creditor_agent": 1,
+      "debtor": 1,
+      "debtor_agent": 1,
+      "intermediary_agent_1": 1,
+      "intermediary_agent_2": 1,
+      "intermediary_agent_3": 1,
+      "remittance": 2,
+      "ultimate_creditor": 1,
+      "ultimate_debtor": 1
+    },
+    "by_name_variant": {
+      "alias": 3,
+      "exact": 5,
+      "fuzzed": 1,
+      "native_script": 1,
+      "transliteration": 1
+    },
+    "by_entity_type": {
+      "bank": 5,
+      "corporate": 5,
+      "individual": 2
+    },
+    "by_list": {
+      "ofac_sdn": 10,
+      "uk": 11
+    },
+    "by_exposure_country": {
+      "RU": 1
+    }
+  },
+  "hits": [
+    {
+      "id": "h1",
+      "scope": "file",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Nm",
+      "entity": {
+        "id": "rosneft",
+        "entity_type": "corporate",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "17022"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS3064"
+          }
+        ]
+      },
+      "placement": "debtor",
+      "name": {
+        "variant": "exact",
+        "rendered": "Open Joint-Stock Company Rosneft Oil Company",
+        "source": {
+          "value": "Open Joint-Stock Company Rosneft Oil Company",
+          "type": "primary",
+          "script": "latin",
+          "listing": {
+            "list": "ofac_sdn",
+            "entry_id": "17022"
+          }
+        }
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": "17022",
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "Open Joint-Stock Company Rosneft Oil Company",
+          "listed_on": [
+            "ofac_sdn"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h2",
+      "scope": "file",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI",
+      "entity": {
+        "id": "vtb-bank",
+        "entity_type": "bank",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "17013"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS0250"
+          }
+        ]
+      },
+      "placement": "debtor_agent",
+      "rendering_mode": "bic_only",
+      "name": null,
+      "bic": {
+        "value": "VTBRRUMM",
+        "source": "listing"
+      },
+      "lei": null,
+      "address_from_listing": null,
+      "triggers": [
+        {
+          "kind": "bic",
+          "value": "VTBRRUMM",
+          "listed_on": [
+            "ofac_sdn"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h3",
+      "scope": "transaction",
+      "transaction_number": 1,
+      "end_to_end_id": "E2E-2687CE3A68DB",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[1]/Cdtr/Nm",
+      "entity": {
+        "id": "evraz-plc",
+        "entity_type": "corporate",
+        "listings": [
+          {
+            "list": "uk",
+            "entry_id": "RUS1027"
+          }
+        ]
+      },
+      "placement": "creditor",
+      "name": {
+        "variant": "transliteration",
+        "rendered": "Yevraz",
+        "source": {
+          "value": "Евраз",
+          "type": "aka",
+          "script": "cyrillic",
+          "listing": {
+            "list": "uk",
+            "entry_id": "RUS1027"
+          }
+        },
+        "scheme": "wikipedia"
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": "RUS1027",
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "Yevraz",
+          "listed_on": []
+        }
+      ],
+      "origin": "named",
+      "paired_with": "h4",
+      "displaced": null
+    },
+    {
+      "id": "h4",
+      "scope": "transaction",
+      "transaction_number": 1,
+      "end_to_end_id": "E2E-2687CE3A68DB",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[1]/UltmtCdtr/Nm",
+      "entity": {
+        "id": "alexander-abramov",
+        "entity_type": "individual",
+        "listings": [
+          {
+            "list": "uk",
+            "entry_id": "RUS1656"
+          }
+        ]
+      },
+      "placement": "ultimate_creditor",
+      "name": {
+        "variant": "exact",
+        "rendered": "Alexander Grigoryevich ABRAMOV",
+        "source": {
+          "value": "Alexander Grigoryevich ABRAMOV",
+          "type": "primary",
+          "script": "latin",
+          "listing": {
+            "list": "uk",
+            "entry_id": "RUS1656"
+          }
+        }
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": null,
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "Alexander Grigoryevich ABRAMOV",
+          "listed_on": [
+            "uk"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": "h3",
+      "displaced": null
+    },
+    {
+      "id": "h5",
+      "scope": "transaction",
+      "transaction_number": 2,
+      "end_to_end_id": "E2E-5B0B3F65B7E6",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[2]/CdtrAgt/FinInstnId/Nm",
+      "entity": {
+        "id": "gazprombank",
+        "entity_type": "bank",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "17016"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS1072"
+          }
+        ]
+      },
+      "placement": "creditor_agent",
+      "rendering_mode": "name_only",
+      "name": {
+        "variant": "alias",
+        "rendered": "Joint Stock Bank of the Gas Industry Gazprombank",
+        "source": {
+          "value": "Joint Stock Bank of the Gas Industry Gazprombank",
+          "type": "fka",
+          "script": "latin",
+          "listing": {
+            "list": "ofac_sdn",
+            "entry_id": "17016"
+          }
+        }
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": "RUS1072",
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "Joint Stock Bank of the Gas Industry Gazprombank",
+          "listed_on": [
+            "ofac_sdn"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h6",
+      "scope": "transaction",
+      "transaction_number": 3,
+      "end_to_end_id": "E2E-DD652BFB5F94",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[3]/UltmtDbtr/Nm",
+      "entity": {
+        "id": "igor-sechin",
+        "entity_type": "individual",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "16692"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS0273"
+          }
+        ]
+      },
+      "placement": "ultimate_debtor",
+      "name": {
+        "variant": "native_script",
+        "rendered": "Игорь Иванович СЕЧИН",
+        "source": {
+          "value": "Игорь Иванович СЕЧИН",
+          "type": "aka",
+          "script": "cyrillic",
+          "listing": {
+            "list": "uk",
+            "entry_id": "RUS0273"
+          }
+        }
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": null,
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "Игорь Иванович СЕЧИН",
+          "listed_on": [
+            "uk"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h7",
+      "scope": "transaction",
+      "transaction_number": 4,
+      "end_to_end_id": "E2E-22EB0228EA19",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[4]/IntrmyAgt1/FinInstnId/Nm",
+      "entity": {
+        "id": "sberbank",
+        "entity_type": "bank",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "17018"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS0256"
+          }
+        ]
+      },
+      "placement": "intermediary_agent_1",
+      "rendering_mode": "name_and_bic",
+      "name": {
+        "variant": "fuzzed",
+        "rendered": "Sberbank (Public Joint-Stock Company Sberbank) Public Joint Stock Company",
+        "source": {
+          "value": "PJSC Sberbank (Public Joint-Stock Company Sberbank)",
+          "type": "primary",
+          "script": "latin",
+          "listing": {
+            "list": "uk",
+            "entry_id": "RUS0256"
+          }
+        },
+        "base": "PJSC Sberbank (Public Joint-Stock Company Sberbank)",
+        "operations": [
+          "reorder_tokens",
+          "expand_legal_form"
+        ]
+      },
+      "bic": {
+        "value": "SABRINDDXXX",
+        "source": "gleif"
+      },
+      "lei": null,
+      "address_from_listing": "17018",
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "Sberbank (Public Joint-Stock Company Sberbank) Public Joint Stock Company",
+          "listed_on": []
+        },
+        {
+          "kind": "bic",
+          "value": "SABRINDDXXX",
+          "listed_on": []
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h8",
+      "scope": "transaction",
+      "transaction_number": 4,
+      "end_to_end_id": "E2E-22EB0228EA19",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[4]/IntrmyAgt2/FinInstnId/Nm",
+      "entity": {
+        "id": "promsvyazbank",
+        "entity_type": "bank",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "34656"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS0237"
+          }
+        ]
+      },
+      "placement": "intermediary_agent_2",
+      "rendering_mode": "name_and_bic",
+      "name": {
+        "variant": "exact",
+        "rendered": "PROMSVYAZBANK PUBLIC JOINT STOCK COMPANY",
+        "source": {
+          "value": "PROMSVYAZBANK PUBLIC JOINT STOCK COMPANY",
+          "type": "primary",
+          "script": "latin",
+          "listing": {
+            "list": "ofac_sdn",
+            "entry_id": "34656"
+          }
+        }
+      },
+      "bic": {
+        "value": "PRMSRUMM",
+        "source": "listing"
+      },
+      "lei": null,
+      "address_from_listing": "RUS0237",
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "PROMSVYAZBANK PUBLIC JOINT STOCK COMPANY",
+          "listed_on": [
+            "ofac_sdn"
+          ]
+        },
+        {
+          "kind": "bic",
+          "value": "PRMSRUMM",
+          "listed_on": [
+            "ofac_sdn"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h9",
+      "scope": "transaction",
+      "transaction_number": 4,
+      "end_to_end_id": "E2E-22EB0228EA19",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[4]/IntrmyAgt3/FinInstnId/Nm",
+      "entity": {
+        "id": "bank-rossiya",
+        "entity_type": "bank",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "16681"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS0232"
+          }
+        ]
+      },
+      "placement": "intermediary_agent_3",
+      "rendering_mode": "name_and_bic",
+      "name": {
+        "variant": "alias",
+        "rendered": "Bank of Russia",
+        "source": {
+          "value": "Bank of Russia",
+          "type": "primary_variation",
+          "script": "latin",
+          "listing": {
+            "list": "uk",
+            "entry_id": "RUS0232"
+          }
+        }
+      },
+      "bic": {
+        "value": "ROSYRU2P",
+        "source": "listing"
+      },
+      "lei": null,
+      "address_from_listing": "RUS0232",
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "Bank of Russia",
+          "listed_on": [
+            "uk"
+          ]
+        },
+        {
+          "kind": "bic",
+          "value": "ROSYRU2P",
+          "listed_on": [
+            "ofac_sdn"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h10",
+      "scope": "transaction",
+      "transaction_number": 5,
+      "end_to_end_id": "E2E-7969F3E566D1",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[5]/RmtInf/Strd/Invcee/Nm",
+      "entity": {
+        "id": "mahan-air",
+        "entity_type": "corporate",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "12927"
+          }
+        ]
+      },
+      "placement": "remittance",
+      "element": "invcee",
+      "name": {
+        "variant": "exact",
+        "rendered": "MAHAN AIR",
+        "source": {
+          "value": "MAHAN AIR",
+          "type": "primary",
+          "script": "latin",
+          "listing": {
+            "list": "ofac_sdn",
+            "entry_id": "12927"
+          }
+        }
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": null,
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "MAHAN AIR",
+          "listed_on": [
+            "ofac_sdn"
+          ]
+        }
+      ],
+      "origin": "named",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h11",
+      "scope": "transaction",
+      "transaction_number": 11,
+      "end_to_end_id": "E2E-3F21EEA1AD36",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[11]/RmtInf/Ustrd",
+      "entity": {
+        "id": "gazprom-neft",
+        "entity_type": "corporate",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "17143"
+          },
+          {
+            "list": "uk",
+            "entry_id": "RUS2383"
+          }
+        ]
+      },
+      "placement": "remittance",
+      "element": "ustrd",
+      "name": {
+        "variant": "alias",
+        "rendered": "GAZPROM NEFT PAO",
+        "source": {
+          "value": "GAZPROM NEFT PAO",
+          "type": "aka",
+          "script": "latin",
+          "listing": {
+            "list": "ofac_sdn",
+            "entry_id": "17143"
+          }
+        }
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": null,
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "GAZPROM NEFT PAO",
+          "listed_on": [
+            "ofac_sdn",
+            "uk"
+          ]
+        }
+      ],
+      "origin": "drawn",
+      "paired_with": null,
+      "displaced": null
+    },
+    {
+      "id": "h12",
+      "scope": "transaction",
+      "transaction_number": 12,
+      "end_to_end_id": "E2E-AB9C0915C34D",
+      "xpath": "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[12]/Cdtr/Nm",
+      "entity": {
+        "id": "national-iranian-oil-company",
+        "entity_type": "corporate",
+        "listings": [
+          {
+            "list": "ofac_sdn",
+            "entry_id": "11317"
+          },
+          {
+            "list": "uk",
+            "entry_id": "INU0318"
+          }
+        ]
+      },
+      "placement": "creditor",
+      "name": {
+        "variant": "exact",
+        "rendered": "NATIONAL IRANIAN OIL COMPANY",
+        "source": {
+          "value": "NATIONAL IRANIAN OIL COMPANY",
+          "type": "primary",
+          "script": "latin",
+          "listing": {
+            "list": "ofac_sdn",
+            "entry_id": "11317"
+          }
+        }
+      },
+      "bic": null,
+      "lei": null,
+      "address_from_listing": "11317",
+      "triggers": [
+        {
+          "kind": "name",
+          "value": "NATIONAL IRANIAN OIL COMPANY",
+          "listed_on": [
+            "ofac_sdn",
+            "uk"
+          ]
+        }
+      ],
+      "origin": "drawn",
+      "paired_with": null,
+      "displaced": null
+    }
+  ],
+  "exposures": [
+    {
+      "transaction_number": 8,
+      "end_to_end_id": "E2E-6D449EE54212",
+      "country": "RU",
+      "currency": "RUB",
+      "elements": [
+        "creditor_address",
+        "agent_bic",
+        "account"
+      ]
+    }
+  ],
+  "transactions": [
+    {
+      "number": 1,
+      "end_to_end_id": "E2E-2687CE3A68DB",
+      "hit_ids": [
+        "h1",
+        "h2",
+        "h3",
+        "h4"
+      ]
+    },
+    {
+      "number": 2,
+      "end_to_end_id": "E2E-5B0B3F65B7E6",
+      "hit_ids": [
+        "h1",
+        "h2",
+        "h5"
+      ]
+    },
+    {
+      "number": 3,
+      "end_to_end_id": "E2E-DD652BFB5F94",
+      "hit_ids": [
+        "h1",
+        "h2",
+        "h6"
+      ]
+    },
+    {
+      "number": 4,
+      "end_to_end_id": "E2E-22EB0228EA19",
+      "hit_ids": [
+        "h1",
+        "h2",
+        "h7",
+        "h8",
+        "h9"
+      ]
+    },
+    {
+      "number": 5,
+      "end_to_end_id": "E2E-7969F3E566D1",
+      "hit_ids": [
+        "h1",
+        "h2",
+        "h10"
+      ]
+    },
+    {
+      "number": 6,
+      "end_to_end_id": "E2E-1FFDF1518DAB",
+      "hit_ids": [
+        "h1",
+        "h2"
+      ]
+    },
+    {
+      "number": 7,
+      "end_to_end_id": "E2E-60FA4816577B",
+      "hit_ids": [
+        "h1",
+        "h2"
+      ]
+    },
+    {
+      "number": 8,
+      "end_to_end_id": "E2E-6D449EE54212",
+      "hit_ids": [
+        "h1",
+        "h2"
+      ]
+    },
+    {
+      "number": 9,
+      "end_to_end_id": "E2E-96D5EC3400E7",
+      "hit_ids": [
+        "h1",
+        "h2"
+      ]
+    },
+    {
+      "number": 10,
+      "end_to_end_id": "E2E-8BB5A1E1C6A1",
+      "hit_ids": [
+        "h1",
+        "h2"
+      ]
+    },
+    {
+      "number": 11,
+      "end_to_end_id": "E2E-3F21EEA1AD36",
+      "hit_ids": [
+        "h1",
+        "h2",
+        "h11"
+      ]
+    },
+    {
+      "number": 12,
+      "end_to_end_id": "E2E-AB9C0915C34D",
+      "hit_ids": [
+        "h1",
+        "h2",
+        "h12"
+      ]
+    }
+  ],
+  "warnings": []
+}
