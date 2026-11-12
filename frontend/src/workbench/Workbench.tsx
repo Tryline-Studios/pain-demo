@@ -1,5 +1,6 @@
 import { type KeyboardEvent, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useGeneration } from "@/workbench/generate/useGeneration";
 import { OutputPane } from "@/workbench/OutputPane";
 import { SettingsPane } from "@/workbench/SettingsPane";
 import { SETTINGS_WIDTH_MAX, SETTINGS_WIDTH_MIN, useSettingsPaneWidth } from "@/workbench/useSettingsPaneWidth";
@@ -17,8 +18,14 @@ export function Workbench() {
   const { width, dragging, startResize, resizeByKey } = useSettingsPaneWidth();
   const [mode, setMode] = useState<(typeof MODES)[number]>("Generate");
   const validation = useValidation();
+  const generation = useGeneration();
   const panes = {
-    Generate: { inputLabel: "Settings", input: <SettingsPane />, outputLabel: "Output", output: <OutputPane /> },
+    Generate: {
+      inputLabel: "Settings",
+      input: <SettingsPane generation={generation} />,
+      outputLabel: "Output",
+      output: <OutputPane generation={generation} />,
+    },
     Validate: {
       inputLabel: "Message",
       input: <ValidateInput validation={validation} />,
