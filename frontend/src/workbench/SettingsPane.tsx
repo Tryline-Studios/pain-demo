@@ -12,21 +12,22 @@ import {
   INPUT,
 } from "@/workbench/generate/FileSection";
 import type { Generation } from "@/workbench/generate/useGeneration";
+import { PRIMARY_BUTTON } from "@/workbench/OutputPane";
 
 function Section({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
   return (
-    <Collapsible className="group rounded-xl border bg-card">
-      <div className="flex items-center gap-3 px-5 py-4">
-        <CollapsibleTrigger className="flex flex-1 items-center gap-3 text-left">
+    <Collapsible className="group border-b pb-5 last-of-type:border-b-0">
+      <div className="flex items-center gap-3">
+        <CollapsibleTrigger className="flex flex-1 items-center gap-2 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2">
           <ChevronRight
-            className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-90"
+            className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
             aria-hidden
           />
-          <span className="font-medium text-base">{title}</span>
+          <span className="font-semibold text-[11px] text-muted-foreground uppercase tracking-[0.08em]">{title}</span>
         </CollapsibleTrigger>
-        <span className="text-muted-foreground text-sm">{hint}</span>
+        <span className="text-muted-foreground text-xs">{hint}</span>
       </div>
-      <CollapsibleContent className="space-y-6 px-5 pt-1 pb-6">{children}</CollapsibleContent>
+      <CollapsibleContent className="space-y-5 pt-4">{children}</CollapsibleContent>
     </Collapsible>
   );
 }
@@ -55,13 +56,7 @@ export function SettingsPane({ generation }: { generation: Generation }) {
   };
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-      <div className="px-1 pb-2">
-        <h1 className="font-semibold text-xl tracking-tight">pain.001 Sample File generator</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Generate a Sample File and the Answer Key that goes with it.
-        </p>
-      </div>
+    <form className="flex flex-col gap-5" onSubmit={onSubmit}>
       <Section title="File" hint="Message Version, transactions, Seed">
         {settings === undefined || options.data === undefined || messageVersions.data === undefined ? (
           <p className="text-muted-foreground text-sm">
@@ -97,11 +92,11 @@ export function SettingsPane({ generation }: { generation: Generation }) {
           </p>
         ) : null}
       </Section>
-      <div className="sticky bottom-6 mt-2">
+      <div className="sticky bottom-6">
         <Button
           type="submit"
           size="lg"
-          className="w-full"
+          className={`${PRIMARY_BUTTON} w-full`}
           disabled={settings === undefined || hitCountTooHigh || generation.isPending}
         >
           {generation.isPending ? "Generating…" : "Generate"}

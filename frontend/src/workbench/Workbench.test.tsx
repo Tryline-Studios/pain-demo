@@ -28,6 +28,12 @@ describe("Workbench", () => {
     expect(await within(screen.getByRole("banner")).findByText("unavailable")).toBeInTheDocument();
   });
 
+  it("names the page in a level-one heading before the first generate", () => {
+    renderWithQueries(<Workbench />);
+
+    expect(screen.getAllByRole("heading", { level: 1 }).map((heading) => heading.textContent)).toEqual(["pain-demo"]);
+  });
+
   it("shows the empty state in the output pane before the first generate", () => {
     renderWithQueries(<Workbench />);
 

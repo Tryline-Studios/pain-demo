@@ -1,6 +1,7 @@
+import { Check, CircleAlert, FileText } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
-import { Tile } from "@/workbench/Tile";
+import { MonoValue, TILES, Tile } from "@/workbench/Tile";
 import { ProblemRail } from "@/workbench/validate/ProblemRail";
 import { SourceView, splitLines } from "@/workbench/validate/SourceView";
 import type { Validation, ValidationProblem } from "@/workbench/validate/useValidation";
@@ -11,17 +12,42 @@ export function ValidationReportPane({ validation }: { validation: Validation })
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <Tile label="Verdict">{verdict(validation)}</Tile>
-        <Tile label="Message Version">{report?.message_version ?? "–"}</Tile>
-        <Tile label="Transactions">{report?.transaction_count ?? "–"}</Tile>
+      {report === undefined ? null : (
+        <div className="flex items-center gap-3 rounded-[10px] border bg-card px-[18px] py-4">
+          <FileText className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+          <div className="min-w-0">
+            <div className="truncate font-medium font-mono text-[13px]">{report.file.name ?? "Pasted XML"}</div>
+            <div className="flex flex-wrap gap-x-3 text-muted-foreground text-xs">
+              <span>{report.file.size_bytes.toLocaleString("en")} bytes</span>
+              <span className="font-mono" title={report.file.sha256}>
+                sha256 {report.file.sha256.slice(0, 12)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className={TILES}>
+        <Tile label="Verdict" tone={report === undefined ? undefined : report.valid ? "valid" : "invalid"}>
+          {report === undefined ? null : report.valid ? (
+            <Check className="size-5" strokeWidth={2.4} aria-hidden />
+          ) : (
+            <CircleAlert className="size-5" strokeWidth={2.4} aria-hidden />
+          )}
+          <span className="text-xl">{verdict(validation)}</span>
+        </Tile>
         <Tile label="Problems">{problemCount(validation.data)}</Tile>
-        <Tile label="Encoding">{report?.encoding ?? "–"}</Tile>
+        <Tile label="Message Version">
+          <MonoValue>{report?.message_version ?? "–"}</MonoValue>
+        </Tile>
+        <Tile label="Transactions">{report?.transaction_count ?? "–"}</Tile>
+        <Tile label="Encoding">
+          <MonoValue>{report?.encoding ?? "–"}</MonoValue>
+        </Tile>
       </div>
       {validation.isError ? <ProblemBlock error={validation.error} /> : null}
       {validation.isIdle ? (
-        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed text-center">
-          <p className="font-medium text-lg">No message validated yet</p>
+        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[10px] border border-border-strong border-dashed bg-card px-4 text-center">
+          <p className="font-semibold text-lg">No message validated yet</p>
           <p className="mt-2 max-w-md text-muted-foreground text-sm">
             Choose a file or paste XML on the left. The verdict and every Validation Problem will show here.
           </p>
@@ -29,16 +55,9 @@ export function ValidationReportPane({ validation }: { validation: Validation })
       ) : null}
       {report === undefined ? null : (
         <>
-          <p className="flex flex-wrap gap-x-3 text-muted-foreground text-sm">
-            <span className="font-medium text-foreground">{report.file.name ?? "Pasted XML"}</span>
-            <span>{report.file.size_bytes.toLocaleString("en")} bytes</span>
-            <span className="font-mono" title={report.file.sha256}>
-              sha256 {report.file.sha256.slice(0, 12)}
-            </span>
-          </p>
           {report.valid ? (
-            <div className="rounded-xl border border-green-600/40 bg-green-600/5 p-8 text-center">
-              <p className="font-medium text-lg">No problems found</p>
+            <div className="rounded-[10px] border border-success bg-success-soft p-8 text-center text-success">
+              <p className="font-semibold text-lg">No problems found</p>
             </div>
           ) : null}
           {report.truncated ? (
@@ -72,17 +91,33 @@ function problemCount(report: Validation["data"]) {
 
 /** The source view with the problem rail on its right; clicking a problem scrolls the source to its line. */
 function SourceAndRail({ source, problems }: { source: string; problems: ValidationProblem[] }) {
-  const [target, setTarget] = useState<{ line: number } | null>(null);
+  // `key` tells apart two problems on one line, so only the chosen card is marked.
+  const [target, setTarget] = useState<{ line: number; key: string } | null>(null);
   const lines = useMemo(() => splitLines(source), [source]);
   if (problems.length === 0) {
     return <SourceView lines={lines} problems={problems} target={null} />;
   }
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <SourceView lines={lines} problems={problems} target={target} />
-      <div className="lg:max-h-[70vh] lg:overflow-auto">
-        <ProblemRail problems={problems} lineCount={lines.length} onJump={(line) => setTarget({ line })} />
+    <div className="flex flex-wrap items-start gap-4">
+      <div className="min-w-0 flex-[999_1_520px]">
+        <SourceView lines={lines} problems={problems} target={target} />
       </div>
+      <section aria-labelledby="problems-heading" className="flex min-w-0 flex-[1_1_340px] flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <h2 id="problems-heading" className="font-semibold text-sm">
+            Validation Problems
+          </h2>
+          <span className="text-muted-foreground text-xs">XSD layer</span>
+        </div>
+        <div className="lg:max-h-[70vh] lg:overflow-auto">
+          <ProblemRail
+            problems={problems}
+            lineCount={lines.length}
+            selected={target?.key ?? null}
+            onJump={(line, key) => setTarget({ line, key })}
+          />
+        </div>
+      </section>
     </div>
   );
 }

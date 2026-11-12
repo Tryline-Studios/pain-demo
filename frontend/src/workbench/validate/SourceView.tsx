@@ -56,47 +56,57 @@ export function SourceView({
   const total = tops[lines.length] ?? 0;
 
   return (
-    <div
-      ref={scroller}
-      onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
-      className="h-[70vh] overflow-auto rounded-xl border bg-muted/30 font-mono text-xs leading-5"
-    >
-      <ol
-        aria-label="Source"
-        className="w-max min-w-full"
-        style={{ paddingTop: tops[start], paddingBottom: total - (tops[end] ?? total) }}
+    <div className="overflow-hidden rounded-[10px] border bg-card shadow-xs">
+      <div className="flex items-center justify-between border-b px-[18px] py-3">
+        <h2 className="font-semibold text-sm">Source</h2>
+        <span className="font-mono text-muted-foreground text-xs">{lines.length.toLocaleString("en")} lines</span>
+      </div>
+      <div
+        ref={scroller}
+        onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+        className="h-[70vh] overflow-auto bg-code font-mono text-xs leading-5"
       >
-        {lines.slice(start, end).map((text, at) => {
-          const line = start + at + 1;
-          const lineProblems = byLine.get(line);
-          return (
-            <li
-              key={line}
-              aria-current={target?.line === line ? "location" : undefined}
-              className={cn({
-                "bg-destructive/10": lineProblems,
-                "outline-2 outline-primary -outline-offset-2": target?.line === line,
-              })}
-            >
-              <div className="flex h-5">
-                <span className="sticky left-0 w-16 shrink-0 select-none bg-inherit pr-3 text-right text-muted-foreground tabular-nums">
-                  {line}
-                </span>
-                <span className="whitespace-pre pr-4">{text}</span>
-              </div>
-              {lineProblems?.map((problem) => (
-                <div
-                  key={problemKey(problem)}
-                  className="ml-16 h-5 whitespace-pre border-destructive border-l-2 pr-4 pl-3 font-sans text-destructive"
-                >
-                  <code className="mr-2">{problem.code}</code>
-                  {problem.message}
+        <ol
+          aria-label="Source"
+          className="w-max min-w-full"
+          style={{ paddingTop: tops[start], paddingBottom: total - (tops[end] ?? total) }}
+        >
+          {lines.slice(start, end).map((text, at) => {
+            const line = start + at + 1;
+            const lineProblems = byLine.get(line);
+            return (
+              <li
+                key={line}
+                aria-current={target?.line === line ? "location" : undefined}
+                className={cn({ "bg-destructive-soft": lineProblems })}
+              >
+                <div className="flex h-5">
+                  <span
+                    className={cn(
+                      "sticky left-0 w-16 shrink-0 select-none pr-3.5 text-right tabular-nums",
+                      lineProblems ? "bg-destructive-soft text-destructive" : "bg-code text-line-number",
+                      // The marked line's bar sits on the sticky number, so it stays put on horizontal scroll.
+                      { "shadow-[inset_3px_0_0_var(--destructive)]": target?.line === line },
+                    )}
+                  >
+                    {line}
+                  </span>
+                  <span className="whitespace-pre pr-4">{text}</span>
                 </div>
-              ))}
-            </li>
-          );
-        })}
-      </ol>
+                {lineProblems?.map((problem) => (
+                  <div
+                    key={problemKey(problem)}
+                    className="ml-16 h-5 whitespace-pre border-destructive border-l-2 pr-4 pl-3 font-sans text-destructive"
+                  >
+                    <code className="mr-2">{problem.code}</code>
+                    {problem.message}
+                  </div>
+                ))}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
   );
 }

@@ -53,8 +53,8 @@ function toggle<T>(list: T[], item: T) {
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: the control is the child
-    <label className="flex flex-col gap-2 text-sm">
-      <span className="font-medium">{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span className={LABEL}>{label}</span>
       {children}
     </label>
   );
@@ -80,9 +80,12 @@ function Chips<T extends string>({
           type="button"
           aria-pressed={chosen.includes(item)}
           onClick={() => onToggle(item)}
-          className={cn("rounded-full border px-3 py-1 font-medium text-sm tabular-nums", {
-            "border-primary bg-primary text-primary-foreground": chosen.includes(item),
-          })}
+          className={cn(
+            "h-[26px] rounded-full border bg-secondary px-2.5 font-medium text-xs tabular-nums focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1",
+            {
+              "border-primary bg-primary text-primary-foreground": chosen.includes(item),
+            },
+          )}
         >
           {item}
         </button>
@@ -91,7 +94,9 @@ function Chips<T extends string>({
   );
 }
 
-export const INPUT = "h-10 rounded-md border bg-background px-3 text-sm";
+export const LABEL = "font-medium text-label text-xs";
+export const INPUT =
+  "h-9 w-full rounded-md border border-border-strong bg-card px-2.5 font-mono text-sm focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1 aria-invalid:border-destructive";
 
 /** Message Version, transactions, Seed, countries, amount range and currencies, all from the API (spec 13.2). */
 export function FileSection({
@@ -110,7 +115,7 @@ export function FileSection({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-3">
         <Field label="Message Version">
           <select
             className={INPUT}
@@ -145,8 +150,8 @@ export function FileSection({
           onChange={(e) => set({ seed: e.target.value })}
         />
       </Field>
-      <div className="flex flex-col gap-2 text-sm">
-        <span className="font-medium">Countries</span>
+      <div className="flex flex-col gap-2 text-xs">
+        <span className={LABEL}>Countries</span>
         <Chips
           label="Countries"
           all={options.countries.map((c) => c.country)}
@@ -160,14 +165,14 @@ export function FileSection({
               key={country}
               type="button"
               onClick={() => set({ countries: [country, ...value.countries.filter((c) => c !== country)] })}
-              className="rounded-full border border-dashed px-2 text-xs hover:text-foreground"
+              className="rounded-full border border-dashed px-2 text-primary hover:text-foreground"
             >
               Make {country} Debtor
             </button>
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-3">
         <Field label="Minimum amount">
           <input
             type="text"
@@ -187,8 +192,8 @@ export function FileSection({
           />
         </Field>
       </div>
-      <div className="flex flex-col gap-2 text-sm">
-        <span className="font-medium">Currencies</span>
+      <div className="flex flex-col gap-2 text-xs">
+        <span className={LABEL}>Currencies</span>
         <Chips
           label="Currencies"
           all={currencies}

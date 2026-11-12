@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>pain-demo</title>
+    <script>
+      // Applies the remembered theme before first paint so a dark user never sees a light flash;
+      // src/workbench/ThemeSwitch.tsx owns the theme (and THEME_KEY) after that;
+      // ThemeSwitch.test.tsx runs this script to keep the two in step.
+      // A block keeps `theme` out of global scope.
+      {
+        let theme = null;
+        try {
+          theme = localStorage.getItem("workbench.theme");
+        } catch {
+          // A blocked store means System.
+        }
+        if (theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.classList.add("dark");
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

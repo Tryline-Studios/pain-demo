@@ -16,6 +16,7 @@ async function openValidate() {
 }
 
 type ValidationReport = components["schemas"]["ValidationReport"];
+type ValidationProblem = ValidationReport["problems"][number];
 
 const SHA256 = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 
@@ -166,7 +167,7 @@ describe("Validate mode", () => {
     const [first, second, last] = items as [HTMLElement, HTMLElement, HTMLElement];
     expect(first).toHaveTextContent("invalid_value");
     expect(second).toHaveTextContent("pattern_mismatch");
-    expect(second).toHaveTextContent("Line 12");
+    expect(second).toHaveTextContent("Line 12 · col 30");
     expect(last).toHaveTextContent("dtd_not_allowed");
     expect(first).toHaveTextContent("Line 9");
     expect(first).toHaveTextContent("Cd 'SAVING' on line 9 is not one of the allowed values");
@@ -318,11 +319,27 @@ describe("Validate mode", () => {
       const rail = await within(report()).findByRole("list", { name: "Validation Problems" });
 
       await user.click(within(rail).getByRole("button", { name: /pattern_mismatch/ }));
+      expect(within(rail).getByRole("button", { name: /pattern_mismatch/ })).toHaveAttribute("aria-pressed", "true");
+      expect(within(rail).getByRole("button", { name: /invalid_value/ })).toHaveAttribute("aria-pressed", "false");
       expect(sourceLine(12)).toHaveAttribute("aria-current", "location");
       expect(sourceLine(9)).not.toHaveAttribute("aria-current");
 
       const [, , noLine] = within(rail).getAllByRole("listitem") as [HTMLElement, HTMLElement, HTMLElement];
       expect(within(noLine).queryByRole("button")).not.toBeInTheDocument();
+    });
+
+    it("marks only the chosen problem when two share a line", async () => {
+      const [first, second] = invalidReport.problems as [ValidationProblem, ValidationProblem];
+      answerWith({ ...invalidReport, problems: [first, { ...second, line: first.line }] });
+      const user = await openValidate();
+
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([source], "batch.xml"));
+      const rail = await within(report()).findByRole("list", { name: "Validation Problems" });
+
+      await user.click(within(rail).getByRole("button", { name: /pattern_mismatch/ }));
+      expect(within(rail).getByRole("button", { name: /pattern_mismatch/ })).toHaveAttribute("aria-pressed", "true");
+      expect(within(rail).getByRole("button", { name: /invalid_value/ })).toHaveAttribute("aria-pressed", "false");
+      expect(sourceLine(9)).toHaveAttribute("aria-current", "location");
     });
 
     it("treats a problem whose line is past the end of the source like one with no line", async () => {

@@ -41,7 +41,7 @@ export function HighlightedXml({ xml, hits }: { xml: string; hits: Hit[] }) {
   }, [xml, hits]);
 
   return (
-    <pre className="max-h-[70vh] overflow-auto rounded-xl border bg-card p-4 font-mono text-xs">
+    <pre className="max-h-[70vh] overflow-auto rounded-b-[10px] bg-code px-[18px] py-3 font-mono text-[12.5px] leading-[22px]">
       {lines.map(({ text, hit }, at) => {
         const end = at === lines.length - 1 ? "" : "\n";
         if (hit === undefined) {
@@ -54,7 +54,7 @@ export function HighlightedXml({ xml, hits }: { xml: string; hits: Hit[] }) {
           // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
           <span key={at}>
             {text.slice(0, open)}
-            <mark title={hit.id} className="rounded-sm bg-amber-200 px-0.5 text-foreground dark:bg-amber-500/40">
+            <mark title={hit.id} className="rounded-sm bg-hit px-0.5 text-hit-foreground">
               {text.slice(open, close)}
             </mark>
             {text.slice(close)}
