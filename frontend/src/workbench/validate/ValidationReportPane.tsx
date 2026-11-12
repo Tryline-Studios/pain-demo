@@ -43,15 +43,10 @@ export function ValidationReportPane({ validation }: { validation: Validation })
             <div className="rounded-xl border border-green-600/40 bg-green-600/5 p-8 text-center">
               <p className="font-medium text-lg">No problems found</p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {report.truncated ? (
-                <p className="text-muted-foreground text-sm">Only the first 100 problems are shown.</p>
-              ) : null}
-              {/* Keyed by submission so a new report starts at the top with no line marked. */}
-              <SourceAndRail key={validation.submittedAt} source={validation.source} problems={report.problems} />
-            </div>
-          )}
+          ) : null}
+          {report.truncated ? <p className="text-muted-foreground text-sm">Only the first 100 problems are shown.</p> : null}
+          {/* Keyed by submission so a new report starts at the top with no line marked. */}
+          <SourceAndRail key={validation.submittedAt} source={validation.source} problems={report.problems} />
         </>
       )}
     </div>
@@ -61,6 +56,9 @@ export function ValidationReportPane({ validation }: { validation: Validation })
 /** The source view with the problem rail on its right; clicking a problem scrolls the source to its line. */
 function SourceAndRail({ source, problems }: { source: string; problems: ValidationProblem[] }) {
   const [target, setTarget] = useState<{ line: number } | null>(null);
+  if (problems.length === 0) {
+    return <SourceView source={source} problems={problems} target={null} />;
+  }
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
       <SourceView source={source} problems={problems} target={target} />

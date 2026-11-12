@@ -287,6 +287,17 @@ describe("Validate mode", () => {
       expect(sourceView()).not.toHaveTextContent("dtd_not_allowed");
     });
 
+    it("shows the source of a valid message below 'No problems found'", async () => {
+      answerWith(validReport);
+      const user = await openValidate();
+
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([source], "batch.xml"));
+
+      expect(await within(report()).findByText("No problems found")).toBeInTheDocument();
+      expect(within(sourceView()).getAllByRole("listitem")).toHaveLength(12);
+      expect(sourceLine(12)).toHaveTextContent(/^12<L12\/>$/);
+    });
+
     it("shows the pasted text", async () => {
       answerWith(invalidReport);
       const user = await openValidate();
