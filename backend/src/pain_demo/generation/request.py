@@ -29,6 +29,8 @@ type MessageVersion = Literal[
 ]
 
 DEFAULT_MESSAGE_VERSION: MessageVersion = "pain.001.001.03"
+# shortcut: published as `maximum` on `transaction_count` until `transactions[]` exists; the Supplied Data ticket
+# adds `maxItems: 100` to it.
 MAX_TRANSACTIONS = 100
 DEFAULT_TRANSACTION_COUNT = 10
 MAX_SEED_LENGTH = 64
