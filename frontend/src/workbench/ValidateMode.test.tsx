@@ -367,4 +367,40 @@ describe("Validate mode", () => {
       expect(within(sourceView()).queryByText(/^<Ln1\/>$/)).not.toBeInTheDocument();
     });
   });
+
+  describe("source encoding", () => {
+    // "<Nm>Société</Nm>" on line 2; every character is below 256, so its char codes are its Latin-1 bytes.
+    const latin1 = new Uint8Array([..."<Document>\n<Nm>Société</Nm>\n</Document>"].map((char) => char.charCodeAt(0)));
+
+    async function sourceOf(bytes: Uint8Array<ArrayBuffer>, encoding: string | null) {
+      answerWith({ ...validReport, encoding });
+      const user = await openValidate();
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([bytes], "batch.xml"));
+      return within(report()).findByRole("list", { name: "Source" });
+    }
+
+    it("decodes a picked file with the encoding the report names", async () => {
+      const source = await sourceOf(latin1, "ISO-8859-1");
+
+      expect(within(source).getByText("<Nm>Société</Nm>")).toBeInTheDocument();
+    });
+
+    it("decodes a UTF-16 file, keeping its line numbers", async () => {
+      const text = "<Document>\n<Nm>Société</Nm>\n</Document>";
+      const utf16 = new Uint8Array([0xff, 0xfe, ...[...text].flatMap((char) => [char.charCodeAt(0), 0])]);
+
+      const source = await sourceOf(utf16, "UTF-16");
+
+      expect(within(source).getAllByRole("listitem")).toHaveLength(3);
+      expect(within(source).getByText("<Nm>Société</Nm>")).toBeInTheDocument();
+    });
+
+    it("falls back to UTF-8 when the report names no encoding the browser knows", async () => {
+      const utf8 = new TextEncoder().encode("<Document>\n<Nm>Société</Nm>\n</Document>");
+
+      const source = await sourceOf(utf8, "X-NOT-AN-ENCODING");
+
+      expect(within(source).getByText("<Nm>Société</Nm>")).toBeInTheDocument();
+    });
+  });
 });
