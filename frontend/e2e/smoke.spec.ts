@@ -21,6 +21,8 @@ test("Generate mode generates a clean Sample File through Caddy, downloads it an
   await expect(output.getByRole("group", { name: "Seed" })).toHaveText(/smoke/);
   await expect(output.getByRole("group", { name: "Transactions" })).toHaveText(/3/);
   await expect(output.getByRole("group", { name: "Version" })).toHaveText(/pain\.001\.001\.09/);
+  await expect(output.getByRole("tabpanel")).toContainText("No Hits");
+  await output.getByRole("tab", { name: "XML" }).click();
   await expect(output.getByRole("tabpanel")).toContainText("urn:iso:std:iso:20022:tech:xsd:pain.001.001.09");
 
   for (const [button, name] of [
@@ -38,6 +40,21 @@ test("Generate mode generates a clean Sample File through Caddy, downloads it an
   await expect(report.getByRole("group", { name: "Verdict" })).toHaveText(/^Verdict\s*Valid$/);
   await expect(report.getByRole("group", { name: "Message Version" })).toHaveText(/pain\.001\.001\.09/);
   await expect(report.getByText("pain.001.001.09-smoke.xml")).toBeVisible();
+});
+
+test("Generate mode draws Hits and lists them in the Answer Key table and the XML", async ({ page }) => {
+  await page.goto("/");
+  const settings = page.getByRole("complementary", { name: "Settings" });
+  await settings.getByRole("button", { name: "Hits" }).click();
+  await settings.getByRole("spinbutton", { name: "Hit Count" }).fill("2");
+  await settings.getByRole("button", { name: "Generate" }).click();
+
+  const output = page.getByRole("region", { name: "Output" });
+  await expect(output.getByRole("group", { name: "Hits" })).toHaveText(/2/);
+  // A header row and one row per Hit.
+  await expect(output.getByRole("tabpanel").getByRole("row")).toHaveCount(3);
+  await output.getByRole("tab", { name: "XML" }).click();
+  await expect(output.getByRole("tabpanel").locator("mark")).toHaveCount(2);
 });
 
 // The minimal XSD-valid .03 message the backend's validation tests use.
