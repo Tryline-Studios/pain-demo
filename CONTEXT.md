@@ -12,6 +12,18 @@ _Avoid_: Payment file, test file, output
 The specific pain.001 schema revision a Sample File conforms to (e.g. pain.001.001.03, the default).
 _Avoid_: Format, variant, schema
 
+**Uploaded Message**:
+A pain.001 XML document supplied by a user to be checked, not produced by this app. Never called a Sample File, even when it is one we generated and uploaded back.
+_Avoid_: Upload, input file, customer file
+
+**Validation Report**:
+The verdict on one Uploaded Message: whether it is valid, the Message Version it declares, and every Validation Problem found.
+_Avoid_: Validation result, error list, lint output
+
+**Validation Problem**:
+One located defect in an Uploaded Message: what is wrong, the element and line where it occurs, and the cause.
+_Avoid_: Error, violation, finding
+
 **Generated Data**:
 Payment content fabricated by the app (fake names, accounts, amounts) rather than supplied by a user.
 _Avoid_: Random data, mock data, dummy data
