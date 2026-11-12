@@ -21,6 +21,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "httpx2",
+    "hypothesis>=6.170.15",
     "prek",
     "pytest",
     "ruff",
