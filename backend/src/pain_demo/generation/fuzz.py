@@ -67,7 +67,7 @@ class Fuzz:
 
 def fuzz(rng: random.Random, entity: Entity) -> Fuzz:
     """Redraw base and operations from `rng` until the result keeps to the budget (spec 7.5, 7.6): at most two
-    distinct operations (so at most one typo), Jaro-Winkler at least 0.85 to the base, at most 140 characters, and
+    distinct operations (so at most one typo), `keeps_to_similarity` to the base, at most 140 characters, and
     not a listed name even case-insensitively (a case change is not a fuzz)."""
     bases = [name for name in candidate_names(entity) if name.script == "latin"]
     listed = {name.value.casefold() for name in entity.names}
@@ -87,7 +87,7 @@ def fuzz(rng: random.Random, entity: Entity) -> Fuzz:
             value is not None
             and len(value) <= MAX_NAME_LENGTH
             and value.casefold() not in listed
-            and JaroWinkler.normalized_similarity(value, base.value) >= FUZZ_THRESHOLD
+            and keeps_to_similarity(value, base.value)
         ):
             return Fuzz(base, tuple(drawn), value)
     msg = f"no fuzz of {entity.id} keeps to the budget"
@@ -102,15 +102,25 @@ def apply_operation(operation: FuzzOperation, value: str, entity_type: EntityTyp
     return result if result and result != value else None
 
 
+def keeps_to_similarity(value: str, base: str) -> bool:
+    """Jaro-Winkler at least the threshold on token-sorted strings, so moving whole tokens costs nothing (spec 7.5)."""
+    return JaroWinkler.normalized_similarity(_token_sorted(value), _token_sorted(base)) >= FUZZ_THRESHOLD
+
+
+def _token_sorted(value: str) -> str:
+    return " ".join(sorted(value.split()))
+
+
 def _typo(value: str, rng: random.Random, _: EntityType) -> str | None:
-    """One substitution, transposition, deletion or insertion, never in a token's first two characters."""
+    """One substitution, transposition, deletion or insertion of letters, never in the first two letters of a run
+    of letters: tokens split on any non-letter, so `-` or `(` are never touched and stay `punctuation`'s."""
     kind = rng.choice(_TYPOS)
-    spots: list[tuple[int, bool]] = []  # (index into value, token in capitals)
-    for token in re.finditer(r"\S+", value):
-        start, end, upper = token.start(), token.end(), token[0].isupper()
+    spots: list[tuple[int, bool]] = []  # (index into value, run in capitals)
+    for run in re.finditer(r"[^\W\d_]+", value):
+        start, end, upper = run.start(), run.end(), run[0].isupper()
         match kind:
             case "substitution":
-                spots += [(i, upper) for i in range(start + 2, end) if value[i].isalpha()]
+                spots += [(i, upper) for i in range(start + 2, end)]
             case "transposition":
                 spots += [(i, upper) for i in range(start + 2, end - 1) if value[i].lower() != value[i + 1].lower()]
             case "deletion":
@@ -195,7 +205,7 @@ def _punctuation(value: str, rng: random.Random, _: EntityType) -> str | None:
     if spaces:
         at = rng.choice(spaces)
         edits.append(lambda: value[:at] + "-" + value[at + 1 :])
-    changed = [result for edit in edits if (result := _tidy(edit())) != value]
+    changed = [result for edit in edits if (result := edit()) != value]
     return rng.choice(changed) if changed else None
 
 

@@ -5,15 +5,14 @@ from typing import Literal
 
 import iuliia
 
-type TransliterationScheme = Literal["icao", "bgn_pcgn", "iso_9", "ala_lc", "russian_passport_2013", "wikipedia"]
+type TransliterationScheme = Literal["icao", "bgn_pcgn", "iso_9", "ala_lc", "gost_52535", "wikipedia"]
 
 SCHEMES: dict[TransliterationScheme, iuliia.Schema] = {
     "icao": iuliia.ICAO_DOC_9303,
     "bgn_pcgn": iuliia.BGN_PCGN,
     "iso_9": iuliia.GOST_779,  # GOST 7.79-2000 system A is ISO 9:1995
-    # iuliia has no separate 2013 passport scheme (2013 passports use ICAO Doc 9303, already above), so the slot
-    # takes GOST R 52535.1-2006, the passport scheme in force until 2013, whose output differs from ICAO's.
-    "russian_passport_2013": iuliia.GOST_52535,
+    # GOST R 52535.1-2006, the passport scheme until 2013 (passports since use ICAO Doc 9303, above).
+    "gost_52535": iuliia.GOST_52535,
     "ala_lc": iuliia.ALA_LC,
     "wikipedia": iuliia.WIKIPEDIA,
 }

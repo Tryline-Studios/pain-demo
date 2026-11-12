@@ -485,9 +485,9 @@ def test_placements_and_name_variants_follow_the_spec_weights(client: TestClient
     every_variant = shares(all_five, "variant")
     expected = {"exact": 0.4, "alias": 0.25, "fuzzed": 0.2, "transliteration": 0.1, "native_script": 0.05}
     assert every_variant == pytest.approx(expected, abs=0.05), every_variant
-    # Evraz NTMK has neither a non-Latin name nor a Cyrillic one: 40 / 25 / 20, renormalised over 85.
+    # Evraz NTMK has no non-Latin name, so it draws from exact, alias and fuzzed only (too few Hits to check shares).
     ntmk = shares([h for h in hits if h["entity"]["id"] == "evraz-ntmk"], "variant")
-    assert set(ntmk) <= {"exact", "alias", "fuzzed"}
+    assert set(ntmk) == {"exact", "alias", "fuzzed"}
 
 
 def test_a_hit_leaves_every_other_transaction_untouched(client: TestClient) -> None:

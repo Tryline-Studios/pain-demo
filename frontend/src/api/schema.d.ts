@@ -831,7 +831,7 @@ export interface components {
         /** @enum {string} */
         SupportedCountry: "GB" | "IE" | "DE" | "FR" | "IT" | "ES" | "NL" | "BE" | "PL" | "AT" | "PT" | "US";
         /** @enum {string} */
-        TransliterationScheme: "icao" | "bgn_pcgn" | "iso_9" | "ala_lc" | "russian_passport_2013" | "wikipedia";
+        TransliterationScheme: "icao" | "bgn_pcgn" | "iso_9" | "ala_lc" | "gost_52535" | "wikipedia";
         /** Trigger */
         Trigger: {
             /**

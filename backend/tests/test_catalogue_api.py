@@ -339,3 +339,13 @@ def test_an_entity_whose_every_transliteration_is_listed_does_not_support_it(tmp
         (summary,) = client.get("/api/v1/entities").json()
 
     assert summary["name_variants"] == ["exact", "native_script", "fuzzed"]
+
+
+def test_an_entity_with_no_latin_name_does_not_support_fuzzed(tmp_path: Path) -> None:
+    cyrillic_only = MINIMAL_BANK.replace('"TEST BANK"', '"Тест Банк"').replace('"latin"', '"cyrillic"')
+    write_catalogue(tmp_path, {"test-bank": cyrillic_only})
+    with TestClient(create_app(catalogue_root=tmp_path)) as client:
+        (summary,) = client.get("/api/v1/entities").json()
+
+    assert "native_script" in summary["name_variants"]
+    assert "fuzzed" not in summary["name_variants"]

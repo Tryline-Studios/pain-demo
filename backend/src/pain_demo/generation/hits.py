@@ -477,14 +477,14 @@ def _mention(rng: random.Random, name: str) -> tuple[RemittanceElement, str]:
 
 
 def _name(rng: random.Random, entity: Entity) -> HitName:
-    supported = supported_name_variants(entity)  # never a name over 140 characters (spec 7.6)
+    offered = transliterations(entity)
+    supported = supported_name_variants(entity, offered)  # never a name over 140 characters (spec 7.6)
     weights = {variant: w for variant, w in NAME_VARIANT_WEIGHTS.items() if variant in supported}
     (variant,) = rng.choices(list(weights), weights=list(weights.values()))
     if variant == "transliteration":  # a Cyrillic name, then a scheme that does not collide (spec 7.4)
-        offered = transliterations(entity)
-        name = rng.choice(list(dict.fromkeys(name for name, _, _ in offered)))
-        scheme, latin = rng.choice([(scheme, latin) for n, scheme, latin in offered if n == name])
-        return HitName(variant=variant, rendered=latin, source=_source(name), scheme=scheme)
+        name = rng.choice(list(dict.fromkeys(t.name for t in offered)))
+        chosen = rng.choice([t for t in offered if t.name == name])
+        return HitName(variant=variant, rendered=chosen.latin, source=_source(name), scheme=chosen.scheme)
     if variant == "fuzzed":
         fuzzed = fuzz(rng, entity)
         return HitName(

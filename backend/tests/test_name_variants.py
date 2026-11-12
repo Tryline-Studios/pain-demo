@@ -1,6 +1,8 @@
 """Transliteration and fuzzed Name Variants (spec 7.4, 7.5): pinned examples and the fuzz budget as a property."""
 
 import random
+import re
+import unicodedata
 
 import pytest
 from hypothesis import given, settings
@@ -8,10 +10,11 @@ from hypothesis import strategies as st
 from rapidfuzz.distance import JaroWinkler
 
 from pain_demo.catalogue import load_catalogue
-from pain_demo.catalogue.capabilities import transliterations
+from pain_demo.catalogue.capabilities import MAX_NAME_LENGTH, transliterations
 from pain_demo.catalogue.schema import Entity, EntityType
 from pain_demo.catalogue.transliteration import transliterate
-from pain_demo.generation.fuzz import FuzzOperation, apply_operation, fuzz
+from pain_demo.generation.fuzz import LEGAL_FORMS, FuzzOperation, apply_operation, fuzz, keeps_to_similarity
+from pain_demo.generation.screening import FUZZ_THRESHOLD
 
 CATALOGUE = load_catalogue()
 SBERBANK, ALFA_BANK, EVRAZ, ABRAMOVICH = (
@@ -22,23 +25,28 @@ SBERBANK, ALFA_BANK, EVRAZ, ABRAMOVICH = (
 # --- transliteration
 
 
-def test_each_scheme_romanises_a_listed_cyrillic_name_its_own_way() -> None:
-    name = "ПАО Сбербанк"
-    assert {
-        scheme: transliterate(name, scheme)
-        for scheme in ("icao", "bgn_pcgn", "iso_9", "ala_lc", "russian_passport_2013", "wikipedia")
-    } == {
-        "icao": "PAO Sberbank",
-        "bgn_pcgn": "PAO Sberbank",
-        "iso_9": "PAO Sberbank",
-        "ala_lc": "PAO Sberbank",
-        "russian_passport_2013": "PAO Sberbank",
-        "wikipedia": "PAO Sberbank",
+SCHEMES = ("icao", "bgn_pcgn", "iso_9", "ala_lc", "gost_52535", "wikipedia")
+
+
+def test_the_six_schemes_romanise_one_listed_name_six_ways() -> None:
+    name = "Публичное Акционерное Общество Промсвязьбанк"  # Promsvyazbank's listed Cyrillic name
+
+    assert {scheme: transliterate(name, scheme) for scheme in SCHEMES} == {
+        "icao": "Publichnoe Aktsionernoe Obshchestvo Promsviazbank",
+        "bgn_pcgn": "Publichnoye Aktsionernoye Obshchestvo Promsvyaz\u2019bank",
+        "iso_9": "Publi\u010dnoe Akcionernoe Ob\u015destvo Promsv\u00e2z\u02b9bank",
+        "ala_lc": "Publichnoe Akt\u0361sionernoe Obshchestvo Promsvi\u0361az\u02b9bank",
+        "gost_52535": "Publichnoe Aktcionernoe Obshchestvo Promsviazbank",
+        "wikipedia": "Publichnoye Aktsionernoye Obshchestvo Promsvyazbank",
     }
+
+
+def test_a_plain_name_can_come_out_the_same_under_every_scheme() -> None:
+    assert {transliterate("ПАО Сбербанк", scheme) for scheme in SCHEMES} == {"PAO Sberbank"}
     assert transliterate("Альфа-Банка", "bgn_pcgn") == "Al\u2019fa-Banka"
     assert transliterate("Альфа-Банка", "iso_9") == "Al\u02b9fa-Banka"
     assert transliterate("Евраз", "wikipedia") == "Yevraz"
-    assert transliterate("Цюрих", "russian_passport_2013") == "Tciurikh"
+    assert transliterate("Цюрих", "gost_52535") == "Tciurikh"
     assert transliterate("Цюрих", "icao") == "Tsiurikh"
 
 
@@ -118,10 +126,38 @@ def test_a_typo_alters_one_character_after_a_tokens_first_two() -> None:
     assert "Sbrebank" in results  # the spec's transposition
 
 
+def test_a_typo_alters_only_letters_never_the_first_two_of_a_letter_run() -> None:
+    value = "Alfa-Bank (PJSC)."
+    results = {apply_operation("typo", value, "bank", random.Random(n)) for n in range(500)}
+
+    for result in map(str, results):
+        assert re.sub(r"[^\W\d_]", "", result) == "- ().", result
+        assert [run[:2] for run in re.findall(r"[^\W\d_]+", result)] == ["Al", "Ba", "PJ"], result
+        assert all(run.isupper() for run in re.findall(r"[^\W\d_]+", result)[2:]), result
+
+
+def test_punctuation_changes_only_the_punctuation_it_targets() -> None:
+    results = {apply_operation("punctuation", "Alfa-Bank,  Moscow.", "bank", random.Random(n)) for n in range(200)}
+
+    assert results == {"Alfa Bank,  Moscow.", "Alfa-Bank,  Moscow", "Alfa-Bank,- Moscow.", "Alfa-Bank, -Moscow."}
+
+
 def test_whitespace_doubles_a_space_or_adds_a_trailing_one() -> None:
     results = {apply_operation("whitespace", "Evraz PLC", "corporate", random.Random(n)) for n in range(50)}
 
     assert results == {"Evraz  PLC", "Evraz PLC "}
+
+
+def test_the_similarity_budget_ignores_token_order_but_not_letters() -> None:
+    assert keeps_to_similarity("Abramovich Roman", "Roman Abramovich")
+    assert JaroWinkler.normalized_similarity("Abramovich Roman", "Roman Abramovich") < FUZZ_THRESHOLD  # unsorted
+    assert not keeps_to_similarity("Roman Vekselberg", "Roman Abramovich")
+
+
+def test_reorder_tokens_appears_in_drawn_fuzzes() -> None:
+    drawn = [fuzz(random.Random(n), ABRAMOVICH) for n in range(200)]
+
+    assert any("reorder_tokens" in f.operations for f in drawn)
 
 
 # --- whole fuzzes, pinned per Seed so the same Seed always yields the same string (spec 7)
@@ -134,7 +170,7 @@ def test_a_seeded_fuzz_is_pinned() -> None:
         "sberbank": ("Sberbank of Russia", ("punctuation",), "Sberbank-of Russia"),
         "alfa-bank": ("ALFA-BANK", ("punctuation",), "ALFA BANK"),
         "evraz-plc": ("Evraz PLC", ("punctuation",), "Evraz-PLC"),
-        "roman-abramovich": ("Roman Arkadyevich ABRAMOVICH", ("initial",), "R. Arkadyevich ABRAMOVICH"),
+        "roman-abramovich": ("Roman ABRAMOVICH", ("reorder_tokens",), "ABRAMOVICH Roman"),
     }
 
 
@@ -150,9 +186,18 @@ def test_every_fuzz_keeps_to_the_budget(entity: Entity, seed: int) -> None:
     assert result.base.script == "latin"
     assert 1 <= len(result.operations) <= 2
     assert len(set(result.operations)) == len(result.operations)  # so at most one typo
-    assert JaroWinkler.normalized_similarity(result.rendered, result.base.value) >= 0.85
-    assert len(result.rendered) <= 140
+    tokens_sorted = [" ".join(sorted(v.split())) for v in (result.rendered, result.base.value)]
+    assert JaroWinkler.normalized_similarity(*tokens_sorted) >= FUZZ_THRESHOLD
+    assert len(result.rendered) <= MAX_NAME_LENGTH
     assert result.rendered.casefold() not in {name.value.casefold() for name in entity.names}
-    if result.operations == ("typo",):
-        base, rendered = result.base.value.split(), result.rendered.split()
-        assert [token[:2] for token in base] == [token[:2] for token in rendered]
+    if "typo" in result.operations:  # every word starts as a word of the base (punctuation dropped or not) or a form
+        base = result.base.value
+        words = [base, re.sub(r"[^\w\s-]", "", base), *LEGAL_FORMS, *LEGAL_FORMS.values()]
+        allowed = {run[:2] for run in _letter_runs(" ".join(words))}
+        for run in _letter_runs(result.rendered):
+            assert any(prefix.startswith(run[:2]) for prefix in allowed), (result, run)
+
+
+def _letter_runs(value: str) -> list[str]:
+    bare = "".join(c for c in unicodedata.normalize("NFD", value) if not unicodedata.combining(c))
+    return re.findall(r"[^\W\d_]+", bare.casefold())
