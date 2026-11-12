@@ -136,7 +136,7 @@ def _agent(agent: Agent) -> dict[str, Any]:
 def _account(account: Account) -> dict[str, Any]:
     if isinstance(account, Iban):
         return {"iban": account.iban}
-    return {"other": {"id": account.id, "proprietary_scheme": "BBAN"}}
+    return {"other": {"id": account.id}}
 
 
 def _remittance(remittance: Remittance) -> dict[str, Any]:

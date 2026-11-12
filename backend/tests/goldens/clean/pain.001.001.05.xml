@@ -244,9 +244,6 @@
           <Id>
             <Othr>
               <Id>4990460470</Id>
-              <SchmeNm>
-                <Prtry>BBAN</Prtry>
-              </SchmeNm>
             </Othr>
           </Id>
         </CdtrAcct>
@@ -362,9 +359,6 @@
           <Id>
             <Othr>
               <Id>7126988743</Id>
-              <SchmeNm>
-                <Prtry>BBAN</Prtry>
-              </SchmeNm>
             </Othr>
           </Id>
         </CdtrAcct>

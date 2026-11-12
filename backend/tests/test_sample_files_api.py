@@ -237,6 +237,7 @@ def test_us_creditors_get_an_other_account_and_an_aba_routed_agent(client: TestC
     for tx in transactions_of(envelope):
         assert text_at(tx, "CdtrAcct/Id/IBAN") == []
         assert re.fullmatch(r"[0-9]{10}", text_at(tx, "CdtrAcct/Id/Othr/Id")[0])
+        assert text_at(tx, "CdtrAcct/Id/Othr/SchmeNm/Prtry") == []
         (bic,) = text_at(tx, "CdtrAgt/FinInstnId/BIC")
         assert text_at(tx, "CdtrAgt/FinInstnId/ClrSysMmbId/MmbId") == [us_routing[bic]]
         assert text_at(tx, "CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd") == ["USABA"]
