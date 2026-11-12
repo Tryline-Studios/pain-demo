@@ -23,6 +23,8 @@ const COLUMNS: [string, (hit: Hit) => string | number | null | undefined][] = [
   ["LEI", (hit) => hit.lei],
   ["Triggers", (hit) => hit.triggers.map((trigger) => trigger.kind).join(", ")],
   ["Lists", (hit) => [...new Set(hit.entity.listings.map((listing) => listing.list))].join(", ")],
+  ["Origin", (hit) => hit.origin],
+  ["Paired with", (hit) => hit.paired_with],
 ];
 
 const CELL = "px-3.5 py-3";

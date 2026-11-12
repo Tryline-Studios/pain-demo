@@ -359,6 +359,22 @@ export interface components {
             amount_min: components["schemas"]["Amount-Output"];
             /** @default 50000.00 */
             amount_max: components["schemas"]["Amount-Output"];
+            /**
+             * Hits
+             * @description Named Hits; they count toward `hit_count`
+             * @default []
+             */
+            hits: components["schemas"]["NamedHit"][];
+            /**
+             * Placements
+             * @description Allowlist for the drawn Hits; absent means every Placement
+             */
+            placements?: components["schemas"]["Placement"][] | null;
+            /**
+             * Name Variants
+             * @description Allowlist for the drawn Hits; absent means every Name Variant
+             */
+            name_variants?: components["schemas"]["NameVariant"][] | null;
         };
         EntityDetail: components["schemas"]["BankDetail"] | components["schemas"]["CorporateDetail"] | components["schemas"]["IndividualDetail"];
         EntityId: string;
@@ -382,6 +398,11 @@ export interface components {
             placements: components["schemas"]["Placement"][];
             /** Has Bic */
             has_bic: boolean;
+            /**
+             * Has Controller
+             * @description A Control Relationship names it as controlled: it may take `with_controller`
+             */
+            has_controller: boolean;
         };
         /** @enum {string} */
         EntityType: "individual" | "bank" | "corporate";
@@ -481,6 +502,22 @@ export interface components {
             amount_min: components["schemas"]["Amount-Input"];
             /** @default 50000.00 */
             amount_max: components["schemas"]["Amount-Input"];
+            /**
+             * Hits
+             * @description Named Hits; they count toward `hit_count`
+             * @default []
+             */
+            hits: components["schemas"]["NamedHit"][];
+            /**
+             * Placements
+             * @description Allowlist for the drawn Hits; absent means every Placement
+             */
+            placements?: components["schemas"]["Placement"][] | null;
+            /**
+             * Name Variants
+             * @description Allowlist for the drawn Hits; absent means every Name Variant
+             */
+            name_variants?: components["schemas"]["NameVariant"][] | null;
         };
         /**
          * GeneratorVersion
@@ -543,11 +580,8 @@ export interface components {
             placement: components["schemas"]["Placement"];
             /** @description Remittance only */
             element?: components["schemas"]["RemittanceElement"] | null;
-            /**
-             * Rendering Mode
-             * @description Agents only
-             */
-            rendering_mode?: ("name_and_bic" | "bic_only" | "name_only") | null;
+            /** @description Agents only */
+            rendering_mode?: components["schemas"]["RenderingMode"] | null;
             name: components["schemas"]["HitName"] | null;
             bic: components["schemas"]["HitBic"] | null;
             /** Lei */
@@ -700,16 +734,62 @@ export interface components {
         NameSourceType: "primary" | "primary_variation" | "aka" | "fka" | "nka";
         /** @enum {string} */
         NameVariant: "exact" | "alias" | "native_script" | "transliteration" | "fuzzed";
+        /**
+         * NamedHit
+         * @description One Hit the caller pins (spec 6.4); anything left out is drawn. Checked against the catalogue at generation.
+         */
+        NamedHit: {
+            /**
+             * Entity
+             * @description Catalogue id
+             */
+            entity: string;
+            placement?: components["schemas"]["Placement"] | null;
+            name_variant?: components["schemas"]["NameVariant"] | null;
+            /**
+             * Transaction
+             * @description 1-based; must be absent for file-level Placements
+             */
+            transaction?: number | null;
+            /** @description Agents only */
+            rendering_mode?: components["schemas"]["RenderingMode"] | null;
+            /**
+             * With Controller
+             * @description Controlled Legal Entities only: its controller becomes the matching Ultimate party; two Hits
+             * @default false
+             */
+            with_controller: boolean;
+        };
         NonEmpty: string;
         /** Options */
         Options: {
             /** Countries */
             countries: components["schemas"]["CountryOption"][];
+            /** Placements */
+            placements: components["schemas"]["PlacementOption"][];
+            /** Name Variants */
+            name_variants: components["schemas"]["NameVariant"][];
+            /** Rendering Modes */
+            rendering_modes: components["schemas"]["RenderingMode"][];
             limits: components["schemas"]["Limits"];
             defaults: components["schemas"]["Defaults"];
         };
         /** @enum {string} */
         Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
+        /** PlacementOption */
+        PlacementOption: {
+            placement: components["schemas"]["Placement"];
+            /**
+             * File Level
+             * @description Debtor and Debtor Agent: one per file, and a named Hit takes no transaction
+             */
+            file_level: boolean;
+            /**
+             * Agent
+             * @description Takes a rendering mode
+             */
+            agent: boolean;
+        };
         /**
          * Problem
          * @description A problem details body. `type` is `about:blank` for plain HTTP errors and a stable token otherwise.
@@ -744,6 +824,8 @@ export interface components {
         };
         /** @enum {string} */
         RemittanceElement: "ustrd" | "addtl_rmt_inf" | "invcr" | "invcee";
+        /** @enum {string} */
+        RenderingMode: "name_and_bic" | "bic_only" | "name_only";
         /**
          * RequestValidationProblem
          * @description `type` is `validation_error`; `field` is a dotted path into the request model, e.g. `hits[2].name_variant`.

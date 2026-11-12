@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { api } from "@/api/client";
+import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -11,6 +12,7 @@ import {
   generationRequest,
   INPUT,
 } from "@/workbench/generate/FileSection";
+import { type HitSettings, hitsRequest, NamedHits } from "@/workbench/generate/NamedHits";
 import type { Generation } from "@/workbench/generate/useGeneration";
 import { PRIMARY_BUTTON } from "@/workbench/OutputPane";
 
@@ -36,6 +38,11 @@ function Section({ title, hint, children }: { title: string; hint: string; child
 export function SettingsPane({ generation }: { generation: Generation }) {
   const options = api.useQuery("get", "/api/v1/options");
   const messageVersions = api.useQuery("get", "/api/v1/message-versions");
+  const entities = api.useQuery("get", "/api/v1/entities");
+  const [hits, setHits] = useState<HitSettings>({ rows: [], placements: [], name_variants: [] });
+  // A 422's field errors, so the named Hit rows can show theirs (spec 13.3).
+  const fieldErrors =
+    (generation.error as Partial<components["schemas"]["RequestValidationProblem"]> | null)?.errors ?? [];
   // Only what the user changed; everything else follows the API's defaults once they load.
   const [changed, setChanged] = useState<Partial<FileSettings>>({});
   const settings = options.data === undefined ? undefined : { ...defaultFileSettings(options.data), ...changed };
@@ -51,6 +58,7 @@ export function SettingsPane({ generation }: { generation: Generation }) {
       generation.generate({
         ...generationRequest(changed),
         ...(hitCount === undefined ? {} : { hit_count: Number(hitCount) }),
+        ...hitsRequest(hits),
       });
     }
   };
@@ -91,6 +99,16 @@ export function SettingsPane({ generation }: { generation: Generation }) {
             At most {hitLimit} Hits for {settings?.transaction_count} transactions.
           </p>
         ) : null}
+        {options.data === undefined || settings === undefined ? null : (
+          <NamedHits
+            options={options.data}
+            entities={entities.data ?? []}
+            transactionCount={settings.transaction_count}
+            value={hits}
+            onChange={setHits}
+            errors={fieldErrors}
+          />
+        )}
       </Section>
       <div className="sticky bottom-6">
         <Button
