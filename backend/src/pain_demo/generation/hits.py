@@ -7,11 +7,11 @@ Hit), so Hit Count 0 leaves the file untouched and adding a Hit never reshuffles
 
 import random
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, replace
-from typing import Literal
+from typing import Literal, cast
 
-from pydantic import BaseModel, Field
+from pydantic import MISSING, BaseModel, Field, JsonValue
 from schwifty import BIC
 
 from pain_demo.catalogue import Catalogue
@@ -52,6 +52,7 @@ from pain_demo.generation.model import (
 )
 from pain_demo.generation.request import EffectiveRequest
 from pain_demo.generation.seeds import stream
+from pain_demo.generation.supplied import SuppliedRemittance, SuppliedStructuredRemittance
 from pain_demo.identifiers import bic_country
 
 
@@ -111,6 +112,7 @@ _REMITTANCE_FIELDS: dict[RemittanceElement, str] = {
     "invcr": "invoicer",
     "invcee": "invoicee",
 }
+_REMITTANCE_LISTS = frozenset({"unstructured", "additional"})
 REMITTANCE_SENTENCES = (
     "Invoice {n} payment to {name}",
     "Payment for order {n}, supplier {name}",
@@ -184,6 +186,13 @@ class Trigger(BaseModel):
     """The lists that carry this value: a name case-insensitively, a BIC only on its Listing, an LEI on none."""
 
 
+class Displaced(BaseModel):
+    field: str
+    """The dotted request path of the supplied value, e.g. `transactions[2].creditor`."""
+    value: JsonValue
+    """As supplied: an object for a party or agent, a string or list for a remittance element, null if left out."""
+
+
 class Hit(BaseModel):
     """One Placement of a Sanctioned Entity (spec 11.3), in wire order."""
 
@@ -207,8 +216,8 @@ class Hit(BaseModel):
     origin: Literal["named", "drawn"]
     paired_with: str | None
     """Always null until named Hits with `with_controller` pair them."""
-    displaced: None
-    """Always null until Supplied Data can be displaced by a Hit."""
+    displaced: Displaced | None
+    """The Supplied Data this Hit replaced (spec 5.3, 11.4)."""
 
 
 @dataclass(frozen=True)
@@ -246,9 +255,69 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
         else:
             free_transactions -= 1
         planned.append(_Planned(entity, placement))
-    numbers = iter(rng.sample(range(1, request.transaction_count + 1), request.transaction_count - free_transactions))
+    count = request.transaction_count - free_transactions
+    if request.transactions:
+        numbers = _prefer_generated(
+            request, [p.placement for p in planned if not PLACEMENTS[p.placement].file_level], rng
+        )
+    else:
+        numbers = iter(rng.sample(range(1, request.transaction_count + 1), count))
     planned = [p if PLACEMENTS[p.placement].file_level else replace(p, transaction=next(numbers)) for p in planned]
     return _debtor_agent_at_home(planned, entities, rng, request)
+
+
+def _prefer_generated(request: EffectiveRequest, placements: list[Placement], rng: random.Random) -> Iterator[int]:
+    """A transaction number per Placement, where the Placement's role was not supplied while there is one (spec 5.3)."""
+    free = list(range(1, request.transaction_count + 1))
+    for placement in placements:
+        preferred = [n for n in free if _supplied(request, placement, n, None) is None]
+        number = rng.choice(preferred or free)
+        free.remove(number)
+        yield number
+
+
+def _supplied(
+    request: EffectiveRequest, placement: Placement, transaction: int | None, element: RemittanceElement | None
+) -> Displaced | None:
+    """The supplied value at a Placement, if any: what a Hit there displaces."""
+    if transaction is None:
+        role = getattr(request.payment, placement, MISSING) if request.payment else MISSING
+        path = f"payment.{placement}"
+    elif transaction > len(request.transactions):
+        return None
+    else:
+        row = request.transactions[transaction - 1]
+        path = f"transactions[{transaction - 1}]"
+        if placement.startswith("intermediary_agent_"):
+            slot = int(placement[-1]) - 1
+            agents = row.intermediary_agents
+            path += ".intermediary_agents"
+            role = agents  # a supplied list or null decides every slot; an agent in the slot is what is displaced
+            if isinstance(agents, list) and slot < len(agents):
+                role, path = agents[slot], f"{path}[{slot}]"
+        elif placement == "remittance":
+            role, path = _supplied_remittance(row.remittance, element, path)
+        else:
+            role = getattr(row, placement)
+            path += f".{placement}"
+    if role is MISSING:
+        return None
+    value = role.model_dump(mode="json") if isinstance(role, BaseModel) else cast("JsonValue", role)
+    return Displaced(field=path, value=value)
+
+
+def _supplied_remittance(
+    remittance: SuppliedRemittance | MISSING, element: RemittanceElement | None, path: str
+) -> tuple[object, str]:
+    """Without an `element` (while drawing), any supplied remittance counts."""
+    if remittance is MISSING or element is None:
+        return remittance, f"{path}.remittance"
+    if element == "ustrd":
+        return remittance.unstructured, f"{path}.remittance.unstructured"
+    structured = remittance.structured
+    field = _REMITTANCE_FIELDS[element]
+    value = getattr(structured, field) if isinstance(structured, SuppliedStructuredRemittance) else MISSING
+    return value, f"{path}.remittance.structured.{field}"
 
 
 def _debtor_agent_at_home(
@@ -327,7 +396,8 @@ class _Placer:
             if plan.placement == "remittance" and plan.transaction is not None:  # always transaction-level
                 element, text = _mention(rng, name.rendered)
                 tx = transactions[plan.transaction - 1]
-                remittance = replace(tx.remittance, **{_REMITTANCE_FIELDS[element]: text})
+                field = _REMITTANCE_FIELDS[element]
+                remittance = replace(tx.remittance, **{field: (text,) if field in _REMITTANCE_LISTS else text})
                 transactions[plan.transaction - 1] = replace(tx, remittance=remittance)
                 hits.append(self._hit(ids[k], plan, tx.end_to_end_id, name, element=element))
                 continue
@@ -376,8 +446,8 @@ class _Placer:
         model = replace(model, transactions=tuple(transactions))
         return model, sorted(hits, key=lambda hit: int(hit.id[1:]))
 
-    @staticmethod
     def _hit(
+        self,
         hit_id: str,
         plan: _Planned,
         end_to_end_id: str | None,
@@ -410,7 +480,7 @@ class _Placer:
             triggers=_triggers(plan.entity, name.rendered, bic, lei),
             origin="drawn",
             paired_with=None,
-            displaced=None,
+            displaced=_supplied(self.request, plan.placement, plan.transaction, element),
         )
 
     def _lei(self, entity: Entity) -> str | None:
@@ -434,7 +504,7 @@ class _Placer:
         agents = list(tx.intermediary_agents[: slot - 1])
         while len(agents) < slot - 1:  # contiguous from 1: clean generated banks below the Hit (spec 6.2)
             agents.append(self.data.clean_agent(rng, rng.choice(self.request.countries))[0])
-        return replace(tx, intermediary_agents=(*agents, hit))
+        return replace(tx, intermediary_agents=(*agents, hit, *tx.intermediary_agents[slot:]))
 
 
 def place_hits(

@@ -74,6 +74,7 @@ def test_the_transaction_cap_and_seed_length_are_published() -> None:
 
     (count,) = [s for s in properties["transaction_count"]["anyOf"] if s["type"] == "integer"]
     assert (count["minimum"], count["maximum"]) == (1, 100)
+    assert properties["transactions"]["maxItems"] == 100
     (seed,) = [s for s in properties["seed"]["anyOf"] if s["type"] == "string"]
     assert seed["maxLength"] == 64
 

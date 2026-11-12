@@ -518,20 +518,6 @@
         ],
         "title": "Address"
       },
-      "Amount-Input": {
-        "anyOf": [
-          {
-            "type": "number",
-            "exclusiveMinimum": 0.0
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
-      "Amount-Output": {
-        "type": "string"
-      },
       "AnswerKey": {
         "properties": {
           "answer_key_version": {
@@ -900,10 +886,6 @@
         ],
         "title": "CountryOption"
       },
-      "CurrencyCode": {
-        "type": "string",
-        "pattern": "^[A-Z]{3}$"
-      },
       "Defaults": {
         "properties": {
           "message_version": {
@@ -938,6 +920,23 @@
           "amount_max"
         ],
         "title": "Defaults"
+      },
+      "Displaced": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "value"
+        ],
+        "title": "Displaced"
       },
       "EffectiveRequest": {
         "properties": {
@@ -1000,7 +999,8 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/CurrencyCode"
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
                 },
                 "type": "array",
                 "minItems": 1
@@ -1013,12 +1013,34 @@
             "description": "Each transaction draws one; absent means the creditor country's"
           },
           "amount_min": {
-            "$ref": "#/components/schemas/Amount-Output",
+            "type": "string",
+            "title": "Amount Min",
             "default": "10.00"
           },
           "amount_max": {
-            "$ref": "#/components/schemas/Amount-Output",
+            "type": "string",
+            "title": "Amount Max",
             "default": "50000.00"
+          },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedPayment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "File-level Supplied Data; absent means all generated"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/SuppliedTransaction-Output"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Transactions",
+            "description": "Per-transaction Supplied Data, row n for transaction n; rows past the end are generated"
           }
         },
         "additionalProperties": false,
@@ -1291,7 +1313,7 @@
               }
             ],
             "title": "Transaction Count",
-            "description": "Absent means 10"
+            "description": "Absent means the number of supplied transactions, or 10 with none"
           },
           "hit_count": {
             "type": "integer",
@@ -1320,7 +1342,8 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/CurrencyCode"
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
                 },
                 "type": "array",
                 "minItems": 1
@@ -1333,12 +1356,50 @@
             "description": "Each transaction draws one; absent means the creditor country's"
           },
           "amount_min": {
-            "$ref": "#/components/schemas/Amount-Input",
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount Min",
             "default": "10.00"
           },
           "amount_max": {
-            "$ref": "#/components/schemas/Amount-Input",
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount Max",
             "default": "50000.00"
+          },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedPayment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "File-level Supplied Data; absent means all generated"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/SuppliedTransaction-Input"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Transactions",
+            "description": "Per-transaction Supplied Data, row n for transaction n; rows past the end are generated"
           }
         },
         "additionalProperties": false,
@@ -1555,8 +1616,14 @@
             "title": "Paired With"
           },
           "displaced": {
-            "type": "null",
-            "title": "Displaced"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Displaced"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -1770,6 +1837,7 @@
         ],
         "title": "IndividualDetail"
       },
+      "JsonValue": {},
       "LanguageCode": {
         "type": "string",
         "pattern": "^[a-z]{2}$",
@@ -2260,6 +2328,656 @@
         },
         "type": "object",
         "title": "Summary"
+      },
+      "SuppliedAccount": {
+        "properties": {
+          "iban": {
+            "type": "string",
+            "title": "Iban",
+            "description": "Checksum-validated"
+          },
+          "other_id": {
+            "type": "string",
+            "maxLength": 34,
+            "minLength": 1,
+            "title": "Other Id",
+            "description": "`Othr/Id`"
+          },
+          "scheme": {
+            "type": "string",
+            "maxLength": 4,
+            "minLength": 1,
+            "title": "Scheme",
+            "description": "`Othr/SchmeNm/Cd`, e.g. `BBAN`"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedAccount",
+        "description": "Either `iban`, or `other_id` with an optional `scheme`."
+      },
+      "SuppliedAddress": {
+        "properties": {
+          "care_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Care Of",
+            "description": "From .12"
+          },
+          "street": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street",
+            "description": "70 characters before .12"
+          },
+          "building_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Number"
+          },
+          "building_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Name",
+            "description": "From .09; 35 characters before .12"
+          },
+          "floor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 70,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Floor",
+            "description": "From .09"
+          },
+          "unit_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Number",
+            "description": "From .12"
+          },
+          "post_box": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Post Box",
+            "description": "From .09"
+          },
+          "room": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 70,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room",
+            "description": "From .09"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "town": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Town",
+            "description": "35 characters before .12"
+          },
+          "town_location_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Town Location Name",
+            "description": "From .09; 35 characters before .12"
+          },
+          "district_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Name",
+            "description": "From .09; 35 characters before .12"
+          },
+          "country_subdivision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 35,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Subdivision"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "Any ISO 3166 country"
+          },
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 70,
+                  "minLength": 1
+                },
+                "type": "array",
+                "maxItems": 7
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines",
+            "description": "`AdrLine`: an unstructured address, with `country` only"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedAddress",
+        "description": "`PstlAdr`. Widths are the widest any Message Version allows; narrower versions are checked per request."
+      },
+      "SuppliedAgent": {
+        "properties": {
+          "bic": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bic",
+            "description": "Strict `BICIdentifier` pattern before .09"
+          },
+          "lei": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z0-9]{18}[0-9]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lei",
+            "description": "From .09"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedAddress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedAgent"
+      },
+      "SuppliedParty": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 140,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedAddress"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedPartyId"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "country_of_residence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Of Residence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedParty"
+      },
+      "SuppliedPartyId": {
+        "properties": {
+          "other_id": {
+            "type": "string",
+            "maxLength": 35,
+            "minLength": 1,
+            "title": "Other Id"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheme",
+            "description": "`SchmeNm/Cd`, e.g. `TXID`"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "other_id"
+        ],
+        "title": "SuppliedPartyId",
+        "description": "`Id/OrgId/Othr`."
+      },
+      "SuppliedPayment": {
+        "properties": {
+          "payment_information_id": {
+            "type": "string",
+            "maxLength": 35,
+            "minLength": 1,
+            "title": "Payment Information Id"
+          },
+          "debtor": {
+            "$ref": "#/components/schemas/SuppliedParty",
+            "description": "A supplied address country overrides `countries[0]` as the Debtor's"
+          },
+          "debtor_agent": {
+            "$ref": "#/components/schemas/SuppliedAgent"
+          },
+          "debtor_account": {
+            "$ref": "#/components/schemas/SuppliedAccount"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedPayment",
+        "description": "File-level Supplied Data: the one Debtor, Debtor Agent and Debtor account (spec 6.2)."
+      },
+      "SuppliedRemittance": {
+        "properties": {
+          "unstructured": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 140,
+                  "minLength": 1
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unstructured",
+            "description": "`Ustrd`, one per line"
+          },
+          "structured": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedStructuredRemittance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedRemittance"
+      },
+      "SuppliedStructuredRemittance": {
+        "properties": {
+          "creditor_reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 35,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creditor Reference"
+          },
+          "invoicer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoicer",
+            "description": "`Invcr/Nm`"
+          },
+          "invoicee": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoicee",
+            "description": "`Invcee/Nm`"
+          },
+          "additional": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 140,
+                  "minLength": 1
+                },
+                "type": "array",
+                "maxItems": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Additional",
+            "description": "`AddtlRmtInf`"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedStructuredRemittance",
+        "description": "`Strd`."
+      },
+      "SuppliedTransaction-Input": {
+        "properties": {
+          "end_to_end_id": {
+            "type": "string",
+            "maxLength": 35,
+            "minLength": 1,
+            "title": "End To End Id"
+          },
+          "creditor": {
+            "$ref": "#/components/schemas/SuppliedParty"
+          },
+          "creditor_agent": {
+            "$ref": "#/components/schemas/SuppliedAgent"
+          },
+          "creditor_account": {
+            "$ref": "#/components/schemas/SuppliedAccount"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency"
+          },
+          "ultimate_debtor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedParty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ultimate_creditor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedParty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intermediary_agents": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SuppliedAgent"
+                },
+                "type": "array",
+                "maxItems": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intermediary Agents",
+            "description": "`IntrmyAgt1` to `IntrmyAgt3`, in order"
+          },
+          "remittance": {
+            "$ref": "#/components/schemas/SuppliedRemittance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedTransaction"
+      },
+      "SuppliedTransaction-Output": {
+        "properties": {
+          "end_to_end_id": {
+            "type": "string",
+            "maxLength": 35,
+            "minLength": 1,
+            "title": "End To End Id"
+          },
+          "creditor": {
+            "$ref": "#/components/schemas/SuppliedParty"
+          },
+          "creditor_agent": {
+            "$ref": "#/components/schemas/SuppliedAgent"
+          },
+          "creditor_account": {
+            "$ref": "#/components/schemas/SuppliedAccount"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency"
+          },
+          "ultimate_debtor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedParty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ultimate_creditor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliedParty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intermediary_agents": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SuppliedAgent"
+                },
+                "type": "array",
+                "maxItems": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intermediary Agents",
+            "description": "`IntrmyAgt1` to `IntrmyAgt3`, in order"
+          },
+          "remittance": {
+            "$ref": "#/components/schemas/SuppliedRemittance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SuppliedTransaction"
       },
       "SupportedCountry": {
         "type": "string",

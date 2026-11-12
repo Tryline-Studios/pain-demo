@@ -141,24 +141,48 @@ def _transaction(tx: Transaction) -> dict[str, Any]:
 
 
 def _party(party: Party) -> dict[str, Any]:
-    return {"name": party.name} | ({"address": _address(party.address)} if party.address else {})
+    scenario: dict[str, Any] = {"name": party.name}
+    if party.address:
+        scenario["address"] = _address(party.address)
+    if party.id:
+        scenario["id"] = {"org": {"other": [_other_id(party.id.other_id, party.id.scheme)]}}
+    if party.country_of_residence:
+        scenario["country_of_residence"] = party.country_of_residence
+    return scenario
 
 
 def _address(address: Address | ListedAddress) -> dict[str, Any]:
     if isinstance(address, ListedAddress):
-        return {"form": "unstructured", "lines": list(address.lines), "country": address.country}
-    return {
-        "form": "structured",
-        "street": address.street,
-        "building_number": address.building_number,
-        "post_code": address.post_code,
-        "town": address.town,
-        "country": address.country,
-    }
+        return _present({"form": "unstructured", "lines": list(address.lines), "country": address.country})
+    return _present(
+        {
+            "form": "structured",
+            "street": address.street,
+            "building_number": address.building_number,
+            "building_name": address.building_name,
+            "floor": address.floor,
+            "post_box": address.post_box,
+            "room": address.room,
+            "post_code": address.postcode,
+            "town": address.town,
+            "town_location": address.town_location_name,
+            "district": address.district_name,
+            "country_subdivision": address.country_subdivision,
+            "country": address.country,
+        }
+    )
+
+
+def _present(scenario: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in scenario.items() if value is not None}
+
+
+def _other_id(identifier: str, scheme: str | None) -> dict[str, str]:
+    return _present({"id": identifier, "scheme": scheme})
 
 
 def _agent(agent: Agent) -> dict[str, Any]:
-    scenario: dict[str, Any] = {"name": agent.name}
+    scenario: dict[str, Any] = _present({"name": agent.name})
     if agent.bic:
         scenario["bic"] = agent.bic
     if agent.routing_number:
@@ -173,18 +197,18 @@ def _agent(agent: Agent) -> dict[str, Any]:
 def _account(account: Account) -> dict[str, Any]:
     if isinstance(account, Iban):
         return {"iban": account.iban}
-    return {"other": {"id": account.id}}
+    return {"other": _other_id(account.id, account.scheme)}
 
 
 def _remittance(remittance: Remittance) -> dict[str, Any]:
     scenario: dict[str, Any] = {}
     if remittance.unstructured:
-        scenario["unstructured"] = [remittance.unstructured]
+        scenario["unstructured"] = list(remittance.unstructured)
     structured = {
         "creditor_reference": remittance.creditor_reference and {"reference": remittance.creditor_reference},
         "invoicer": remittance.invoicer and {"name": remittance.invoicer},
         "invoicee": remittance.invoicee and {"name": remittance.invoicee},
-        "additional": remittance.additional and [remittance.additional],
+        "additional": list(remittance.additional),
     }
     if structured := {key: value for key, value in structured.items() if value}:
         scenario["structured"] = [structured]

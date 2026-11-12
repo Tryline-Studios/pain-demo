@@ -1,10 +1,11 @@
 """The `sample-files` endpoints: generation and what a client needs to build a request (spec 12.1)."""
 
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 import structlog
 from fastapi import APIRouter, Request, Response
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
@@ -25,6 +26,7 @@ from pain_demo.generation.request import (
 )
 from pain_demo.generation.sample_file import GeneratedSampleFile, zip_bytes
 from pain_demo.generation.screening import NameScreen
+from pain_demo.generation.supplied import SuppliedAgent, roles
 from pain_demo.problems import BODY_TOO_LARGE, BUILD_FAILED, VALIDATION_ERROR
 from pain_demo.renderer import RenderFailed
 from pain_demo.request_context import add_log_fields
@@ -52,15 +54,18 @@ log = structlog.get_logger("pain_demo.generation")
 async def generate_sample_file(
     request: Request, body: GenerationRequest, format: Literal["json", "zip"] = "json"
 ) -> GeneratedSampleFile | Response:
-    effective = body.resolve()
     state = request.app.state
+    screen = NameScreen(state.catalogue)
+    if errors := catalogue_errors(body, screen):
+        raise RequestValidationError(errors)
+    effective = body.resolve()
     add_log_fields(
         request,
         message_version=effective.message_version,
         transaction_count=effective.transaction_count,
         hit_count=effective.hit_count,
         named_hit_count=0,
-        data_source="generated",
+        data_source="supplied" if body.payment or body.transactions else "generated",
         seed=effective.seed,
     )
     try:
@@ -69,7 +74,7 @@ async def generate_sample_file(
             effective,
             state.catalogue,
             state.clean_banks,
-            NameScreen(state.catalogue),
+            screen,
             state.generator_version,
         )
     except RenderFailed as error:
@@ -84,6 +89,24 @@ async def generate_sample_file(
             headers={"Content-Disposition": f'attachment; filename="{generated.sample_file.zip_filename}"'},
         )
     return generated
+
+
+def catalogue_errors(body: GenerationRequest, screen: NameScreen) -> list[dict[str, Any]]:
+    """Supplied Data rows cannot name a catalogue Entity (spec 5.3); a named Hit is the way to place one."""
+    errors = []
+    for location, role in roles(body.payment, body.transactions):
+        if isinstance(role.name, str) and screen.names_entity(role.name):
+            errors.append((*location, "name"))
+        if isinstance(role, SuppliedAgent) and isinstance(role.bic, str) and screen.listed_bic(role.bic):
+            errors.append((*location, "bic"))
+    return [
+        {
+            "loc": ("body", *loc),
+            "msg": "names a catalogue Entity; place it with a Hit instead",
+            "type": "catalogue_entity",
+        }
+        for loc in errors
+    ]
 
 
 class MessageVersionOption(BaseModel):

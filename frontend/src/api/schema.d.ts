@@ -154,8 +154,6 @@ export interface components {
             country: components["schemas"]["CountryCode"];
             listing: components["schemas"]["ListingRef"];
         };
-        "Amount-Input": number | string;
-        "Amount-Output": string;
         /**
          * AnswerKey
          * @description Key order is the wire order (spec 11.2).
@@ -296,7 +294,6 @@ export interface components {
              */
             currency: string;
         };
-        CurrencyCode: string;
         /** Defaults */
         Defaults: {
             message_version: components["schemas"]["MessageVersion"];
@@ -308,6 +305,12 @@ export interface components {
             amount_min: string;
             /** Amount Max */
             amount_max: string;
+        };
+        /** Displaced */
+        Displaced: {
+            /** Field */
+            field: string;
+            value: components["schemas"]["JsonValue"];
         };
         /**
          * EffectiveRequest
@@ -354,11 +357,24 @@ export interface components {
              * Currencies
              * @description Each transaction draws one; absent means the creditor country's
              */
-            currencies?: components["schemas"]["CurrencyCode"][] | null;
-            /** @default 10.00 */
-            amount_min: components["schemas"]["Amount-Output"];
-            /** @default 50000.00 */
-            amount_max: components["schemas"]["Amount-Output"];
+            currencies?: string[] | null;
+            /**
+             * Amount Min
+             * @default 10.00
+             */
+            amount_min: string;
+            /**
+             * Amount Max
+             * @default 50000.00
+             */
+            amount_max: string;
+            /** @description File-level Supplied Data; absent means all generated */
+            payment?: components["schemas"]["SuppliedPayment"] | null;
+            /**
+             * Transactions
+             * @description Per-transaction Supplied Data, row n for transaction n; rows past the end are generated
+             */
+            transactions?: components["schemas"]["SuppliedTransaction-Output"][];
         };
         EntityDetail: components["schemas"]["BankDetail"] | components["schemas"]["CorporateDetail"] | components["schemas"]["IndividualDetail"];
         EntityId: string;
@@ -451,7 +467,7 @@ export interface components {
             message_id?: string | null;
             /**
              * Transaction Count
-             * @description Absent means 10
+             * @description Absent means the number of supplied transactions, or 10 with none
              */
             transaction_count?: number | null;
             /**
@@ -476,11 +492,24 @@ export interface components {
              * Currencies
              * @description Each transaction draws one; absent means the creditor country's
              */
-            currencies?: components["schemas"]["CurrencyCode"][] | null;
-            /** @default 10.00 */
-            amount_min: components["schemas"]["Amount-Input"];
-            /** @default 50000.00 */
-            amount_max: components["schemas"]["Amount-Input"];
+            currencies?: string[] | null;
+            /**
+             * Amount Min
+             * @default 10.00
+             */
+            amount_min: number | string;
+            /**
+             * Amount Max
+             * @default 50000.00
+             */
+            amount_max: number | string;
+            /** @description File-level Supplied Data; absent means all generated */
+            payment?: components["schemas"]["SuppliedPayment"] | null;
+            /**
+             * Transactions
+             * @description Per-transaction Supplied Data, row n for transaction n; rows past the end are generated
+             */
+            transactions?: components["schemas"]["SuppliedTransaction-Input"][];
         };
         /**
          * GeneratorVersion
@@ -563,8 +592,7 @@ export interface components {
             origin: "named" | "drawn";
             /** Paired With */
             paired_with: string | null;
-            /** Displaced */
-            displaced: null;
+            displaced: components["schemas"]["Displaced"] | null;
         };
         /** HitBic */
         HitBic: {
@@ -628,6 +656,7 @@ export interface components {
             /** Control Relationships */
             control_relationships: components["schemas"]["ControlRelationship"][];
         };
+        JsonValue: unknown;
         /** @description ISO 639-1 */
         LanguageCode: string;
         /** Lei */
@@ -827,6 +856,221 @@ export interface components {
             by_exposure_country: {
                 [key: string]: number;
             };
+        };
+        /**
+         * SuppliedAccount
+         * @description Either `iban`, or `other_id` with an optional `scheme`.
+         */
+        SuppliedAccount: {
+            /**
+             * Iban
+             * @description Checksum-validated
+             */
+            iban?: string;
+            /**
+             * Other Id
+             * @description `Othr/Id`
+             */
+            other_id?: string;
+            /**
+             * Scheme
+             * @description `Othr/SchmeNm/Cd`, e.g. `BBAN`
+             */
+            scheme?: string;
+        };
+        /**
+         * SuppliedAddress
+         * @description `PstlAdr`. Widths are the widest any Message Version allows; narrower versions are checked per request.
+         */
+        SuppliedAddress: {
+            /**
+             * Care Of
+             * @description From .12
+             */
+            care_of?: string | null;
+            /**
+             * Street
+             * @description 70 characters before .12
+             */
+            street?: string | null;
+            /** Building Number */
+            building_number?: string | null;
+            /**
+             * Building Name
+             * @description From .09; 35 characters before .12
+             */
+            building_name?: string | null;
+            /**
+             * Floor
+             * @description From .09
+             */
+            floor?: string | null;
+            /**
+             * Unit Number
+             * @description From .12
+             */
+            unit_number?: string | null;
+            /**
+             * Post Box
+             * @description From .09
+             */
+            post_box?: string | null;
+            /**
+             * Room
+             * @description From .09
+             */
+            room?: string | null;
+            /** Postcode */
+            postcode?: string | null;
+            /**
+             * Town
+             * @description 35 characters before .12
+             */
+            town?: string | null;
+            /**
+             * Town Location Name
+             * @description From .09; 35 characters before .12
+             */
+            town_location_name?: string | null;
+            /**
+             * District Name
+             * @description From .09; 35 characters before .12
+             */
+            district_name?: string | null;
+            /** Country Subdivision */
+            country_subdivision?: string | null;
+            /**
+             * Country
+             * @description Any ISO 3166 country
+             */
+            country?: string | null;
+            /**
+             * Lines
+             * @description `AdrLine`: an unstructured address, with `country` only
+             */
+            lines?: string[] | null;
+        };
+        /** SuppliedAgent */
+        SuppliedAgent: {
+            /**
+             * Bic
+             * @description Strict `BICIdentifier` pattern before .09
+             */
+            bic?: string | null;
+            /**
+             * Lei
+             * @description From .09
+             */
+            lei?: string | null;
+            /** Name */
+            name?: string | null;
+            address?: components["schemas"]["SuppliedAddress"] | null;
+        };
+        /** SuppliedParty */
+        SuppliedParty: {
+            /** Name */
+            name?: string;
+            address?: components["schemas"]["SuppliedAddress"] | null;
+            id?: components["schemas"]["SuppliedPartyId"] | null;
+            /** Country Of Residence */
+            country_of_residence?: string | null;
+        };
+        /**
+         * SuppliedPartyId
+         * @description `Id/OrgId/Othr`.
+         */
+        SuppliedPartyId: {
+            /** Other Id */
+            other_id: string;
+            /**
+             * Scheme
+             * @description `SchmeNm/Cd`, e.g. `TXID`
+             */
+            scheme?: string | null;
+        };
+        /**
+         * SuppliedPayment
+         * @description File-level Supplied Data: the one Debtor, Debtor Agent and Debtor account (spec 6.2).
+         */
+        SuppliedPayment: {
+            /** Payment Information Id */
+            payment_information_id?: string;
+            /** @description A supplied address country overrides `countries[0]` as the Debtor's */
+            debtor?: components["schemas"]["SuppliedParty"];
+            debtor_agent?: components["schemas"]["SuppliedAgent"];
+            debtor_account?: components["schemas"]["SuppliedAccount"];
+        };
+        /** SuppliedRemittance */
+        SuppliedRemittance: {
+            /**
+             * Unstructured
+             * @description `Ustrd`, one per line
+             */
+            unstructured?: string[] | null;
+            structured?: components["schemas"]["SuppliedStructuredRemittance"] | null;
+        };
+        /**
+         * SuppliedStructuredRemittance
+         * @description `Strd`.
+         */
+        SuppliedStructuredRemittance: {
+            /** Creditor Reference */
+            creditor_reference?: string | null;
+            /**
+             * Invoicer
+             * @description `Invcr/Nm`
+             */
+            invoicer?: string | null;
+            /**
+             * Invoicee
+             * @description `Invcee/Nm`
+             */
+            invoicee?: string | null;
+            /**
+             * Additional
+             * @description `AddtlRmtInf`
+             */
+            additional?: string[] | null;
+        };
+        /** SuppliedTransaction */
+        "SuppliedTransaction-Input": {
+            /** End To End Id */
+            end_to_end_id?: string;
+            creditor?: components["schemas"]["SuppliedParty"];
+            creditor_agent?: components["schemas"]["SuppliedAgent"];
+            creditor_account?: components["schemas"]["SuppliedAccount"];
+            /** Amount */
+            amount?: number | string;
+            /** Currency */
+            currency?: string;
+            ultimate_debtor?: components["schemas"]["SuppliedParty"] | null;
+            ultimate_creditor?: components["schemas"]["SuppliedParty"] | null;
+            /**
+             * Intermediary Agents
+             * @description `IntrmyAgt1` to `IntrmyAgt3`, in order
+             */
+            intermediary_agents?: components["schemas"]["SuppliedAgent"][] | null;
+            remittance?: components["schemas"]["SuppliedRemittance"];
+        };
+        /** SuppliedTransaction */
+        "SuppliedTransaction-Output": {
+            /** End To End Id */
+            end_to_end_id?: string;
+            creditor?: components["schemas"]["SuppliedParty"];
+            creditor_agent?: components["schemas"]["SuppliedAgent"];
+            creditor_account?: components["schemas"]["SuppliedAccount"];
+            /** Amount */
+            amount?: string;
+            /** Currency */
+            currency?: string;
+            ultimate_debtor?: components["schemas"]["SuppliedParty"] | null;
+            ultimate_creditor?: components["schemas"]["SuppliedParty"] | null;
+            /**
+             * Intermediary Agents
+             * @description `IntrmyAgt1` to `IntrmyAgt3`, in order
+             */
+            intermediary_agents?: components["schemas"]["SuppliedAgent"][] | null;
+            remittance?: components["schemas"]["SuppliedRemittance"];
         };
         /** @enum {string} */
         SupportedCountry: "GB" | "IE" | "DE" | "FR" | "IT" | "ES" | "NL" | "BE" | "PL" | "AT" | "PT" | "US";
