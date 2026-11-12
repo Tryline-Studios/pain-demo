@@ -600,6 +600,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "A worker the request needs could not start",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }

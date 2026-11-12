@@ -24,6 +24,8 @@ MAX_ELEMENTS = 500_000
 """Above the richest realistic 10 MB pain.001 (about 400,000 elements) and well below a flood (about 1.3 million)."""
 XSD_BUDGET_SECONDS = 10
 """The longest the XSD layer may run before its worker process is stopped."""
+XSD_START_SECONDS = 5
+"""The longest a new worker process may take to start (about a quarter of a second normally) before it is stopped."""
 XSD_WORKERS = 4
 """Upload Validations running at once; later ones queue for a worker."""
 _ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
@@ -219,8 +221,18 @@ def _layers_before_xsd(content: bytes) -> tuple[str, str, etree._Element]:
     return encoding, version, root
 
 
+@functools.cache
+def _schema(version: str) -> etree.XMLSchema:
+    """A Message Version's XSD, compiled once per worker process and reused for its later uploads.
+
+    Each worker runs one validation at a time: an XMLSchema's error log belongs to the schema, not the call, so it
+    must never be shared between threads.
+    """
+    return etree.XMLSchema(renderer.xsd(version))
+
+
 def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
-    schema = renderer.schema(version)
+    schema = _schema(version)
     schema.validate(root)
     # lxml offers no error cap, so a hostile file runs until the worker's time budget stops it.
     return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
@@ -347,9 +359,12 @@ class _Worker:
         self.ready = False
 
     def run(self, content: bytes, version: str) -> tuple[list[ValidationProblem], int] | None:
-        """The XSD layer's result, or None past the budget."""
+        """The XSD layer's result, or None past the budget; `WorkerUnavailable` if the process never starts."""
         if not self.ready:
-            self.ready = self.conn.recv() is None  # start-up is not the upload's budget
+            # Start-up is not the upload's budget, but it has its own.
+            if not self.conn.poll(XSD_START_SECONDS):
+                raise WorkerUnavailable
+            self.ready = self.conn.recv() is None
         self.conn.send((content, version))
         return self.conn.recv() if self.conn.poll(XSD_BUDGET_SECONDS) else None
 
@@ -359,14 +374,19 @@ class _Worker:
         self.conn.close()
 
 
-_THREADS = ThreadPoolExecutor(XSD_WORKERS, thread_name_prefix="upload-validation")
-"""Never the pool generation uses, so a slow validation holds none of its threads."""
+class WorkerUnavailable(Exception):
+    """A worker process did not start within `XSD_START_SECONDS`; it has been stopped."""
+
+
+_threads: list[ThreadPoolExecutor] = []
+"""The Upload Validation threads, started on first use: never the pool generation uses, so a slow validation holds
+none of its threads. A list so `shutdown` can empty it and the next app start a fresh one."""
 _idle: list[_Worker] = []
-_idle_lock = threading.Lock()
+_lock = threading.Lock()
 
 
 def _run_xsd_layer(content: bytes, version: str) -> tuple[list[ValidationProblem], int] | None:
-    with _idle_lock:
+    with _lock:
         worker = _idle.pop() if _idle else None
     worker = worker or _Worker()
     try:
@@ -377,14 +397,32 @@ def _run_xsd_layer(content: bytes, version: str) -> tuple[list[ValidationProblem
     if result is None:
         worker.stop()
         worker = _Worker()
-    with _idle_lock:
+    with _lock:
         _idle.append(worker)  # last in, first out: a replacement serves the next upload
     return result
 
 
 async def validate(content: bytes, name: str | None) -> ValidationReport:
     """`validate_message` on the Upload Validation threads."""
-    return await asyncio.wrap_future(_THREADS.submit(validate_message, content, name))
+    with _lock:
+        if not _threads:
+            _threads.append(ThreadPoolExecutor(XSD_WORKERS, thread_name_prefix="upload-validation"))
+        future = _threads[0].submit(validate_message, content, name)
+    return await asyncio.wrap_future(future)
+
+
+def shutdown() -> None:
+    """Wait for the running validations (each ends within its budgets), then stop the threads and idle workers."""
+    with _lock:
+        threads = _threads.copy()
+        _threads.clear()
+    for executor in threads:
+        executor.shutdown(wait=True)
+    with _lock:
+        idle = _idle.copy()
+        _idle.clear()
+    for worker in idle:
+        worker.stop()
 
 
 def validate_message(content: bytes, name: str | None) -> ValidationReport:

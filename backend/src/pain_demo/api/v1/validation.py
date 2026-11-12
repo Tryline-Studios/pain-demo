@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.datastructures import UploadFile
 
 from pain_demo import validation
-from pain_demo.problems import BODY_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE, VALIDATION_ERROR
+from pain_demo.problems import BODY_TOO_LARGE, SERVICE_UNAVAILABLE, UNSUPPORTED_MEDIA_TYPE, VALIDATION_ERROR
 from pain_demo.request_context import add_log_fields
 from pain_demo.validation import ValidationReport
 
@@ -51,7 +51,7 @@ async def _read_upload(request: Request) -> tuple[bytes, str | None]:
     "/validations",
     operation_id="validate_message",
     summary="Validate an Uploaded Message: always 200 with a Validation Report",
-    responses={**BODY_TOO_LARGE, **UNSUPPORTED_MEDIA_TYPE, **VALIDATION_ERROR},
+    responses={**BODY_TOO_LARGE, **UNSUPPORTED_MEDIA_TYPE, **VALIDATION_ERROR, **SERVICE_UNAVAILABLE},
     openapi_extra={"requestBody": _REQUEST_BODY},
 )
 async def validate_message(request: Request) -> ValidationReport:
@@ -60,7 +60,11 @@ async def validate_message(request: Request) -> ValidationReport:
         raise RequestValidationError(
             [{"loc": ("body", "file"), "msg": "A non-empty file is required", "type": "missing"}]
         )
-    report = await validation.validate(content, name)
+    try:
+        report = await validation.validate(content, name)
+    except validation.WorkerUnavailable:
+        detail = f"The schema check's worker did not start within {validation.XSD_START_SECONDS:g} seconds; try again"
+        raise HTTPException(HTTPStatus.SERVICE_UNAVAILABLE, detail=detail) from None
     add_log_fields(
         request,
         message_version=report.message_version,

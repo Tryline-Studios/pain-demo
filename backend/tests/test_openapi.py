@@ -99,7 +99,7 @@ def test_every_operation_declares_only_the_problem_responses_it_can_return() -> 
         ("/api/v1/version", "get"): {"500"},
         ("/api/v1/entities", "get"): {"422", "500"},
         ("/api/v1/entities/{entity_id}", "get"): {"404", "422", "500"},
-        ("/api/v1/validations", "post"): {"413", "415", "422", "500"},
+        ("/api/v1/validations", "post"): {"413", "415", "422", "500", "503"},
     }
     paths = document["paths"]
     assert "build_failed" in paths["/api/v1/sample-files"]["post"]["responses"]["500"]["description"]

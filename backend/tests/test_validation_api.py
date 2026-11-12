@@ -1,6 +1,9 @@
 """Upload Validation through the HTTP seam (spec section 17)."""
 
 import hashlib
+import multiprocessing
+import multiprocessing.process
+import threading
 import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -11,6 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from pain_demo import validation
+from pain_demo.app import create_app
 
 URL = "/api/v1/validations"
 XML = {"Content-Type": "application/xml"}
@@ -497,14 +501,53 @@ def test_a_validation_over_the_time_budget_is_stopped_and_says_so(
 def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(validation, "XSD_BUDGET_SECONDS", 3)
+    """The slow one holds its worker until the quick one is done, so the quick one must have had another."""
+    monkeypatch.setattr(validation, "XSD_BUDGET_SECONDS", 1)
+    slow_has_a_worker, quick_done = threading.Event(), threading.Event()
+    run = validation._Worker.run
+
+    def held(worker: validation._Worker, content: bytes, version: str) -> object:
+        if content == HOSTILE:
+            slow_has_a_worker.set()
+            quick_done.wait(60)
+        return run(worker, content, version)
+
+    monkeypatch.setattr(validation._Worker, "run", held)
     with ThreadPoolExecutor(1) as pool:
         slow = pool.submit(client.post, URL, content=HOSTILE, headers=XML)
+        assert slow_has_a_worker.wait(60)
         quick = client.post(URL, content=pain001(), headers=XML)
-        slow_was_running = not slow.done()
+        quick_done.set()
 
-    assert (quick.json()["valid"], slow_was_running) == (True, True)
+    assert quick.json()["valid"] is True
     assert slow.result().json()["problems"][0]["code"] == "validation_timed_out"
+
+
+def xsd_workers() -> list[multiprocessing.process.BaseProcess]:
+    return [process for process in multiprocessing.active_children() if process.name == "xsd-worker"]
+
+
+def test_a_worker_that_does_not_start_in_time_is_stopped_and_the_upload_is_a_503_problem(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    validation.shutdown()  # no warm worker left by direct `validate_message` calls
+    with TestClient(create_app()) as client:
+        monkeypatch.setattr(validation, "XSD_START_SECONDS", 0)  # no process starts in no time
+        response = client.post(URL, content=pain001(), headers=XML)
+
+        assert response.status_code == 503
+        assert response.headers["content-type"] == "application/problem+json"
+        assert "did not start within 0 seconds" in response.json()["detail"]
+        assert xsd_workers() == []
+
+
+def test_stopping_the_app_stops_its_workers() -> None:
+    validation.shutdown()
+    with TestClient(create_app()) as client:
+        assert client.post(URL, content=pain001(), headers=XML).json()["valid"] is True
+        assert xsd_workers()
+
+    assert xsd_workers() == []
 
 
 def with_creditor(version: str, inside: bytes) -> bytes:

@@ -5,7 +5,6 @@ explicitly, and returns the XML bytes plus the elements the version fitter dropp
 in a worker thread.
 """
 
-import functools
 import importlib.resources
 import re
 from dataclasses import asdict, dataclass
@@ -55,18 +54,8 @@ class RenderResult:
     """Element paths the version fitter dropped, deduplicated, in first-seen order. None carries a Placement."""
 
 
-@functools.cache
-def schema(message_version: str) -> etree.XMLSchema:
-    """pain001's bundled XSD for a Message Version (pain.001.001.03 to .13), compiled once and reused.
-
-    Only Upload Validation's worker processes use it, one validation at a time each: an XMLSchema's error log belongs
-    to the schema, not the call, so it must never be shared between threads.
-    """
-    return etree.XMLSchema(xsd(message_version))
-
-
 def xsd(message_version: str) -> etree._Element:
-    """pain001's bundled XSD document for a Message Version, freshly parsed."""
+    """pain001's bundled XSD document for a Message Version (pain.001.001.03 to .13), freshly parsed."""
     path = importlib.resources.files(pain001) / "templates" / message_version / f"{message_version}.xsd"
     return etree.fromstring(path.read_bytes())
 
