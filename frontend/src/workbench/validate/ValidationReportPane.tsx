@@ -18,7 +18,7 @@ export function ValidationReportPane({ validation }: { validation: Validation })
         <div className="flex min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed text-center">
           <p className="font-medium text-lg">No message validated yet</p>
           <p className="mt-2 max-w-md text-muted-foreground text-sm">
-            Drop a pain.001 file or paste XML on the left. The verdict and every Validation Problem will show here.
+            Choose a file or paste XML on the left. The verdict and every Validation Problem will show here.
           </p>
         </div>
       ) : (

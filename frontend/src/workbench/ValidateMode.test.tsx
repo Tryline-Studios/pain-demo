@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
@@ -86,5 +86,32 @@ describe("Validate mode", () => {
     expect(within(report()).getByText("Pasted XML")).toBeInTheDocument();
     expect(within(report()).getByText("1,234 bytes")).toBeInTheDocument();
     expect(within(report()).getByText("sha256 9f86d081884c")).toBeInTheDocument();
+  });
+
+  it("sends a picked file as multipart so the report carries its name", async () => {
+    const seen = answerWith({ ...validReport, file: { name: "batch.xml", size_bytes: 11, sha256: SHA256 } });
+    const user = await openValidate();
+
+    await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File(["<Document/>"], "batch.xml"));
+
+    expect(await within(report()).findByText("batch.xml")).toBeInTheDocument();
+    expect(seen).toEqual([
+      {
+        contentType: expect.stringMatching(/^multipart\/form-data; boundary=/),
+        text: "<Document/>",
+        fileName: "batch.xml",
+      },
+    ]);
+  });
+
+  it("validates a dropped file", async () => {
+    const seen = answerWith({ ...validReport, file: { name: "dropped.xml", size_bytes: 11, sha256: SHA256 } });
+    await openValidate();
+
+    const file = new File(["<Document/>"], "dropped.xml");
+    fireEvent.drop(screen.getByText(/Drop a pain.001 file/), { dataTransfer: { files: [file] } });
+
+    expect(await within(report()).findByText("dropped.xml")).toBeInTheDocument();
+    expect(seen.map((request) => request.fileName)).toEqual(["dropped.xml"]);
   });
 });
