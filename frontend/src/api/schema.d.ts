@@ -21,6 +21,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sample-files/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate a Sample File and its Answer Key from Supplied Data as CSV */
+        post: operations["generate_sample_file_from_csv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/answer-keys/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The CSV projection of an Answer Key's hits
+         * @description A pure transform: any Answer Key of the current `answer_key_version`; another version is a 422.
+         */
+        post: operations["answer_key_to_csv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/message-versions": {
         parameters: {
             query?: never;
@@ -154,13 +191,11 @@ export interface components {
             country: components["schemas"]["CountryCode"];
             listing: components["schemas"]["ListingRef"];
         };
-        "Amount-Input": number | string;
-        "Amount-Output": string;
         /**
          * AnswerKey
          * @description Key order is the wire order (spec 11.2).
          */
-        AnswerKey: {
+        "AnswerKey-Input": {
             /**
              * Answer Key Version
              * @default 1
@@ -171,13 +206,40 @@ export interface components {
             seed: string;
             message_version: components["schemas"]["MessageVersion"];
             generator: components["schemas"]["GeneratorVersion"];
-            request: components["schemas"]["EffectiveRequest"];
+            request: components["schemas"]["EffectiveRequest-Input"];
             file: components["schemas"]["FileFacts"];
             summary: components["schemas"]["Summary"];
             /** Hits */
             hits: components["schemas"]["Hit"][];
             /** Exposures */
-            exposures: unknown[];
+            exposures: components["schemas"]["Exposure"][];
+            /** Transactions */
+            transactions: components["schemas"]["AnswerKeyTransaction"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /**
+         * AnswerKey
+         * @description Key order is the wire order (spec 11.2).
+         */
+        "AnswerKey-Output": {
+            /**
+             * Answer Key Version
+             * @default 1
+             * @constant
+             */
+            answer_key_version: 1;
+            /** Seed */
+            seed: string;
+            message_version: components["schemas"]["MessageVersion"];
+            generator: components["schemas"]["GeneratorVersion"];
+            request: components["schemas"]["EffectiveRequest-Output"];
+            file: components["schemas"]["FileFacts"];
+            summary: components["schemas"]["Summary"];
+            /** Hits */
+            hits: components["schemas"]["Hit"][];
+            /** Exposures */
+            exposures: components["schemas"]["Exposure"][];
             /** Transactions */
             transactions: components["schemas"]["AnswerKeyTransaction"][];
             /** Warnings */
@@ -240,6 +302,19 @@ export interface components {
              */
             verified_date: string;
         };
+        /** Body_generate_sample_file_from_csv */
+        Body_generate_sample_file_from_csv: {
+            /**
+             * Request
+             * @description The generation settings and Hits as `POST /sample-files` takes them, without Supplied Data
+             */
+            request: string;
+            /**
+             * Supplied Data
+             * @description One row per transaction; columns are dotted field paths such as `creditor.name`
+             */
+            supplied_data: string;
+        };
         /** ControlRelationship */
         ControlRelationship: {
             controller: components["schemas"]["EntityId"];
@@ -296,7 +371,6 @@ export interface components {
              */
             currency: string;
         };
-        CurrencyCode: string;
         /** Defaults */
         Defaults: {
             message_version: components["schemas"]["MessageVersion"];
@@ -308,12 +382,20 @@ export interface components {
             amount_min: string;
             /** Amount Max */
             amount_max: string;
+            /** Exposure Countries */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
+        };
+        /** Displaced */
+        Displaced: {
+            /** Field */
+            field: string;
+            value: components["schemas"]["JsonValue"];
         };
         /**
          * EffectiveRequest
          * @description The request with every default resolved, as embedded in the Answer Key.
          */
-        EffectiveRequest: {
+        "EffectiveRequest-Input": {
             /** @default pain.001.001.03 */
             message_version: components["schemas"]["MessageVersion"];
             /** Seed */
@@ -354,11 +436,158 @@ export interface components {
              * Currencies
              * @description Each transaction draws one; absent means the creditor country's
              */
-            currencies?: components["schemas"]["CurrencyCode"][] | null;
-            /** @default 10.00 */
-            amount_min: components["schemas"]["Amount-Output"];
-            /** @default 50000.00 */
-            amount_max: components["schemas"]["Amount-Output"];
+            currencies?: string[] | null;
+            /**
+             * Amount Min
+             * @default 10.00
+             */
+            amount_min: number | string;
+            /**
+             * Amount Max
+             * @default 50000.00
+             */
+            amount_max: number | string;
+            /**
+             * Hits
+             * @description Named Hits; they count toward `hit_count`
+             * @default []
+             */
+            hits: components["schemas"]["NamedHit"][];
+            /**
+             * Placements
+             * @description Allowlist for the drawn Hits; absent means every Placement
+             */
+            placements?: components["schemas"]["Placement"][] | null;
+            /**
+             * Name Variants
+             * @description Allowlist for the drawn Hits; absent means every Name Variant
+             */
+            name_variants?: components["schemas"]["NameVariant"][] | null;
+            /**
+             * Exposure Countries
+             * @description Each Exposure draws its country from them
+             * @default [
+             *       "RU",
+             *       "BY",
+             *       "IR",
+             *       "KP",
+             *       "SY",
+             *       "VE"
+             *     ]
+             */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
+            /**
+             * Exposure Count
+             * @description Clean transactions with the creditor side in an exposure country, none of them carrying a Hit
+             * @default 0
+             */
+            exposure_count: number;
+            /** @description File-level Supplied Data; absent means all generated */
+            payment?: components["schemas"]["SuppliedPayment"] | null;
+            /**
+             * Transactions
+             * @description Per-transaction Supplied Data, row n for transaction n; rows past the end are generated
+             */
+            transactions?: components["schemas"]["SuppliedTransaction-Input"][];
+        };
+        /**
+         * EffectiveRequest
+         * @description The request with every default resolved, as embedded in the Answer Key.
+         */
+        "EffectiveRequest-Output": {
+            /** @default pain.001.001.03 */
+            message_version: components["schemas"]["MessageVersion"];
+            /** Seed */
+            seed: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Execution Date
+             * Format: date
+             */
+            execution_date: string;
+            /** Message Id */
+            message_id: string;
+            /** Transaction Count */
+            transaction_count: number;
+            /**
+             * Hit Count
+             * @description Sanctioned Entities placed as drawn Hits; at most the transaction count plus two
+             * @default 0
+             */
+            hit_count: number;
+            /**
+             * Countries
+             * @description The Debtor takes the first; creditors and their agents draw from all of them
+             * @default [
+             *       "GB",
+             *       "DE",
+             *       "FR",
+             *       "NL",
+             *       "US"
+             *     ]
+             */
+            countries: components["schemas"]["SupportedCountry"][];
+            /**
+             * Currencies
+             * @description Each transaction draws one; absent means the creditor country's
+             */
+            currencies?: string[] | null;
+            /**
+             * Amount Min
+             * @default 10.00
+             */
+            amount_min: string;
+            /**
+             * Amount Max
+             * @default 50000.00
+             */
+            amount_max: string;
+            /**
+             * Hits
+             * @description Named Hits; they count toward `hit_count`
+             * @default []
+             */
+            hits: components["schemas"]["NamedHit"][];
+            /**
+             * Placements
+             * @description Allowlist for the drawn Hits; absent means every Placement
+             */
+            placements?: components["schemas"]["Placement"][] | null;
+            /**
+             * Name Variants
+             * @description Allowlist for the drawn Hits; absent means every Name Variant
+             */
+            name_variants?: components["schemas"]["NameVariant"][] | null;
+            /**
+             * Exposure Countries
+             * @description Each Exposure draws its country from them
+             * @default [
+             *       "RU",
+             *       "BY",
+             *       "IR",
+             *       "KP",
+             *       "SY",
+             *       "VE"
+             *     ]
+             */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
+            /**
+             * Exposure Count
+             * @description Clean transactions with the creditor side in an exposure country, none of them carrying a Hit
+             * @default 0
+             */
+            exposure_count: number;
+            /** @description File-level Supplied Data; absent means all generated */
+            payment?: components["schemas"]["SuppliedPayment"] | null;
+            /**
+             * Transactions
+             * @description Per-transaction Supplied Data, row n for transaction n; rows past the end are generated
+             */
+            transactions?: components["schemas"]["SuppliedTransaction-Output"][];
         };
         EntityDetail: components["schemas"]["BankDetail"] | components["schemas"]["CorporateDetail"] | components["schemas"]["IndividualDetail"];
         EntityId: string;
@@ -382,9 +611,42 @@ export interface components {
             placements: components["schemas"]["Placement"][];
             /** Has Bic */
             has_bic: boolean;
+            /**
+             * Has Controller
+             * @description A Control Relationship names it as controlled: it may take `with_controller`
+             */
+            has_controller: boolean;
         };
         /** @enum {string} */
         EntityType: "individual" | "bank" | "corporate";
+        /** @enum {string} */
+        ExposedElement: "creditor_address" | "agent_bic" | "account";
+        /**
+         * Exposure
+         * @description One exposed transaction (spec 11.2), in wire order.
+         */
+        Exposure: {
+            /** Transaction Number */
+            transaction_number: number;
+            /** End To End Id */
+            end_to_end_id: string;
+            country: components["schemas"]["ExposureCountry"];
+            /** Currency */
+            currency: string;
+            /** Elements */
+            elements: components["schemas"]["ExposedElement"][];
+        };
+        /** @enum {string} */
+        ExposureCountry: "RU" | "BY" | "IR" | "KP" | "SY" | "VE";
+        /** ExposureCountryOption */
+        ExposureCountryOption: {
+            country: components["schemas"]["ExposureCountry"];
+            /**
+             * Currency
+             * @description What an exposed transaction is paid in, whatever `currencies` says
+             */
+            currency: string;
+        };
         /** FieldError */
         FieldError: {
             /** Field */
@@ -420,7 +682,7 @@ export interface components {
         /** GeneratedSampleFile */
         GeneratedSampleFile: {
             sample_file: components["schemas"]["SampleFile"];
-            answer_key: components["schemas"]["AnswerKey"];
+            answer_key: components["schemas"]["AnswerKey-Output"];
         };
         /**
          * GenerationRequest
@@ -451,7 +713,7 @@ export interface components {
             message_id?: string | null;
             /**
              * Transaction Count
-             * @description Absent means 10
+             * @description Absent means the number of supplied transactions, or 10 with none
              */
             transaction_count?: number | null;
             /**
@@ -476,11 +738,59 @@ export interface components {
              * Currencies
              * @description Each transaction draws one; absent means the creditor country's
              */
-            currencies?: components["schemas"]["CurrencyCode"][] | null;
-            /** @default 10.00 */
-            amount_min: components["schemas"]["Amount-Input"];
-            /** @default 50000.00 */
-            amount_max: components["schemas"]["Amount-Input"];
+            currencies?: string[] | null;
+            /**
+             * Amount Min
+             * @default 10.00
+             */
+            amount_min: number | string;
+            /**
+             * Amount Max
+             * @default 50000.00
+             */
+            amount_max: number | string;
+            /**
+             * Hits
+             * @description Named Hits; they count toward `hit_count`
+             * @default []
+             */
+            hits: components["schemas"]["NamedHit"][];
+            /**
+             * Placements
+             * @description Allowlist for the drawn Hits; absent means every Placement
+             */
+            placements?: components["schemas"]["Placement"][] | null;
+            /**
+             * Name Variants
+             * @description Allowlist for the drawn Hits; absent means every Name Variant
+             */
+            name_variants?: components["schemas"]["NameVariant"][] | null;
+            /**
+             * Exposure Countries
+             * @description Each Exposure draws its country from them
+             * @default [
+             *       "RU",
+             *       "BY",
+             *       "IR",
+             *       "KP",
+             *       "SY",
+             *       "VE"
+             *     ]
+             */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
+            /**
+             * Exposure Count
+             * @description Clean transactions with the creditor side in an exposure country, none of them carrying a Hit
+             * @default 0
+             */
+            exposure_count: number;
+            /** @description File-level Supplied Data; absent means all generated */
+            payment?: components["schemas"]["SuppliedPayment"] | null;
+            /**
+             * Transactions
+             * @description Per-transaction Supplied Data, row n for transaction n; rows past the end are generated
+             */
+            transactions?: components["schemas"]["SuppliedTransaction-Input"][];
         };
         /**
          * GeneratorVersion
@@ -543,11 +853,8 @@ export interface components {
             placement: components["schemas"]["Placement"];
             /** @description Remittance only */
             element?: components["schemas"]["RemittanceElement"] | null;
-            /**
-             * Rendering Mode
-             * @description Agents only
-             */
-            rendering_mode?: ("name_and_bic" | "bic_only" | "name_only") | null;
+            /** @description Agents only */
+            rendering_mode?: components["schemas"]["RenderingMode"] | null;
             name: components["schemas"]["HitName"] | null;
             bic: components["schemas"]["HitBic"] | null;
             /** Lei */
@@ -563,8 +870,7 @@ export interface components {
             origin: "named" | "drawn";
             /** Paired With */
             paired_with: string | null;
-            /** Displaced */
-            displaced: null;
+            displaced: components["schemas"]["Displaced"] | null;
         };
         /** HitBic */
         HitBic: {
@@ -628,6 +934,7 @@ export interface components {
             /** Control Relationships */
             control_relationships: components["schemas"]["ControlRelationship"][];
         };
+        JsonValue: unknown;
         /** @description ISO 639-1 */
         LanguageCode: string;
         /** Lei */
@@ -700,16 +1007,69 @@ export interface components {
         NameSourceType: "primary" | "primary_variation" | "aka" | "fka" | "nka";
         /** @enum {string} */
         NameVariant: "exact" | "alias" | "native_script" | "transliteration" | "fuzzed";
+        /**
+         * NamedHit
+         * @description One Hit the caller pins (spec 6.4); anything left out is drawn. Checked against the catalogue at generation.
+         */
+        NamedHit: {
+            /**
+             * Entity
+             * @description Catalogue id
+             */
+            entity: string;
+            placement?: components["schemas"]["Placement"] | null;
+            name_variant?: components["schemas"]["NameVariant"] | null;
+            /**
+             * Transaction
+             * @description 1-based; must be absent for file-level Placements
+             */
+            transaction?: number | null;
+            /** @description Agents only */
+            rendering_mode?: components["schemas"]["RenderingMode"] | null;
+            /**
+             * With Controller
+             * @description Controlled Legal Entities only: its controller becomes the matching Ultimate party; two Hits
+             * @default false
+             */
+            with_controller: boolean;
+        };
         NonEmpty: string;
         /** Options */
         Options: {
             /** Countries */
             countries: components["schemas"]["CountryOption"][];
+            /** Placements */
+            placements: components["schemas"]["PlacementOption"][];
+            /** Name Variants */
+            name_variants: components["schemas"]["NameVariant"][];
+            /** Rendering Modes */
+            rendering_modes: components["schemas"]["RenderingMode"][];
+            /** Exposure Countries */
+            exposure_countries: components["schemas"]["ExposureCountryOption"][];
             limits: components["schemas"]["Limits"];
             defaults: components["schemas"]["Defaults"];
+            /**
+             * Supplied Data Columns
+             * @description The `POST /sample-files/csv` header template; each list at position 0, later ones are `.1`, `.2`
+             */
+            supplied_data_columns: string[];
         };
         /** @enum {string} */
         Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
+        /** PlacementOption */
+        PlacementOption: {
+            placement: components["schemas"]["Placement"];
+            /**
+             * File Level
+             * @description Debtor and Debtor Agent: one per file, and a named Hit takes no transaction
+             */
+            file_level: boolean;
+            /**
+             * Agent
+             * @description Takes a rendering mode
+             */
+            agent: boolean;
+        };
         /**
          * Problem
          * @description A problem details body. `type` is `about:blank` for plain HTTP errors and a stable token otherwise.
@@ -733,7 +1093,7 @@ export interface components {
          * ProblemCode
          * @enum {string}
          */
-        ProblemCode: "malformed_xml" | "dtd_not_allowed" | "unsupported_message" | "too_many_elements" | "missing_element" | "unexpected_element" | "pattern_mismatch" | "invalid_value" | "too_long" | "too_short" | "schema_violation";
+        ProblemCode: "malformed_xml" | "dtd_not_allowed" | "unsupported_message" | "too_many_elements" | "validation_timed_out" | "missing_element" | "unexpected_element" | "pattern_mismatch" | "invalid_value" | "too_long" | "too_short" | "schema_violation";
         /** RegistrationNumber */
         RegistrationNumber: {
             value: components["schemas"]["NonEmpty"];
@@ -744,6 +1104,8 @@ export interface components {
         };
         /** @enum {string} */
         RemittanceElement: "ustrd" | "addtl_rmt_inf" | "invcr" | "invcee";
+        /** @enum {string} */
+        RenderingMode: "name_and_bic" | "bic_only" | "name_only";
         /**
          * RequestValidationProblem
          * @description `type` is `validation_error`; `field` is a dotted path into the request model, e.g. `hits[2].name_variant`.
@@ -827,6 +1189,221 @@ export interface components {
             by_exposure_country: {
                 [key: string]: number;
             };
+        };
+        /**
+         * SuppliedAccount
+         * @description Either `iban`, or `other_id` with an optional `scheme`.
+         */
+        SuppliedAccount: {
+            /**
+             * Iban
+             * @description Checksum-validated
+             */
+            iban?: string;
+            /**
+             * Other Id
+             * @description `Othr/Id`
+             */
+            other_id?: string;
+            /**
+             * Scheme
+             * @description `Othr/SchmeNm/Cd`, e.g. `BBAN`
+             */
+            scheme?: string;
+        };
+        /**
+         * SuppliedAddress
+         * @description `PstlAdr`. Widths are the widest any Message Version allows; narrower versions are checked per request.
+         */
+        SuppliedAddress: {
+            /**
+             * Care Of
+             * @description From .12
+             */
+            care_of?: string | null;
+            /**
+             * Street
+             * @description 70 characters before .12
+             */
+            street?: string | null;
+            /** Building Number */
+            building_number?: string | null;
+            /**
+             * Building Name
+             * @description From .09; 35 characters before .12
+             */
+            building_name?: string | null;
+            /**
+             * Floor
+             * @description From .09
+             */
+            floor?: string | null;
+            /**
+             * Unit Number
+             * @description From .12
+             */
+            unit_number?: string | null;
+            /**
+             * Post Box
+             * @description From .09
+             */
+            post_box?: string | null;
+            /**
+             * Room
+             * @description From .09
+             */
+            room?: string | null;
+            /** Postcode */
+            postcode?: string | null;
+            /**
+             * Town
+             * @description 35 characters before .12
+             */
+            town?: string | null;
+            /**
+             * Town Location Name
+             * @description From .09; 35 characters before .12
+             */
+            town_location_name?: string | null;
+            /**
+             * District Name
+             * @description From .09; 35 characters before .12
+             */
+            district_name?: string | null;
+            /** Country Subdivision */
+            country_subdivision?: string | null;
+            /**
+             * Country
+             * @description Any ISO 3166 country
+             */
+            country?: string | null;
+            /**
+             * Lines
+             * @description `AdrLine`: an unstructured address, with `country` only
+             */
+            lines?: string[] | null;
+        };
+        /** SuppliedAgent */
+        SuppliedAgent: {
+            /**
+             * Bic
+             * @description Strict `BICIdentifier` pattern before .09
+             */
+            bic?: string | null;
+            /**
+             * Lei
+             * @description From .09
+             */
+            lei?: string | null;
+            /** Name */
+            name?: string | null;
+            address?: components["schemas"]["SuppliedAddress"] | null;
+        };
+        /** SuppliedParty */
+        SuppliedParty: {
+            /** Name */
+            name?: string;
+            address?: components["schemas"]["SuppliedAddress"] | null;
+            id?: components["schemas"]["SuppliedPartyId"] | null;
+            /** Country Of Residence */
+            country_of_residence?: string | null;
+        };
+        /**
+         * SuppliedPartyId
+         * @description `Id/OrgId/Othr`.
+         */
+        SuppliedPartyId: {
+            /** Other Id */
+            other_id: string;
+            /**
+             * Scheme
+             * @description `SchmeNm/Cd`, e.g. `TXID`
+             */
+            scheme?: string | null;
+        };
+        /**
+         * SuppliedPayment
+         * @description File-level Supplied Data: the one Debtor, Debtor Agent and Debtor account (spec 6.2).
+         */
+        SuppliedPayment: {
+            /** Payment Information Id */
+            payment_information_id?: string;
+            /** @description A supplied address country overrides `countries[0]` as the Debtor's */
+            debtor?: components["schemas"]["SuppliedParty"];
+            debtor_agent?: components["schemas"]["SuppliedAgent"];
+            debtor_account?: components["schemas"]["SuppliedAccount"];
+        };
+        /** SuppliedRemittance */
+        SuppliedRemittance: {
+            /**
+             * Unstructured
+             * @description `Ustrd`, one per line
+             */
+            unstructured?: string[] | null;
+            structured?: components["schemas"]["SuppliedStructuredRemittance"] | null;
+        };
+        /**
+         * SuppliedStructuredRemittance
+         * @description `Strd`.
+         */
+        SuppliedStructuredRemittance: {
+            /** Creditor Reference */
+            creditor_reference?: string | null;
+            /**
+             * Invoicer
+             * @description `Invcr/Nm`
+             */
+            invoicer?: string | null;
+            /**
+             * Invoicee
+             * @description `Invcee/Nm`
+             */
+            invoicee?: string | null;
+            /**
+             * Additional
+             * @description `AddtlRmtInf`
+             */
+            additional?: string[] | null;
+        };
+        /** SuppliedTransaction */
+        "SuppliedTransaction-Input": {
+            /** End To End Id */
+            end_to_end_id?: string;
+            creditor?: components["schemas"]["SuppliedParty"];
+            creditor_agent?: components["schemas"]["SuppliedAgent"];
+            creditor_account?: components["schemas"]["SuppliedAccount"];
+            /** Amount */
+            amount?: number | string;
+            /** Currency */
+            currency?: string;
+            ultimate_debtor?: components["schemas"]["SuppliedParty"] | null;
+            ultimate_creditor?: components["schemas"]["SuppliedParty"] | null;
+            /**
+             * Intermediary Agents
+             * @description `IntrmyAgt1` to `IntrmyAgt3`, in order
+             */
+            intermediary_agents?: components["schemas"]["SuppliedAgent"][] | null;
+            remittance?: components["schemas"]["SuppliedRemittance"];
+        };
+        /** SuppliedTransaction */
+        "SuppliedTransaction-Output": {
+            /** End To End Id */
+            end_to_end_id?: string;
+            creditor?: components["schemas"]["SuppliedParty"];
+            creditor_agent?: components["schemas"]["SuppliedAgent"];
+            creditor_account?: components["schemas"]["SuppliedAccount"];
+            /** Amount */
+            amount?: string;
+            /** Currency */
+            currency?: string;
+            ultimate_debtor?: components["schemas"]["SuppliedParty"] | null;
+            ultimate_creditor?: components["schemas"]["SuppliedParty"] | null;
+            /**
+             * Intermediary Agents
+             * @description `IntrmyAgt1` to `IntrmyAgt3`, in order
+             */
+            intermediary_agents?: components["schemas"]["SuppliedAgent"][] | null;
+            remittance?: components["schemas"]["SuppliedRemittance"];
         };
         /** @enum {string} */
         SupportedCountry: "GB" | "IE" | "DE" | "FR" | "IT" | "ES" | "NL" | "BE" | "PL" | "AT" | "PT" | "US";
@@ -921,7 +1498,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The JSON envelope, or with `format=zip` a zip of `<name>.xml` and `<name>.answer-key.json` */
+            /** @description The JSON envelope, or with `format=zip` a zip of `<name>.xml`, `<name>.answer-key.json` and `<name>.answer-key.csv` */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -950,6 +1527,111 @@ export interface operations {
                 };
             };
             /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    generate_sample_file_from_csv: {
+        parameters: {
+            query?: {
+                format?: "json" | "zip";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_generate_sample_file_from_csv"];
+            };
+        };
+        responses: {
+            /** @description As `POST /sample-files` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeneratedSampleFile"];
+                    "application/zip": string;
+                };
+            };
+            /** @description The request body is over the cap */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    answer_key_to_csv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnswerKey-Input"];
+            };
+        };
+        responses: {
+            /** @description One row per Hit (spec 11.1) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description The request body is over the cap */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description An unexpected error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -1222,6 +1904,15 @@ export interface operations {
             };
             /** @description An unexpected error */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A worker the request needs could not start */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

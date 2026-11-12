@@ -3,6 +3,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
+from pain_demo import validation
 from pain_demo.app import create_app
 
 ROSTER: dict[str, list[str]] = {
@@ -81,3 +82,10 @@ def roster() -> dict[str, list[str]]:
 def roster_ids() -> list[str]:
     """Every roster id, in the id order the catalogue and `GET /entities` use."""
     return sorted(entity_id for ids in ROSTER.values() for entity_id in ids)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _stop_xsd_workers() -> Iterator[None]:
+    """Direct `validate_message` calls start workers outside any app's lifespan."""
+    yield
+    validation.shutdown()

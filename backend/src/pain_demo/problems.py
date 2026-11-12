@@ -142,6 +142,9 @@ BODY_TOO_LARGE: dict[int | str, dict[str, Any]] = {
 UNSUPPORTED_MEDIA_TYPE: dict[int | str, dict[str, Any]] = {
     HTTPStatus.UNSUPPORTED_MEDIA_TYPE: {"model": Problem, "description": "The request body's content type is refused"}
 }
+SERVICE_UNAVAILABLE: dict[int | str, dict[str, Any]] = {
+    HTTPStatus.SERVICE_UNAVAILABLE: {"model": Problem, "description": "A worker the request needs could not start"}
+}
 
 
 def problem_openapi(app: FastAPI) -> None:

@@ -1,10 +1,13 @@
 """FastAPI application factory."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import structlog
 from fastapi import FastAPI
 
+from pain_demo import validation
 from pain_demo.api.v1 import catalogue as catalogue_api
 from pain_demo.api.v1 import meta
 from pain_demo.api.v1 import sample_files as sample_files_api
@@ -24,6 +27,12 @@ STARTUP_VALIDATION_EXIT_CODE = 1
 log = structlog.get_logger("pain_demo.startup")
 
 
+@asynccontextmanager
+async def _lifespan(_: FastAPI) -> AsyncGenerator[None]:
+    yield
+    validation.shutdown()  # blocking, but nothing else runs once the app is stopping
+
+
 def create_app(
     settings: Settings | None = None, catalogue_root: Path = DEFAULT_ROOT, clean_banks_path: Path = DEFAULT_PATH
 ) -> FastAPI:
@@ -32,7 +41,7 @@ def create_app(
     catalogue = _load_catalogue_or_exit(catalogue_root)
     clean_banks = _load_clean_banks_or_exit(clean_banks_path, catalogue)
 
-    app = FastAPI(title="pain-demo", version=app_version(), responses=UNEXPECTED_ERROR)
+    app = FastAPI(title="pain-demo", version=app_version(), responses=UNEXPECTED_ERROR, lifespan=_lifespan)
     app.state.settings = settings
     app.state.catalogue = catalogue
     app.state.clean_banks = clean_banks

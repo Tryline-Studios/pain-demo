@@ -40,6 +40,13 @@ PLACEMENT_ELIGIBILITY: dict[Placement, frozenset[EntityType]] = {
     "remittance": EVERY_TYPE,
 }
 """The spec 6.1 table, in Placement enum order."""
+FILE_LEVEL_PLACEMENTS: frozenset[Placement] = frozenset({"debtor", "debtor_agent"})
+"""One `PmtInf` per Sample File: at most one Entity in each (spec 6.2)."""
+AGENT_PLACEMENTS: frozenset[Placement] = frozenset(
+    p for p, types in PLACEMENT_ELIGIBILITY.items() if types == BANK_ONLY
+)
+CONTROLLER_PLACEMENTS: dict[Placement, Placement] = {"creditor": "ultimate_creditor", "debtor": "ultimate_debtor"}
+"""Where a controlled Legal Entity may stand with `with_controller`, and where its controller then goes (spec 6.8)."""
 
 
 def candidate_names(entity: Entity) -> list[Name]:

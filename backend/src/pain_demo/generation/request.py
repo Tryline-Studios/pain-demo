@@ -1,19 +1,28 @@
 """The generation request (spec 5.1, 5.5, 12.4) and its Effective Request (spec 5.7).
 
-Only the generation settings and the Hit Count exist so far; named Hits, Supplied Data and Exposures arrive with
-their own tickets.
+Generation settings, the Hit Count with its named Hits and allowlists (spec 6.4), Exposures, and Supplied Data
+(spec 5).
 """
 
 import secrets
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Annotated, Literal, get_args
+from typing import Annotated, Literal, Self, get_args
 
-import pycountry
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
+from pain_demo.catalogue.capabilities import NameVariant, Placement
 from pain_demo.generation.clean_banks import SupportedCountry
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES, ExposureCountry
 from pain_demo.generation.seeds import identifier, stream
+from pain_demo.generation.supplied import (
+    Amount,
+    CurrencyCode,
+    SuppliedPayment,
+    SuppliedTransaction,
+    field_error,
+    version_errors,
+)
 
 type MessageVersion = Literal[
     "pain.001.001.03",
@@ -31,8 +40,6 @@ type MessageVersion = Literal[
 
 MESSAGE_VERSIONS: tuple[MessageVersion, ...] = get_args(MessageVersion.__value__)
 DEFAULT_MESSAGE_VERSION: MessageVersion = "pain.001.001.03"
-# shortcut: published as `maximum` on `transaction_count` until `transactions[]` exists; the Supplied Data ticket
-# adds `maxItems: 100` to it.
 MAX_TRANSACTIONS = 100
 DEFAULT_TRANSACTION_COUNT = 10
 MAX_SEED_LENGTH = 64
@@ -40,20 +47,41 @@ DEFAULT_COUNTRIES: tuple[SupportedCountry, ...] = ("GB", "DE", "FR", "NL", "US")
 DEFAULT_AMOUNT_MIN = Decimal("10.00")
 DEFAULT_AMOUNT_MAX = Decimal("50000.00")
 
-
-def _iso_4217(code: str) -> str:
-    if pycountry.currencies.get(alpha_3=code) is None:
-        msg = f"{code!r} is not an ISO 4217 currency code"
-        raise ValueError(msg)
-    return code
-
-
-type CurrencyCode = Annotated[str, Field(pattern=r"^[A-Z]{3}$"), AfterValidator(_iso_4217)]
-type Amount = Annotated[Decimal, Field(gt=0, max_digits=17, decimal_places=2)]
 # Plain aliases, not `type`, so the OpenAPI document inlines them rather than naming a schema for each.
 Seed = Annotated[str, Field(min_length=1, max_length=MAX_SEED_LENGTH)]
 MessageId = Annotated[str, Field(min_length=1, max_length=35)]
 TransactionCount = Annotated[int, Field(ge=1, le=MAX_TRANSACTIONS)]
+type RenderingMode = Literal["name_and_bic", "bic_only", "name_only"]
+RENDERING_MODES: tuple[RenderingMode, ...] = get_args(RenderingMode.__value__)
+
+
+class NamedHit(BaseModel):
+    """One Hit the caller pins (spec 6.4); anything left out is drawn. Checked against the catalogue at generation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    entity: str = Field(description="Catalogue id")
+    placement: Placement | None = None
+    name_variant: NameVariant | None = None
+    transaction: int | None = Field(default=None, ge=1, description="1-based; must be absent for file-level Placements")
+    rendering_mode: RenderingMode | None = Field(default=None, description="Agents only")
+    with_controller: bool = Field(
+        default=False,
+        description="Controlled Legal Entities only: its controller becomes the matching Ultimate party; two Hits",
+    )
+
+    @property
+    def weight(self) -> int:
+        """What it counts toward `hit_count`."""
+        return 2 if self.with_controller else 1
+
+
+def _absent(value: object) -> bool:
+    return value is None
+
+
+def _none_supplied(value: list[SuppliedTransaction]) -> bool:
+    return not value
 
 
 class GenerationRequest(BaseModel):
@@ -69,7 +97,8 @@ class GenerationRequest(BaseModel):
     execution_date: date | None = Field(default=None, description="`ReqdExctnDt`; absent means today")
     message_id: MessageId | None = Field(default=None, description="`GrpHdr/MsgId`; absent means drawn from the Seed")
     transaction_count: TransactionCount | None = Field(
-        default=None, description=f"Absent means {DEFAULT_TRANSACTION_COUNT}"
+        default=None,
+        description=f"Absent means the number of supplied transactions, or {DEFAULT_TRANSACTION_COUNT} with none",
     )
     hit_count: int = Field(
         default=0, ge=0, description="Sanctioned Entities placed as drawn Hits; at most the transaction count plus two"
@@ -84,6 +113,30 @@ class GenerationRequest(BaseModel):
     )
     amount_min: Amount = DEFAULT_AMOUNT_MIN
     amount_max: Amount = DEFAULT_AMOUNT_MAX
+    hits: list[NamedHit] = Field(default=[], description="Named Hits; they count toward `hit_count`")
+    placements: list[Placement] | None = Field(
+        default=None, min_length=1, description="Allowlist for the drawn Hits; absent means every Placement"
+    )
+    name_variants: list[NameVariant] | None = Field(
+        default=None, min_length=1, description="Allowlist for the drawn Hits; absent means every Name Variant"
+    )
+    exposure_countries: list[ExposureCountry] = Field(
+        default=list(EXPOSURE_COUNTRIES), min_length=1, description="Each Exposure draws its country from them"
+    )
+    exposure_count: int = Field(
+        default=0,
+        ge=0,
+        description="Clean transactions with the creditor side in an exposure country, none of them carrying a Hit",
+    )
+    payment: SuppliedPayment | None = Field(
+        default=None, exclude_if=_absent, description="File-level Supplied Data; absent means all generated"
+    )
+    transactions: list[SuppliedTransaction] = Field(
+        default_factory=list,
+        max_length=MAX_TRANSACTIONS,
+        exclude_if=_none_supplied,
+        description="Per-transaction Supplied Data, row n for transaction n; rows past the end are generated",
+    )
 
     @field_validator("amount_max")
     @classmethod
@@ -94,17 +147,41 @@ class GenerationRequest(BaseModel):
             raise ValueError(msg)
         return amount_max
 
-    @field_validator("hit_count")
-    @classmethod
-    def _hit_cap(cls, hit_count: int, info: ValidationInfo) -> int:
-        """Two file-level Placements (Debtor, Debtor Agent) plus one Hit per transaction (spec 6.3)."""
-        if "transaction_count" not in info.data:
-            return hit_count  # transaction_count failed its own validation
-        cap = (info.data["transaction_count"] or DEFAULT_TRANSACTION_COUNT) + 2
-        if hit_count > cap:
-            msg = f"hit_count must not exceed the transaction count plus two ({cap})"
-            raise ValueError(msg)
-        return hit_count
+    @model_validator(mode="after")
+    def _across_fields(self) -> Self:
+        """Checks that span fields, each reported at the field it names."""
+        errors = version_errors(self.message_version, self.payment, self.transactions)
+        count = self.transaction_count or len(self.transactions) or DEFAULT_TRANSACTION_COUNT
+        if count < len(self.transactions):
+            errors.append(
+                field_error(
+                    ("transaction_count",),
+                    count,
+                    f"transaction_count must not be below the {len(self.transactions)} supplied transactions",
+                )
+            )
+        # Two file-level Placements (Debtor, Debtor Agent) plus one Hit per transaction (spec 6.3).
+        if self.hit_count > count + 2:
+            errors.append(
+                field_error(
+                    ("hit_count",),
+                    self.hit_count,
+                    f"hit_count must not exceed the transaction count plus two ({count + 2})",
+                )
+            )
+        # Exposures take transactions no Hit touches; Hits beyond the two file-level ones take one each (spec 8.2).
+        exposure_cap = count - max(0, self.hit_count - 2)
+        if self.hit_count <= count + 2 and self.exposure_count > exposure_cap:
+            errors.append(
+                field_error(
+                    ("exposure_count",),
+                    self.exposure_count,
+                    f"exposure_count must not exceed the transactions left free of Hits ({exposure_cap})",
+                )
+            )
+        if errors:
+            raise ValidationError.from_exception_data(type(self).__name__, errors)
+        return self
 
     def resolve(self) -> "EffectiveRequest":
         """Resolve every default (spec 5.7). Replaying the result reproduces the Sample File byte for byte."""
@@ -117,7 +194,7 @@ class GenerationRequest(BaseModel):
                 "created_at": self.created_at or now,
                 "execution_date": self.execution_date or now.date(),
                 "message_id": self.message_id or identifier("MSG", stream(seed, "file/message_id")),
-                "transaction_count": self.transaction_count or DEFAULT_TRANSACTION_COUNT,
+                "transaction_count": self.transaction_count or len(self.transactions) or DEFAULT_TRANSACTION_COUNT,
             }
         )
 

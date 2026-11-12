@@ -13,11 +13,20 @@ from pain_demo.generation.request import CurrencyCode, MessageVersion
 
 @dataclass(frozen=True)
 class Address:
-    street: str
-    building_number: str
-    post_code: str
-    town: str
-    country: str
+    """A structured `PstlAdr`; a part left None is left out."""
+
+    street: str | None = None
+    building_number: str | None = None
+    building_name: str | None = None
+    floor: str | None = None
+    post_box: str | None = None
+    room: str | None = None
+    postcode: str | None = None
+    town: str | None = None
+    town_location_name: str | None = None
+    district_name: str | None = None
+    country_subdivision: str | None = None
+    country: str | None = None
 
 
 @dataclass(frozen=True)
@@ -25,20 +34,31 @@ class ListedAddress:
     """A Listing's address as the list gives it: free lines, rendered unstructured (spec 6.9)."""
 
     lines: tuple[str, ...]
-    country: str
+    country: str | None
+
+
+@dataclass(frozen=True)
+class PartyId:
+    """`Id/OrgId/Othr`."""
+
+    other_id: str
+    scheme: str | None = None
 
 
 @dataclass(frozen=True)
 class Party:
     name: str
     address: Address | ListedAddress | None = None
+    id: PartyId | None = None
+    country_of_residence: str | None = None
 
 
 @dataclass(frozen=True)
 class Agent:
     bic: str | None
     """None renders the agent by name and address only (`name_only`)."""
-    name: str
+    name: str | None
+    """None renders the BIC alone (`bic_only`), or leaves out a name Supplied Data nulls."""
     routing_number: str | None = None
     """The ABA routing number of a US agent, rendered as its clearing system member id."""
     lei: str | None = None
@@ -56,6 +76,7 @@ class OtherAccount:
     """`Othr/Id`: a US account number, or a synthetic one where the country has no IBAN (spec 6.9)."""
 
     id: str
+    scheme: str | None = None
 
 
 type Account = Iban | OtherAccount
@@ -63,10 +84,11 @@ type Account = Iban | OtherAccount
 
 @dataclass(frozen=True)
 class Remittance:
-    unstructured: str | None = None
+    unstructured: tuple[str, ...] = ()
+    """`Ustrd`, one element each."""
     creditor_reference: str | None = None
     """An ISO 11649 `RF` creditor reference, rendered as structured remittance."""
-    additional: str | None = None
+    additional: tuple[str, ...] = ()
     """`Strd/AddtlRmtInf`; with the invoicer and invoicee it shares the one `Strd` block."""
     invoicer: str | None = None
     """`Strd/Invcr/Nm`."""

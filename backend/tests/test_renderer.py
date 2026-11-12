@@ -24,7 +24,7 @@ from pain_demo.validation import MESSAGE_VERSIONS
 
 
 def address(country: str) -> Address:
-    return Address(street="Mudeweg", building_number="4", post_code="06690", town="Gross-Gerau", country=country)
+    return Address(street="Mudeweg", building_number="4", postcode="06690", town="Gross-Gerau", country=country)
 
 
 DEBTOR = Party(name="Karsten Wieloch GmbH", address=address("DE"))
@@ -58,7 +58,7 @@ MODEL = SampleFileModel(
             creditor_agent=Agent(bic="CHASUS33", name="JPMorgan Chase", routing_number="021000021"),
             creditor=Party(name="Ryan Gallagher", address=address("US")),
             creditor_account=OtherAccount("123456789"),
-            remittance=Remittance(unstructured="Invoice 4711"),
+            remittance=Remittance(unstructured=("Invoice 4711",)),
         ),
     ),
 )

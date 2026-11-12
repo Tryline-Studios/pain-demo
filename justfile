@@ -58,6 +58,11 @@ backend-test *args:
 goldens:
     UPDATE_GOLDENS=1 uv run pytest tests/test_goldens.py
 
+# Bump generator pins (pain001, faker, schwifty, iuliia, rapidfuzz; `name==version` for a given one), regenerate the goldens and show the diff
+[working-directory: 'backend']
+upgrade-generators +libraries:
+    uv run python -m pain_demo.upgrade_generators {{ libraries }}
+
 # Run the API natively with reload on http://127.0.0.1:8000
 [working-directory: 'backend']
 dev:
@@ -77,6 +82,16 @@ openapi-check:
 [working-directory: 'backend']
 build-clean-banks:
     uv run python -m pain_demo.generation.build_clean_banks
+
+# Download the live OFAC SDN and UK Sanctions List files and report catalogue drift; exits 1 on drift, 2 on a list it cannot parse
+[working-directory: 'backend']
+verify-catalogue:
+    uv run python -m pain_demo.freshness catalogue
+
+# Download the live OFAC SDN and UK Sanctions List files and report Clean Bank List matches; exits 1 on a match, 2 on a list it cannot parse
+[working-directory: 'backend']
+verify-clean-banks:
+    uv run python -m pain_demo.freshness clean-banks
 
 # --- frontend ---
 
@@ -129,7 +144,7 @@ up:
 down:
     docker compose down
 
-# Playwright smoke test against the running compose stack
+# Playwright smoke test against the running compose stack; E2E_BASE_URL overrides http://localhost:8080
 [working-directory: 'frontend']
 e2e *args:
     pnpm exec playwright test {{ args }}

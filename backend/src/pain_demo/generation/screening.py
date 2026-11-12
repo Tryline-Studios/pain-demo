@@ -4,6 +4,8 @@ from rapidfuzz import process, utils
 from rapidfuzz.distance import JaroWinkler
 
 from pain_demo.catalogue import Catalogue
+from pain_demo.catalogue.schema import Bank
+from pain_demo.identifiers import bic8
 
 FUZZ_THRESHOLD = 0.85
 
@@ -13,6 +15,10 @@ class NameScreen:
 
     def __init__(self, catalogue: Catalogue) -> None:
         self._names = [name.value for entity in catalogue.entities.values() for name in entity.names]
+        self._exact = {utils.default_process(name) for name in self._names}
+        self._bic8s = {
+            bic8(bic.value) for entity in catalogue.entities.values() if isinstance(entity, Bank) for bic in entity.bics
+        }
 
     def matches(self, name: str) -> bool:
         return (
@@ -25,3 +31,10 @@ class NameScreen:
             )
             is not None
         )
+
+    def names_entity(self, name: str) -> bool:
+        """Supplied Data may not name a catalogue Entity (spec 5.3): its name, case- and punctuation-insensitive."""
+        return utils.default_process(name) in self._exact
+
+    def listed_bic(self, bic: str) -> bool:
+        return bic8(bic) in self._bic8s

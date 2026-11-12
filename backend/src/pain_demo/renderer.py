@@ -7,7 +7,6 @@ in a worker thread.
 
 import importlib.resources
 import re
-import threading
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -55,24 +54,8 @@ class RenderResult:
     """Element paths the version fitter dropped, deduplicated, in first-seen order. None carries a Placement."""
 
 
-_THREAD_SCHEMAS = threading.local()
-"""Each thread's compiled schemas, by Message Version, in its `by_version` dict."""
-
-
-def schema(message_version: str) -> etree.XMLSchema:
-    """pain001's bundled XSD for a Message Version (pain.001.001.03 to .13), compiled once per thread and reused.
-
-    An XMLSchema's error log belongs to the schema, not the call, so threads never share one and never wait on each
-    other for it. Compiling takes about 1 ms on an idle process; see `validation._xsd_errors` for one that is not.
-    """
-    schemas: dict[str, etree.XMLSchema] = _THREAD_SCHEMAS.__dict__.setdefault("by_version", {})
-    if message_version not in schemas:
-        schemas[message_version] = etree.XMLSchema(xsd(message_version))
-    return schemas[message_version]
-
-
 def xsd(message_version: str) -> etree._Element:
-    """pain001's bundled XSD document for a Message Version, freshly parsed."""
+    """pain001's bundled XSD document for a Message Version (pain.001.001.03 to .13), freshly parsed."""
     path = importlib.resources.files(pain001) / "templates" / message_version / f"{message_version}.xsd"
     return etree.fromstring(path.read_bytes())
 
@@ -141,24 +124,48 @@ def _transaction(tx: Transaction) -> dict[str, Any]:
 
 
 def _party(party: Party) -> dict[str, Any]:
-    return {"name": party.name} | ({"address": _address(party.address)} if party.address else {})
+    scenario: dict[str, Any] = {"name": party.name}
+    if party.address:
+        scenario["address"] = _address(party.address)
+    if party.id:
+        scenario["id"] = {"org": {"other": [_other_id(party.id.other_id, party.id.scheme)]}}
+    if party.country_of_residence:
+        scenario["country_of_residence"] = party.country_of_residence
+    return scenario
 
 
 def _address(address: Address | ListedAddress) -> dict[str, Any]:
     if isinstance(address, ListedAddress):
-        return {"form": "unstructured", "lines": list(address.lines), "country": address.country}
-    return {
-        "form": "structured",
-        "street": address.street,
-        "building_number": address.building_number,
-        "post_code": address.post_code,
-        "town": address.town,
-        "country": address.country,
-    }
+        return _present({"form": "unstructured", "lines": list(address.lines), "country": address.country})
+    return _present(
+        {
+            "form": "structured",
+            "street": address.street,
+            "building_number": address.building_number,
+            "building_name": address.building_name,
+            "floor": address.floor,
+            "post_box": address.post_box,
+            "room": address.room,
+            "post_code": address.postcode,
+            "town": address.town,
+            "town_location": address.town_location_name,
+            "district": address.district_name,
+            "country_subdivision": address.country_subdivision,
+            "country": address.country,
+        }
+    )
+
+
+def _present(scenario: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in scenario.items() if value is not None}
+
+
+def _other_id(identifier: str, scheme: str | None) -> dict[str, str]:
+    return _present({"id": identifier, "scheme": scheme})
 
 
 def _agent(agent: Agent) -> dict[str, Any]:
-    scenario: dict[str, Any] = {"name": agent.name}
+    scenario: dict[str, Any] = {"name": agent.name} if agent.name else {}  # None is `bic_only` (spec 6.6)
     if agent.bic:
         scenario["bic"] = agent.bic
     if agent.routing_number:
@@ -173,18 +180,18 @@ def _agent(agent: Agent) -> dict[str, Any]:
 def _account(account: Account) -> dict[str, Any]:
     if isinstance(account, Iban):
         return {"iban": account.iban}
-    return {"other": {"id": account.id}}
+    return {"other": _other_id(account.id, account.scheme)}
 
 
 def _remittance(remittance: Remittance) -> dict[str, Any]:
     scenario: dict[str, Any] = {}
     if remittance.unstructured:
-        scenario["unstructured"] = [remittance.unstructured]
+        scenario["unstructured"] = list(remittance.unstructured)
     structured = {
         "creditor_reference": remittance.creditor_reference and {"reference": remittance.creditor_reference},
         "invoicer": remittance.invoicer and {"name": remittance.invoicer},
         "invoicee": remittance.invoicee and {"name": remittance.invoicee},
-        "additional": remittance.additional and [remittance.additional],
+        "additional": list(remittance.additional),
     }
     if structured := {key: value for key, value in structured.items() if value}:
         scenario["structured"] = [structured]

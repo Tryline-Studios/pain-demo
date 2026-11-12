@@ -310,7 +310,8 @@ def test_no_generated_party_name_resembles_a_catalogue_name(client: TestClient) 
         ({"hit_count": -1}, "hit_count", "greater_than_equal"),
         ({"transaction_count": 3, "hit_count": 6}, "hit_count", "value_error"),
         ({"hit_count": 13}, "hit_count", "value_error"),
-        ({"hits": []}, "hits", "extra_forbidden"),
+        ({"hits": [{"entity": "sberbank", "transaction": 0}]}, "hits[0].transaction", "greater_than_equal"),
+        ({"placements": ["teller"]}, "placements[0]", "literal_error"),
     ],
 )
 def test_invalid_settings_are_422_problems_naming_the_field(
@@ -420,7 +421,11 @@ def test_format_zip_returns_the_sample_file_and_answer_key_in_one_zip(client: Te
     assert response.headers["content-type"] == "application/zip"
     assert response.headers["content-disposition"] == 'attachment; filename="pain.001.001.03-zip-run.zip"'
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
-        assert archive.namelist() == ["pain.001.001.03-zip-run.xml", "pain.001.001.03-zip-run.answer-key.json"]
+        assert archive.namelist() == [
+            "pain.001.001.03-zip-run.xml",
+            "pain.001.001.03-zip-run.answer-key.json",
+            "pain.001.001.03-zip-run.answer-key.csv",
+        ]
         xml = archive.read("pain.001.001.03-zip-run.xml").decode("utf-8")
         answer_key = archive.read("pain.001.001.03-zip-run.answer-key.json").decode("utf-8")
     assert xml == envelope["sample_file"]["xml"]
@@ -437,7 +442,7 @@ def test_replaying_the_effective_request_as_a_zip_gives_the_same_files(client: T
 
     assert response.status_code == 200, response.text
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
-        xml_member, answer_key_member = archive.namelist()
+        xml_member, answer_key_member, _ = archive.namelist()
         xml = archive.read(xml_member).decode("utf-8")
         answer_key = archive.read(answer_key_member).decode("utf-8")
     assert xml == envelope["sample_file"]["xml"]
@@ -482,4 +487,17 @@ def test_options_publish_countries_limits_and_defaults(client: TestClient) -> No
         "countries": ["GB", "DE", "FR", "NL", "US"],
         "amount_min": "10.00",
         "amount_max": "50000.00",
+        "exposure_countries": ["RU", "BY", "IR", "KP", "SY", "VE"],
     }
+
+
+def test_options_publish_placements_name_variants_and_rendering_modes(client: TestClient) -> None:
+    options = client.get("/api/v1/options").json()
+
+    placements = {p["placement"]: p for p in options["placements"]}
+    assert len(placements) == 10
+    assert placements["debtor"] == {"placement": "debtor", "file_level": True, "agent": False}
+    assert placements["debtor_agent"] == {"placement": "debtor_agent", "file_level": True, "agent": True}
+    assert placements["remittance"] == {"placement": "remittance", "file_level": False, "agent": False}
+    assert options["name_variants"] == ["exact", "alias", "native_script", "transliteration", "fuzzed"]
+    assert options["rendering_modes"] == ["name_and_bic", "bic_only", "name_only"]

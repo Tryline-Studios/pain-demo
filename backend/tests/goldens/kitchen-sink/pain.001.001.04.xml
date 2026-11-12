@@ -1,0 +1,538 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- pain-demo 0.3.0 seed="golden-kitchen-sink" -->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.04">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-1C32B4E33129</MsgId>
+      <CreDtTm>2026-01-02T09:00:00+00:00</CreDtTm>
+      <NbOfTxs>12</NbOfTxs>
+      <CtrlSum>316628.29</CtrlSum>
+      <InitgPty>
+        <Nm>Open Joint-Stock Company Rosneft Oil Company</Nm>
+        <PstlAdr>
+          <Ctry>RU</Ctry>
+          <AdrLine>26/1 Sofiyskaya Embankment</AdrLine>
+          <AdrLine>115035 Moscow</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>PMTINF-KITCHEN-SINK</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>12</NbOfTxs>
+      <CtrlSum>316628.29</CtrlSum>
+      <ReqdExctnDt>2026-01-05</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Open Joint-Stock Company Rosneft Oil Company</Nm>
+        <PstlAdr>
+          <Ctry>RU</Ctry>
+          <AdrLine>26/1 Sofiyskaya Embankment</AdrLine>
+          <AdrLine>115035 Moscow</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <Othr>
+            <Id>40702810182919475512</Id>
+          </Othr>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>VTBRRUMM</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-2687CE3A68DB</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">16129.75</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>USBKUS44</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>091000022</MmbId>
+            </ClrSysMmbId>
+            <Nm>U.S. Bank National Association</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Yevraz</Nm>
+          <PstlAdr>
+            <Ctry>GB</Ctry>
+            <AdrLine>2 Portman Street</AdrLine>
+            <AdrLine>W1H 6DU London</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>GB13MIDL18227045893729</IBAN>
+          </Id>
+        </CdtrAcct>
+        <UltmtCdtr>
+          <Nm>Alexander Grigoryevich ABRAMOV</Nm>
+        </UltmtCdtr>
+        <RmtInf>
+          <Ustrd>Contract 075768 instalment</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-5B0B3F65B7E6</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="GBP">41449.77</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <Nm>Joint Stock Bank of the Gas Industry Gazprombank</Nm>
+            <PstlAdr>
+              <Ctry>RU</Ctry>
+              <AdrLine>16 Nametkina Street</AdrLine>
+              <AdrLine>Bldg. 1</AdrLine>
+              <AdrLine>117420 Moscow</AdrLine>
+            </PstlAdr>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Frank Castillo</Nm>
+          <PstlAdr>
+            <StrtNm>David Valley</StrtNm>
+            <BldgNb>42730</BldgNb>
+            <PstCd>67204</PstCd>
+            <TwnNm>Rogersstad</TwnNm>
+            <Ctry>US</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>40702810695301391293</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Contract 383878 instalment</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-DD652BFB5F94</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="CHF">39654.12</InstdAmt>
+        </Amt>
+        <UltmtDbtr>
+          <Nm>Игорь Иванович СЕЧИН</Nm>
+        </UltmtDbtr>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>BRBTUS33</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>053101121</MmbId>
+            </ClrSysMmbId>
+            <Nm>Truist Bank</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Rodriguez-Hoffman</Nm>
+          <PstlAdr>
+            <StrtNm>Melissa Motorway</StrtNm>
+            <BldgNb>4552</BldgNb>
+            <PstCd>28744</PstCd>
+            <TwnNm>Johnshire</TwnNm>
+            <Ctry>US</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>9301563978</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Order 397491</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-22EB0228EA19</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="CHF">30598.00</InstdAmt>
+        </Amt>
+        <IntrmyAgt1>
+          <FinInstnId>
+            <BICFI>SABRINDDXXX</BICFI>
+            <Nm>Sberbank (Public Joint-Stock Company Sberbank) Public Joint Stock Company</Nm>
+            <PstlAdr>
+              <Ctry>IN</Ctry>
+              <AdrLine>upper ground floor and fourth floor, Birla Tower</AdrLine>
+              <AdrLine>25-Barakhamba Road</AdrLine>
+              <AdrLine>110001 New Delhi</AdrLine>
+            </PstlAdr>
+          </FinInstnId>
+        </IntrmyAgt1>
+        <IntrmyAgt2>
+          <FinInstnId>
+            <BICFI>PRMSRUMM</BICFI>
+            <Nm>PROMSVYAZBANK PUBLIC JOINT STOCK COMPANY</Nm>
+            <PstlAdr>
+              <Ctry>RU</Ctry>
+              <AdrLine>Building 22</AdrLine>
+              <AdrLine>Smirnovskaya Street, 10</AdrLine>
+              <AdrLine>109052 Moscow</AdrLine>
+            </PstlAdr>
+          </FinInstnId>
+        </IntrmyAgt2>
+        <IntrmyAgt3>
+          <FinInstnId>
+            <BICFI>ROSYRU2P</BICFI>
+            <Nm>Bank of Russia</Nm>
+            <PstlAdr>
+              <Ctry>RU</Ctry>
+              <AdrLine>Rastrelli Square, 2A</AdrLine>
+              <AdrLine>191124 Saint-Petersburg</AdrLine>
+            </PstlAdr>
+          </FinInstnId>
+        </IntrmyAgt3>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>AABSDE31XXX</BICFI>
+            <Nm>Aachener Bausparkasse</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Niemeier</Nm>
+          <PstlAdr>
+            <StrtNm>Halil-Trüb-Ring</StrtNm>
+            <BldgNb>23-95</BldgNb>
+            <PstCd>57631</PstCd>
+            <TwnNm>Schleiz</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE97390200002035685229</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Services rendered, ref 009362</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-7969F3E566D1</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">1337.99</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>CITIUS33</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>021000089</MmbId>
+            </ClrSysMmbId>
+            <Nm>Citibank, N.A.</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Aaron Jimenez MD</Nm>
+          <PstlAdr>
+            <StrtNm>Jones Plains</StrtNm>
+            <BldgNb>70912</BldgNb>
+            <PstCd>93124</PstCd>
+            <TwnNm>New Timothymouth</TwnNm>
+            <Ctry>US</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>1230162923</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Order 854817</Ustrd>
+          <Strd>
+            <Invcee>
+              <Nm>MAHAN AIR</Nm>
+            </Invcee>
+          </Strd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-1FFDF1518DAB</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="GBP">1234.56</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>BNPADEFFXXX</BICFI>
+            <Nm>BNP Paribas Niederlassung Deutschland</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Supplied Creditor Ltd</Nm>
+          <PstlAdr>
+            <StrtNm>Suzanne-Haering-Gasse</StrtNm>
+            <BldgNb>59</BldgNb>
+            <PstCd>00519</PstCd>
+            <TwnNm>Hettstedt</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE27370106001688675850</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Invoice 42</Ustrd>
+          <Strd>
+            <CdtrRefInf>
+              <Ref>RF70037064521857</Ref>
+            </CdtrRefInf>
+          </Strd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-60FA4816577B</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="CHF">719.59</InstdAmt>
+        </Amt>
+        <IntrmyAgt1>
+          <FinInstnId>
+            <BICFI>CLYDGB2S</BICFI>
+            <Nm>CLYDESDALE BANK PLC</Nm>
+          </FinInstnId>
+        </IntrmyAgt1>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>ILBXDE8XXXX</BICFI>
+            <Nm>Investitionsbank des Landes Brandenburg</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Reimund Haering-Harloff</Nm>
+          <PstlAdr>
+            <StrtNm>Haufferplatz</StrtNm>
+            <BldgNb>8-9</BldgNb>
+            <PstCd>13065</PstCd>
+            <TwnNm>Bergzabern</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE88160103009069389617</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Contract 378182 instalment</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-6D449EE54212</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="RUB">22392.77</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>VZWFRUV0</BICFI>
+            <Nm>First Kazan Bank</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>OOO Zuyeva Grishin</Nm>
+          <PstlAdr>
+            <TwnNm>Novosibirsk</TwnNm>
+            <Ctry>RU</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>40702810083992502249</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <UltmtCdtr>
+          <Nm>Melanie Adolph</Nm>
+        </UltmtCdtr>
+        <RmtInf>
+          <Strd>
+            <CdtrRefInf>
+              <Ref>RF53741185545206</Ref>
+            </CdtrRefInf>
+          </Strd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-96D5EC3400E7</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="GBP">45082.52</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>FTBCUS3C</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>042000314</MmbId>
+            </ClrSysMmbId>
+            <Nm>Fifth Third Bank, N.A.</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Jennifer Rowland</Nm>
+          <PstlAdr>
+            <StrtNm>Anthony Estates</StrtNm>
+            <BldgNb>263</BldgNb>
+            <PstCd>24126</PstCd>
+            <TwnNm>South Tracymouth</TwnNm>
+            <Ctry>US</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>5400079826</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <UltmtCdtr>
+          <Nm>Tanya Myers</Nm>
+        </UltmtCdtr>
+        <RmtInf>
+          <Strd>
+            <CdtrRefInf>
+              <Ref>RF13856627397677</Ref>
+            </CdtrRefInf>
+          </Strd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-8BB5A1E1C6A1</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="CHF">33546.06</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>ALTEDEFAXXX</BICFI>
+            <Nm>ALTE LEIPZIGER Bauspar</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Senta Hiller</Nm>
+          <PstlAdr>
+            <StrtNm>Patberggasse</StrtNm>
+            <BldgNb>2-1</BldgNb>
+            <PstCd>34979</PstCd>
+            <TwnNm>Marienberg</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE21500128005394498427</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Contract 623002 instalment</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-3F21EEA1AD36</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">36419.15</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>GRCSFRP1XXX</BICFI>
+            <Nm>BANQUE DU GROUPE CASINO</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Victoire Blot</Nm>
+          <PstlAdr>
+            <StrtNm>chemin Bernadette Lévy</StrtNm>
+            <BldgNb>88</BldgNb>
+            <PstCd>64739</PstCd>
+            <TwnNm>Da Costa-sur-Boucher</TwnNm>
+            <Ctry>FR</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>FR7614628637577734912059981</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Payment for order 927770, supplier GAZPROM NEFT PAO</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-AB9C0915C34D</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">48064.01</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>XZXLIRG0</BICFI>
+            <Nm>Shiraz Commercial Bank</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>NATIONAL IRANIAN OIL COMPANY</Nm>
+          <PstlAdr>
+            <Ctry>IR</Ctry>
+            <AdrLine>National Iranian Oil Company Building</AdrLine>
+            <AdrLine>Taleghani Avenue</AdrLine>
+            <AdrLine>Hafez Street</AdrLine>
+            <AdrLine>Tehran</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>IR450674553343536441756731</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Invoice 930926</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

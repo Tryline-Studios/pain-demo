@@ -1,9 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-test("the Workbench loads through Caddy and the header shows the app version from the API", async ({ page }) => {
+test("the Workbench loads through Caddy and the header shows the app version from the API", async ({
+  page,
+  baseURL,
+}) => {
+  const origin = new URL("/", baseURL).href;
   const elsewhere: string[] = [];
   page.on("request", (request) => {
-    if (!request.url().startsWith("http://localhost:8080/")) {
+    if (!request.url().startsWith(origin)) {
       elsewhere.push(request.url());
     }
   });

@@ -37,6 +37,7 @@ def test_validate_message_takes_multipart_or_xml_and_returns_a_validation_report
         "dtd_not_allowed",
         "unsupported_message",
         "too_many_elements",
+        "validation_timed_out",
         "missing_element",
         "unexpected_element",
         "pattern_mismatch",
@@ -52,6 +53,7 @@ def test_sample_file_operations_are_named_and_tagged() -> None:
 
     for path, method, operation_id in [
         ("/api/v1/sample-files", "post", "generate_sample_file"),
+        ("/api/v1/answer-keys/csv", "post", "answer_key_to_csv"),
         ("/api/v1/message-versions", "get", "list_message_versions"),
         ("/api/v1/options", "get", "get_options"),
     ]:
@@ -74,6 +76,7 @@ def test_the_transaction_cap_and_seed_length_are_published() -> None:
 
     (count,) = [s for s in properties["transaction_count"]["anyOf"] if s["type"] == "integer"]
     assert (count["minimum"], count["maximum"]) == (1, 100)
+    assert properties["transactions"]["maxItems"] == 100
     (seed,) = [s for s in properties["seed"]["anyOf"] if s["type"] == "string"]
     assert seed["maxLength"] == 64
 
@@ -88,13 +91,15 @@ def test_every_operation_declares_only_the_problem_responses_it_can_return() -> 
     }
     assert declared == {
         ("/api/v1/sample-files", "post"): {"413", "422", "500"},
+        ("/api/v1/sample-files/csv", "post"): {"413", "422", "500"},
+        ("/api/v1/answer-keys/csv", "post"): {"413", "422", "500"},
         ("/api/v1/message-versions", "get"): {"500"},
         ("/api/v1/options", "get"): {"500"},
         ("/api/v1/health", "get"): {"500"},
         ("/api/v1/version", "get"): {"500"},
         ("/api/v1/entities", "get"): {"422", "500"},
         ("/api/v1/entities/{entity_id}", "get"): {"404", "422", "500"},
-        ("/api/v1/validations", "post"): {"413", "415", "422", "500"},
+        ("/api/v1/validations", "post"): {"413", "415", "422", "500", "503"},
     }
     paths = document["paths"]
     assert "build_failed" in paths["/api/v1/sample-files"]["post"]["responses"]["500"]["description"]
