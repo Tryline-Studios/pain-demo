@@ -611,3 +611,38 @@ def test_a_value_of_a_known_type_says_what_a_valid_one_looks_like(
     (problem,) = problems_of(client, pain001(version).replace(old, new))
 
     assert problem["message"] == message
+
+
+@pytest.mark.parametrize(
+    ("amount", "message"),
+    [
+        pytest.param(
+            b"1.123456",
+            "InstdAmt '1.123456' on line 9 has too many decimals: expected at most 5 decimals, like 1234.50",
+            id="fractionDigits",
+        ),
+        pytest.param(
+            b"1234567890123456789",
+            "InstdAmt '1234567890123456789' on line 9 has too many digits: expected at most 18 digits, like 1234.50",
+            id="totalDigits",
+        ),
+        pytest.param(
+            b"1,50",
+            "InstdAmt '1,50' on line 9 is not a valid ActiveOrHistoricCurrencyAndAmount_SimpleType: expected a "
+            "number with a dot for decimals, like 1234.50",
+            id="not a number",
+        ),
+    ],
+)
+def test_an_amount_that_breaks_its_type_says_what_a_valid_one_looks_like(
+    client: TestClient, amount: bytes, message: str
+) -> None:
+    (problem,) = problems_of(client, pain001().replace(b">1.00<", b">" + amount + b"<"))
+
+    assert (problem["code"], problem["message"]) == ("invalid_value", message)
+
+
+def test_a_pattern_of_a_type_without_a_hint_keeps_the_plain_message(client: TestClient) -> None:
+    (problem,) = problems_of(client, pain001().replace(b"<NbOfTxs>1</NbOfTxs>", b"<NbOfTxs>one</NbOfTxs>"))
+
+    assert problem["message"] == "NbOfTxs 'one' on line 4 doesn't match the pattern [0-9]{1,15}"

@@ -23,6 +23,7 @@ _PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
 _ENUMERATION = re.compile(r"The value '(.*)' is not an element of the set \{(.*)\}")
 _DATATYPE = re.compile(r": '(.*)' is not a valid value of the atomic type '(?:\{[^}]*\})?([^']+)'")
 _LENGTH = re.compile(r"length of '(\d+)'; this \w+ the allowed \w+ length of '(\d+)'")
+_DIGITS = re.compile(r"The value '(.*)' has more (fractional )?digits than are allowed \('(\d+)'\)")
 _XS = "{http://www.w3.org/2001/XMLSchema}"
 _HINTS = [
     (re.compile(r"ISODate"), "a valid date", "YYYY-MM-DD, like 2009-12-31"),
@@ -46,6 +47,11 @@ _HINTS = [
     ),
     (re.compile(r"CountryCode"), "a country code", "two capital letters, like GB"),
     (re.compile(r"Active(OrHistoric)?CurrencyCode"), "a currency code", "three capital letters, like EUR"),
+    (
+        re.compile(r"Active(OrHistoric)?CurrencyAndAmount_SimpleType"),
+        "a valid amount",
+        "a number with a dot for decimals, like 1234.50",
+    ),
     (
         re.compile(r"LEIIdentifier"),
         "a valid LEI",
@@ -271,6 +277,13 @@ def _classify(
     if error.type_name == "SCHEMAV_CVC_MINLENGTH_VALID" and (match := _LENGTH.search(cause)):
         length, limit = match.groups()
         return ProblemCode.TOO_SHORT, f"{subject} {where} is {length} characters long; the minimum is {limit}"
+    if error.type_name in {"SCHEMAV_CVC_FRACTIONDIGITS_VALID", "SCHEMAV_CVC_TOTALDIGITS_VALID"} and (
+        match := _DIGITS.search(cause)
+    ):
+        value, fractional, limit = match.groups()
+        digits = "decimals" if fractional else "digits"
+        message = f"{subject} '{value}' {where} has too many {digits}: expected at most {limit} {digits}, like 1234.50"
+        return ProblemCode.INVALID_VALUE, message
     return ProblemCode.SCHEMA_VIOLATION, cause
 
 
