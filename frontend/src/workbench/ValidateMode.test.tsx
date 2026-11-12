@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import type { components } from "@/api/schema";
+import "@/test/multipart";
 import { renderWithQueries } from "@/test/render";
 import { server } from "@/test/server";
 import { Workbench } from "@/workbench/Workbench";
