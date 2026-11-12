@@ -40,7 +40,7 @@
         },
         "responses": {
           "200": {
-            "description": "The JSON envelope, or with `format=zip` a zip of `<name>.xml` and `<name>.answer-key.json`",
+            "description": "The JSON envelope, or with `format=zip` a zip of `<name>.xml`, `<name>.answer-key.json` and `<name>.answer-key.csv`",
             "content": {
               "application/json": {
                 "schema": {
@@ -57,6 +57,68 @@
           },
           "500": {
             "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the cap",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/answer-keys/csv": {
+      "post": {
+        "tags": [
+          "sample-files"
+        ],
+        "summary": "The CSV projection of an Answer Key's hits",
+        "description": "A pure transform: any Answer Key of the current `answer_key_version`; another version is a 422.",
+        "operationId": "answer_key_to_csv",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerKey-Input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "One row per Hit (spec 11.1)",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unexpected error",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -532,7 +594,7 @@
       "Amount-Output": {
         "type": "string"
       },
-      "AnswerKey": {
+      "AnswerKey-Input": {
         "properties": {
           "answer_key_version": {
             "type": "integer",
@@ -551,7 +613,77 @@
             "$ref": "#/components/schemas/GeneratorVersion"
           },
           "request": {
-            "$ref": "#/components/schemas/EffectiveRequest"
+            "$ref": "#/components/schemas/EffectiveRequest-Input"
+          },
+          "file": {
+            "$ref": "#/components/schemas/FileFacts"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/Hit"
+            },
+            "type": "array",
+            "title": "Hits"
+          },
+          "exposures": {
+            "items": {},
+            "type": "array",
+            "title": "Exposures"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerKeyTransaction"
+            },
+            "type": "array",
+            "title": "Transactions"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seed",
+          "message_version",
+          "generator",
+          "request",
+          "file",
+          "summary",
+          "hits",
+          "exposures",
+          "transactions",
+          "warnings"
+        ],
+        "title": "AnswerKey",
+        "description": "Key order is the wire order (spec 11.2)."
+      },
+      "AnswerKey-Output": {
+        "properties": {
+          "answer_key_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Answer Key Version",
+            "default": 1
+          },
+          "seed": {
+            "type": "string",
+            "title": "Seed"
+          },
+          "message_version": {
+            "$ref": "#/components/schemas/MessageVersion"
+          },
+          "generator": {
+            "$ref": "#/components/schemas/GeneratorVersion"
+          },
+          "request": {
+            "$ref": "#/components/schemas/EffectiveRequest-Output"
           },
           "file": {
             "$ref": "#/components/schemas/FileFacts"
@@ -939,7 +1071,101 @@
         ],
         "title": "Defaults"
       },
-      "EffectiveRequest": {
+      "EffectiveRequest-Input": {
+        "properties": {
+          "message_version": {
+            "$ref": "#/components/schemas/MessageVersion",
+            "default": "pain.001.001.03"
+          },
+          "seed": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Seed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "execution_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Execution Date"
+          },
+          "message_id": {
+            "type": "string",
+            "maxLength": 35,
+            "minLength": 1,
+            "title": "Message Id"
+          },
+          "transaction_count": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Transaction Count"
+          },
+          "hit_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Hit Count",
+            "description": "Sanctioned Entities placed as drawn Hits; at most the transaction count plus two",
+            "default": 0
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/SupportedCountry"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Countries",
+            "description": "The Debtor takes the first; creditors and their agents draw from all of them",
+            "default": [
+              "GB",
+              "DE",
+              "FR",
+              "NL",
+              "US"
+            ]
+          },
+          "currencies": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CurrencyCode"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currencies",
+            "description": "Each transaction draws one; absent means the creditor country's"
+          },
+          "amount_min": {
+            "$ref": "#/components/schemas/Amount-Input",
+            "default": "10.00"
+          },
+          "amount_max": {
+            "$ref": "#/components/schemas/Amount-Input",
+            "default": "50000.00"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seed",
+          "created_at",
+          "execution_date",
+          "message_id",
+          "transaction_count"
+        ],
+        "title": "EffectiveRequest",
+        "description": "The request with every default resolved, as embedded in the Answer Key."
+      },
+      "EffectiveRequest-Output": {
         "properties": {
           "message_version": {
             "$ref": "#/components/schemas/MessageVersion",
@@ -1209,7 +1435,7 @@
             "$ref": "#/components/schemas/SampleFile"
           },
           "answer_key": {
-            "$ref": "#/components/schemas/AnswerKey"
+            "$ref": "#/components/schemas/AnswerKey-Output"
           }
         },
         "type": "object",
