@@ -3,12 +3,10 @@
 Every problem in the catalogue is collected before `CatalogueError` is raised, so one failed start lists them all.
 """
 
-import tomllib
-from collections.abc import Callable, Iterator
 from datetime import date
 from pathlib import Path
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import TypeAdapter
 
 from pain_demo.catalogue.schema import (
     ControlRelationship,
@@ -16,6 +14,7 @@ from pain_demo.catalogue.schema import (
     Entity,
     Individual,
 )
+from pain_demo.validated_files import FileProblems, parse_toml
 
 DEFAULT_ROOT = Path(__file__).parent
 ENTITIES_DIR = "entities"
@@ -24,12 +23,8 @@ CONTROL_RELATIONSHIPS_FILE = "control_relationships.toml"
 _entity_adapter: TypeAdapter[Entity] = TypeAdapter(Entity)
 
 
-class CatalogueError(Exception):
+class CatalogueError(FileProblems):
     """The catalogue on disk is not usable; `problems` lists every reason."""
-
-    def __init__(self, problems: list[str]) -> None:
-        super().__init__("; ".join(problems))
-        self.problems = problems
 
 
 class Catalogue:
@@ -65,7 +60,7 @@ def _load_entities(entities_dir: Path, problems: list[str]) -> list[Entity]:
     entities: list[Entity] = []
     seen: set[str] = set()
     for path in sorted(entities_dir.glob("*.toml")):
-        entity = _parse(path, _entity_adapter.validate_python, problems)
+        entity = parse_toml(path, _entity_adapter.validate_python, problems)
         if entity is None:
             continue
         if entity.id != path.stem:
@@ -83,7 +78,7 @@ def _load_relationships(path: Path, problems: list[str]) -> list[ControlRelation
     if not path.exists():
         problems.append(f"{path.name}: missing")
         return []
-    parsed = _parse(path, ControlRelationshipsFile.model_validate, problems)
+    parsed = parse_toml(path, ControlRelationshipsFile.model_validate, problems)
     return parsed.relationships if parsed else []
 
 
@@ -97,21 +92,3 @@ def _check_relationships(entities: list[Entity], relationships: list[ControlRela
         controlled = by_id.get(relationship.controlled)
         if isinstance(controlled, Individual):
             problems.append(f"{label}: the controlled Entity must be a Legal Entity, not an Individual")
-
-
-def _parse[T](path: Path, validate: Callable[[object], T], problems: list[str]) -> T | None:
-    try:
-        with path.open("rb") as file:
-            data = tomllib.load(file)
-        return validate(data)
-    except tomllib.TOMLDecodeError as error:
-        problems.append(f"{path.name}: {error}")
-    except ValidationError as error:
-        problems.extend(f"{path.name}: {line}" for line in _format(error))
-    return None
-
-
-def _format(error: ValidationError) -> Iterator[str]:
-    for item in error.errors():
-        location = ".".join(str(part) for part in item["loc"]) or "<root>"
-        yield f"{location}: {item['msg']}"

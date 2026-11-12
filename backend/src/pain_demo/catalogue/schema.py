@@ -9,8 +9,8 @@ from datetime import date
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from schwifty import BIC as SchwiftyBIC
-from schwifty.exceptions import SchwiftyException
+
+from pain_demo.identifiers import BIC_PATTERN, well_formed_bic
 
 type EntityType = Literal["individual", "bank", "corporate"]
 type SanctionsList = Literal["ofac_sdn", "uk"]
@@ -27,7 +27,6 @@ type CountryCode = Annotated[str, Field(pattern=r"^[A-Z]{2}$", description="ISO 
 type LanguageCode = Annotated[str, Field(pattern=r"^[a-z]{2}$", description="ISO 639-1")]
 type NonEmpty = Annotated[str, Field(min_length=1)]
 
-_BIC_PATTERN = r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$"
 _LEI_PATTERN = r"^[A-Z0-9]{18}[0-9]{2}$"
 
 
@@ -103,21 +102,12 @@ class Lei(CatalogueModel):
 class Bic(CatalogueModel):
     """Either the Listing that carries the BIC or an external non-sanctions citation, never both."""
 
-    # The pattern keeps the value upper case and documents the shape in OpenAPI; schwifty checks the country code.
-    value: str = Field(pattern=_BIC_PATTERN)
+    value: str = Field(pattern=BIC_PATTERN)
     listing: ListingRef | None = None
     citation: NonEmpty | None = Field(default=None, description="e.g. the GLEIF BIC-to-LEI mapping file")
     verified_date: date
 
-    @field_validator("value")
-    @classmethod
-    def _well_formed(cls, value: str) -> str:
-        try:
-            SchwiftyBIC(value)
-        except SchwiftyException as error:
-            msg = f"BIC is not well-formed: {error}"
-            raise ValueError(msg) from error
-        return value
+    _well_formed = field_validator("value")(well_formed_bic)
 
     @model_validator(mode="after")
     def _one_source(self) -> "Bic":
