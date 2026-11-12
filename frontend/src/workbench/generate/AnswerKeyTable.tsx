@@ -1,5 +1,6 @@
 import type { components } from "@/api/schema";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 type Hit = components["schemas"]["Hit"];
 
@@ -22,38 +23,49 @@ const COLUMNS: [string, (hit: Hit) => string | number | null | undefined][] = [
   ["Lists", (hit) => [...new Set(hit.entity.listings.map((listing) => listing.list))].join(", ")],
 ];
 
+const CELL = "px-3.5 py-3";
+
 /** One row per Hit, in Answer Key order. */
 export function AnswerKeyTable({ hits }: { hits: Hit[] }) {
   if (hits.length === 0) {
-    return <p className="text-muted-foreground text-sm">No Hits: this Sample File is clean.</p>;
+    return <p className="p-[18px] text-muted-foreground text-sm">No Hits: this Sample File is clean.</p>;
   }
   return (
-    <div className="rounded-xl border bg-card">
-      <Table className="text-xs">
-        <TableHeader>
-          <TableRow>
-            {COLUMNS.map(([label]) => (
-              <TableHead key={label}>{label}</TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {hits.map((hit) => (
-            <TableRow key={hit.id}>
-              {COLUMNS.map(([label, value]) =>
-                label === "XPath" ? (
-                  // Long paths are cut to keep the table readable; the tooltip has the whole one.
-                  <TableCell key={label} className="max-w-56 truncate" title={hit.xpath}>
-                    {hit.xpath}
-                  </TableCell>
-                ) : (
-                  <TableCell key={label}>{value(hit)}</TableCell>
-                ),
-              )}
-            </TableRow>
+    <Table className="text-[13px]">
+      <TableHeader>
+        <TableRow>
+          {COLUMNS.map(([label]) => (
+            <TableHead
+              key={label}
+              className="h-auto bg-secondary px-3.5 py-2.5 font-semibold text-[11px] text-muted-foreground uppercase tracking-[0.06em]"
+            >
+              {label}
+            </TableHead>
           ))}
-        </TableBody>
-      </Table>
-    </div>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {hits.map((hit) => (
+          <TableRow key={hit.id}>
+            {COLUMNS.map(([label, value]) =>
+              label === "XPath" ? (
+                // Long paths are cut to keep the table readable; the tooltip has the whole one.
+                <TableCell
+                  key={label}
+                  className={cn(CELL, "max-w-56 truncate font-mono text-label text-xs")}
+                  title={hit.xpath}
+                >
+                  {hit.xpath}
+                </TableCell>
+              ) : (
+                <TableCell key={label} className={CELL}>
+                  {value(hit)}
+                </TableCell>
+              ),
+            )}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

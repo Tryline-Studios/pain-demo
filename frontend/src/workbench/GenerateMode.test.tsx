@@ -188,7 +188,10 @@ describe("Generate mode: generating", () => {
     expect(seedTile).toHaveTextContent("echoed-seed");
     expect(within(output()).getByRole("group", { name: "Transactions" })).toHaveTextContent("3");
     expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("0");
-    expect(within(output()).getByRole("group", { name: "Version" })).toHaveTextContent("pain.001.001.09");
+    expect(within(output()).getByRole("group", { name: "Message Version" })).toHaveTextContent("pain.001.001.09");
+    expect(within(output()).getByRole("group", { name: "XSD" })).toHaveTextContent("Valid");
+    expect(within(output()).getByRole("heading", { name: "Sample File" })).toBeInTheDocument();
+    expect(within(output()).getByText(generated.sample_file.filename)).toBeInTheDocument();
     expect(within(output()).queryByText("No Sample File yet")).not.toBeInTheDocument();
     await user.click(within(output()).getByRole("tab", { name: "XML" }));
     expect(within(output()).getByRole("tabpanel")).toHaveTextContent('seed="echoed-seed"');
@@ -209,7 +212,7 @@ describe("Generate mode: generating", () => {
   it("shows no Message Version in the version tile before the first generate", async () => {
     await openFileSection();
 
-    expect(within(output()).getByRole("group", { name: "Version" })).toHaveTextContent("–");
+    expect(within(output()).getByRole("group", { name: "Message Version" })).toHaveTextContent("–");
   });
 
   it("clears the previous Sample File while the next one is generating", async () => {
@@ -442,10 +445,10 @@ describe("Generate mode: Hits", () => {
     expect(within(output()).getByRole("tabpanel")).toHaveTextContent("No Hits");
   });
 
-  it("shows the Hit Count in the Hits tile", async () => {
+  it("shows the Hit Count in the Hits tile, split into party and remittance Hits", async () => {
     await generateWithHits();
 
-    expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("3");
+    expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent(/^Hits3\s*2 party · 1 remittance$/);
   });
 
   it("posts the Hit Count the user set, limited to two more than the transactions", async () => {

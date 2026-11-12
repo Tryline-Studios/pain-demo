@@ -5,14 +5,17 @@ export function AppVersion() {
   const version = api.useQuery("get", "/api/v1/version");
 
   return (
-    <p className="text-muted-foreground text-sm">
-      Version{" "}
+    <p className="font-mono text-muted-foreground text-xs">
       {version.isPending ? (
-        <span>…</span>
+        <span>v…</span>
       ) : version.data === undefined ? (
-        <span className="text-destructive">unavailable</span>
+        <>
+          version <span className="text-destructive">unavailable</span>
+        </>
       ) : (
-        <span title={`git ${version.data.git_sha}`}>{version.data.app_version}</span>
+        <span title={`Version ${version.data.app_version}, git ${version.data.git_sha}`}>
+          v<span>{version.data.app_version}</span>
+        </span>
       )}
     </p>
   );

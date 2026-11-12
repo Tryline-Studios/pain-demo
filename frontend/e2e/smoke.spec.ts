@@ -1,11 +1,32 @@
 import { expect, test } from "@playwright/test";
 
 test("the Workbench loads through Caddy and the header shows the app version from the API", async ({ page }) => {
+  const elsewhere: string[] = [];
+  page.on("request", (request) => {
+    if (!request.url().startsWith("http://localhost:8080/")) {
+      elsewhere.push(request.url());
+    }
+  });
   await page.goto("/");
 
   await expect(page.getByRole("complementary", { name: "Settings" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Output" })).toContainText("No Sample File yet");
   await expect(page.getByRole("banner").getByText(/^\d+\.\d+\.\d+$/)).toBeVisible();
+  // Fonts are self-hosted: nothing leaves for a font CDN.
+  expect(elsewhere).toEqual([]);
+});
+
+test("the Dark theme applies and is remembered across a reload", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  const html = page.locator("html");
+  await expect(html).not.toHaveClass(/dark/);
+
+  await page.getByRole("group", { name: "Colour theme" }).getByRole("button", { name: "Dark theme" }).click();
+  await expect(html).toHaveClass(/dark/);
+  await page.reload();
+  await expect(html).toHaveClass(/dark/);
+  await expect(page.getByRole("button", { name: "Dark theme" })).toHaveAttribute("aria-pressed", "true");
 });
 
 test("Generate mode generates a clean Sample File through Caddy, downloads it and validates it", async ({ page }) => {
@@ -20,7 +41,7 @@ test("Generate mode generates a clean Sample File through Caddy, downloads it an
   const output = page.getByRole("region", { name: "Output" });
   await expect(output.getByRole("group", { name: "Seed" })).toHaveText(/smoke/);
   await expect(output.getByRole("group", { name: "Transactions" })).toHaveText(/3/);
-  await expect(output.getByRole("group", { name: "Version" })).toHaveText(/pain\.001\.001\.09/);
+  await expect(output.getByRole("group", { name: "Message Version" })).toHaveText(/pain\.001\.001\.09/);
   await expect(output.getByRole("tabpanel")).toContainText("No Hits");
   await output.getByRole("tab", { name: "XML" }).click();
   await expect(output.getByRole("tabpanel")).toContainText("urn:iso:std:iso:20022:tech:xsd:pain.001.001.09");

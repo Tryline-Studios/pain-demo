@@ -1,3 +1,4 @@
+import { Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { saveFile } from "@/lib/saveFile";
@@ -5,116 +6,152 @@ import { AnswerKeyTable } from "@/workbench/generate/AnswerKeyTable";
 import { HighlightedXml } from "@/workbench/generate/HighlightedXml";
 import { type Generation, siblingFilename } from "@/workbench/generate/useGeneration";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
-import { Tile } from "@/workbench/Tile";
+import { MonoValue, TILES, Tile } from "@/workbench/Tile";
 
-function Downloads({ generation }: { generation: Generation }) {
+/** Buttons at the canvas's 36px height with a 6px radius. */
+export const BUTTON = "h-9 rounded-md px-3.5";
+
+type OnValidate = (file: File) => void;
+
+/** The file name, the downloads and the way into Validate mode, above the tiles once a Sample File exists. */
+function Header({ generation, onValidate }: { generation: Generation; onValidate: OnValidate }) {
   const generated = generation.data;
   if (generated === undefined) {
     return null;
   }
   const { filename, xml } = generated.sample_file;
   return (
-    // biome-ignore lint/a11y/useSemanticElements: a labelled row of buttons, not a form fieldset
-    <div role="group" aria-label="Downloads" className="flex flex-wrap items-center gap-3">
-      <span className="text-muted-foreground text-sm">Download</span>
-      <Button variant="outline" onClick={() => generation.downloadZip(generated)}>
-        Zip
-      </Button>
-      <Button variant="outline" onClick={() => saveFile(new Blob([xml], { type: "application/xml" }), filename)}>
-        XML
-      </Button>
-      <Button
-        variant="outline"
-        onClick={() =>
-          saveFile(
-            new Blob([`${JSON.stringify(generated.answer_key, null, 2)}\n`], { type: "application/json" }),
-            siblingFilename(filename, ".answer-key.json"),
-          )
-        }
-      >
-        Answer Key JSON
-      </Button>
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex min-w-0 flex-col gap-1">
+        <h1 className="font-semibold text-[22px] tracking-[-0.015em]">Sample File</h1>
+        <span className="truncate font-mono text-label text-xs">{filename}</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {/* biome-ignore lint/a11y/useSemanticElements: a labelled row of buttons, not a form fieldset */}
+        <div role="group" aria-label="Downloads" className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" className={BUTTON} onClick={() => generation.downloadZip(generated)}>
+            <Download aria-hidden />
+            Zip
+          </Button>
+          <Button
+            variant="outline"
+            className={BUTTON}
+            onClick={() => saveFile(new Blob([xml], { type: "application/xml" }), filename)}
+          >
+            <Download aria-hidden />
+            XML
+          </Button>
+          <Button
+            variant="outline"
+            className={BUTTON}
+            onClick={() =>
+              saveFile(
+                new Blob([`${JSON.stringify(generated.answer_key, null, 2)}\n`], { type: "application/json" }),
+                siblingFilename(filename, ".answer-key.json"),
+              )
+            }
+          >
+            <Download aria-hidden />
+            Answer Key JSON
+          </Button>
+        </div>
+        <Button className={BUTTON} onClick={() => onValidate(new File([xml], filename, { type: "application/xml" }))}>
+          Validate this Sample File
+        </Button>
+      </div>
     </div>
   );
 }
 
-type OnValidate = (file: File) => void;
+/** A line-variant tab: the accent underline sits on the tab list's bottom border. */
+const TAB = "h-full flex-none px-0.5 text-label after:bottom-[-1px]! after:bg-primary! data-active:text-foreground";
 
-function Result({ generation, onValidate }: { generation: Generation; onValidate: OnValidate }) {
+function Result({ generation }: { generation: Generation }) {
   const generated = generation.data;
   if (generated === undefined) {
     return null;
   }
-  const { warnings } = generated.answer_key;
+  const { warnings, hits } = generated.answer_key;
   return (
-    <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Downloads generation={generation} />
-        <Button
-          onClick={() =>
-            onValidate(
-              new File([generated.sample_file.xml], generated.sample_file.filename, { type: "application/xml" }),
-            )
-          }
-        >
-          Validate this Sample File
-        </Button>
-      </div>
-      {generation.zipError === null ? null : <ProblemBlock error={generation.zipError} />}
-      <Tabs defaultValue="answer-key">
-        <TabsList>
-          <TabsTrigger value="answer-key">Answer Key</TabsTrigger>
-          <TabsTrigger value="xml">XML</TabsTrigger>
-          <TabsTrigger value="warnings">Warnings ({warnings.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="answer-key">
-          <AnswerKeyTable hits={generated.answer_key.hits} />
-        </TabsContent>
-        <TabsContent value="xml">
-          <HighlightedXml xml={generated.sample_file.xml} hits={generated.answer_key.hits} />
-        </TabsContent>
-        <TabsContent value="warnings">
-          {warnings.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No warnings: the Message Version carried everything.</p>
-          ) : (
-            <ul className="list-disc space-y-1 pl-5 font-mono text-xs">
-              {warnings.map((warning) => (
-                <li key={warning}>{warning}</li>
-              ))}
-            </ul>
-          )}
-        </TabsContent>
-      </Tabs>
-    </>
+    <Tabs defaultValue="answer-key" className="min-w-0 gap-0 rounded-[10px] border bg-card shadow-xs">
+      <TabsList variant="line" className="h-[42px]! w-full justify-start gap-5 border-b px-[18px]">
+        <TabsTrigger value="answer-key" className={TAB}>
+          Answer Key
+        </TabsTrigger>
+        <TabsTrigger value="xml" className={TAB}>
+          XML
+        </TabsTrigger>
+        <TabsTrigger value="warnings" className={TAB}>
+          Warnings ({warnings.length})
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="answer-key" className="min-w-0">
+        <AnswerKeyTable hits={hits} />
+      </TabsContent>
+      <TabsContent value="xml" className="min-w-0">
+        <HighlightedXml xml={generated.sample_file.xml} hits={hits} />
+      </TabsContent>
+      <TabsContent value="warnings" className="p-[18px]">
+        {warnings.length === 0 ? (
+          <p className="text-muted-foreground">No warnings: the Message Version carried everything.</p>
+        ) : (
+          <ul className="list-disc space-y-1 pl-5 font-mono text-xs">
+            {warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        )}
+      </TabsContent>
+    </Tabs>
   );
 }
 
-/** Summary tiles above the results; before the first generate, the empty state (spec 13.3). */
+/** The file header, summary tiles and results; before the first generate, the empty state (spec 13.3). */
 export function OutputPane({ generation, onValidate }: { generation: Generation; onValidate: OnValidate }) {
   const generated = generation.data;
   const file = generated?.answer_key.file;
+  const hits = generated?.answer_key.hits ?? [];
+  const remittance = hits.filter((hit) => hit.placement === "remittance").length;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <Header generation={generation} onValidate={onValidate} />
+      {generation.zipError === null ? null : <ProblemBlock error={generation.zipError} />}
+      <div className={TILES}>
         <Tile label="Transactions">{file?.transaction_count ?? "–"}</Tile>
-        <Tile label="Hits">{file?.hit_count ?? "–"}</Tile>
-        <Tile label="Seed">
-          <span className="block truncate" title={generated?.answer_key.seed}>
-            {generated?.answer_key.seed ?? "–"}
-          </span>
+        <Tile label="Hits">
+          {file?.hit_count ?? "–"}
+          {generated === undefined ? null : (
+            <span className="font-normal text-muted-foreground text-xs tracking-normal">
+              {hits.length - remittance} party · {remittance} remittance
+            </span>
+          )}
         </Tile>
-        <Tile label="Version">
-          <span className="block truncate">{generated?.answer_key.message_version ?? "–"}</span>
+        <Tile label="Message Version">
+          <MonoValue>{generated?.answer_key.message_version ?? "–"}</MonoValue>
+        </Tile>
+        <Tile label="Seed">
+          <MonoValue title={generated?.answer_key.seed}>{generated?.answer_key.seed ?? "–"}</MonoValue>
+        </Tile>
+        <Tile label="XSD">
+          {/* The API refuses a Sample File that fails its XSD (a 500 build_failed), so one that arrived is valid. */}
+          {generated === undefined ? (
+            "–"
+          ) : (
+            <span className="flex items-center gap-2 text-base text-success">
+              <Check className="size-[18px]" strokeWidth={2.4} aria-hidden />
+              Valid
+            </span>
+          )}
         </Tile>
       </div>
       {generation.error !== null ? (
         <ProblemBlock error={generation.error} />
       ) : generated !== undefined ? (
-        <Result generation={generation} onValidate={onValidate} />
+        <Result generation={generation} />
       ) : (
-        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed text-center">
-          <p className="font-medium text-lg">{generation.isPending ? "Generating…" : "No Sample File yet"}</p>
+        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[10px] border border-border-strong border-dashed bg-card px-4 text-center">
+          <p className="font-semibold text-lg">{generation.isPending ? "Generating…" : "No Sample File yet"}</p>
           <p className="mt-2 max-w-md text-muted-foreground text-sm">
             Set up the file on the left and press Generate. The XML and any warnings will show here.
           </p>

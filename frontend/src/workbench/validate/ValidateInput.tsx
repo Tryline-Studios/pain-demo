@@ -1,6 +1,8 @@
+import { Upload } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BUTTON } from "@/workbench/OutputPane";
 import type { Validation } from "@/workbench/validate/useValidation";
 
 /** The left pane in Validate mode: drop or pick a file, or paste XML (spec 17.9). */
@@ -17,12 +19,7 @@ export function ValidateInput({ validation }: { validation: Validation }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="px-1 pb-2">
-        <h1 className="font-semibold text-xl tracking-tight">Validate a pain.001 message</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Checked against the XSD of the Message Version it declares (.03 to .13).
-        </p>
-      </div>
+      <h2 className="font-semibold text-[11px] text-muted-foreground uppercase tracking-[0.08em]">Message</h2>
       <label
         onDragOver={(event) => {
           event.preventDefault();
@@ -35,8 +32,8 @@ export function ValidateInput({ validation }: { validation: Validation }) {
           validateFirst(event.dataTransfer.files);
         }}
         className={cn(
-          "block cursor-pointer rounded-xl border-2 border-dashed p-8 text-center focus-within:ring-2 focus-within:ring-ring",
-          { "border-primary bg-accent": over },
+          "flex cursor-pointer flex-wrap items-center gap-4 rounded-[10px] border border-border-strong border-dashed bg-card px-[18px] py-4 focus-within:outline-2 focus-within:outline-ring focus-within:outline-offset-2",
+          { "border-primary bg-primary-soft": over },
         )}
       >
         <input
@@ -49,8 +46,19 @@ export function ValidateInput({ validation }: { validation: Validation }) {
             event.target.value = "";
           }}
         />
-        <span className="block font-medium">Drop a pain.001 file here</span>
-        <span className="mt-1 block text-muted-foreground text-sm">or click to choose one (.xml, up to 10 MB)</span>
+        <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-primary-soft text-primary">
+          <Upload className="size-5" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold">Drop a pain.001 file here</span>
+          <span className="block text-[12.5px] text-muted-foreground">
+            XML up to 10 MB · Message Versions .03 to .13
+          </span>
+        </span>
+        {/* The whole zone is the file input's label, so this is its look, not a second control. */}
+        <span className="inline-flex h-9 items-center rounded-md border border-border-strong bg-card px-3.5 font-medium hover:bg-secondary">
+          Choose file
+        </span>
       </label>
       <textarea
         aria-label="Paste XML"
@@ -58,9 +66,13 @@ export function ValidateInput({ validation }: { validation: Validation }) {
         onChange={(event) => setPasted(event.target.value)}
         placeholder="…or paste XML"
         spellCheck={false}
-        className="h-48 rounded-xl border bg-card p-3 font-mono text-xs"
+        className="h-48 rounded-[10px] border border-border-strong bg-card p-3 font-mono text-xs focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1"
       />
-      <Button disabled={pasted === "" || validation.isPending} onClick={() => validation.validateXml(pasted)}>
+      <Button
+        className={BUTTON}
+        disabled={pasted === "" || validation.isPending}
+        onClick={() => validation.validateXml(pasted)}
+      >
         Validate pasted XML
       </Button>
     </div>
