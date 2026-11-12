@@ -336,12 +336,16 @@ def test_a_build_failure_is_a_500_problem_and_logs_the_effective_request(
     problem = response.json()
     assert (problem["type"], problem["instance"]) == ("build_failed", "req-b")
     assert "value length cannot be greater than 140" in problem["detail"]
-    assert "request" not in problem
+    assert set(problem) == {"type", "title", "status", "detail", "instance"}
+    assert "broken" not in response.text
     events = [json.loads(line) for line in capsys.readouterr().out.splitlines() if line.startswith("{")]
     (failure,) = [e for e in events if e["event"] == "build_failed"]
     assert failure["level"] == "error"
     assert failure["request_id"] == "req-b"
+    assert failure["xsd_messages"] == [".../Cdtr/Nm: value length cannot be greater than 140"]
     assert failure["effective_request"]["seed"] == "broken"
+    assert failure["effective_request"]["message_version"] == "pain.001.001.03"
+    assert failure["effective_request"]["transaction_count"] == 10
     (request_event,) = [e for e in events if e["event"] == "request"]
     assert (request_event["outcome"], request_event["status"]) == ("build_failed", 500)
 
