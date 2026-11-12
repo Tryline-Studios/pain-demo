@@ -629,7 +629,9 @@
             "title": "Hits"
           },
           "exposures": {
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/Exposure"
+            },
             "type": "array",
             "title": "Exposures"
           },
@@ -1161,6 +1163,30 @@
           "amount_max": {
             "$ref": "#/components/schemas/Amount-Input",
             "default": "50000.00"
+          },
+          "exposure_countries": {
+            "items": {
+              "$ref": "#/components/schemas/ExposureCountry"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Exposure Countries",
+            "description": "Each Exposure draws its country from them",
+            "default": [
+              "RU",
+              "BY",
+              "IR",
+              "KP",
+              "SY",
+              "VE"
+            ]
+          },
+          "exposure_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Exposure Count",
+            "description": "Clean transactions with the creditor side in an exposure country, none of them carrying a Hit",
+            "default": 0
           }
         },
         "additionalProperties": false,

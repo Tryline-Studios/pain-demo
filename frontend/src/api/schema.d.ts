@@ -197,7 +197,7 @@ export interface components {
             /** Hits */
             hits: components["schemas"]["Hit"][];
             /** Exposures */
-            exposures: unknown[];
+            exposures: components["schemas"]["Exposure"][];
             /** Transactions */
             transactions: components["schemas"]["AnswerKeyTransaction"][];
             /** Warnings */
@@ -408,6 +408,25 @@ export interface components {
             amount_min: components["schemas"]["Amount-Input"];
             /** @default 50000.00 */
             amount_max: components["schemas"]["Amount-Input"];
+            /**
+             * Exposure Countries
+             * @description Each Exposure draws its country from them
+             * @default [
+             *       "RU",
+             *       "BY",
+             *       "IR",
+             *       "KP",
+             *       "SY",
+             *       "VE"
+             *     ]
+             */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
+            /**
+             * Exposure Count
+             * @description Clean transactions with the creditor side in an exposure country, none of them carrying a Hit
+             * @default 0
+             */
+            exposure_count: number;
         };
         /**
          * EffectiveRequest
