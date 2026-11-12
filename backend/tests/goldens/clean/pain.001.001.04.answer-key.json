@@ -1,0 +1,103 @@
+{
+  "answer_key_version": 1,
+  "seed": "golden-clean",
+  "message_version": "pain.001.001.04",
+  "generator": {
+    "app_version": "0.1.0",
+    "git_sha": "golden",
+    "pain001": "0.0.70",
+    "faker": "40.39.0",
+    "schwifty": "2026.7.3",
+    "iuliia": "0.13.0",
+    "rapidfuzz": "3.14.6",
+    "catalogue_snapshot": "2026-09-14"
+  },
+  "request": {
+    "message_version": "pain.001.001.04",
+    "seed": "golden-clean",
+    "created_at": "2026-01-02T09:00:00Z",
+    "execution_date": "2026-01-05",
+    "message_id": "MSG-B06C0CB80A48",
+    "transaction_count": 10,
+    "countries": [
+      "GB",
+      "DE",
+      "FR",
+      "NL",
+      "US"
+    ],
+    "currencies": null,
+    "amount_min": "10.00",
+    "amount_max": "50000.00"
+  },
+  "file": {
+    "message_id": "MSG-B06C0CB80A48",
+    "created_at": "2026-01-02T09:00:00Z",
+    "execution_date": "2026-01-05",
+    "transaction_count": 10,
+    "hit_count": 0,
+    "sha256": "5f62aa8dae5778cc35a03370e55c8c98233c8b5f237941da053d1c82609f5775"
+  },
+  "summary": {
+    "by_placement": {},
+    "by_name_variant": {},
+    "by_entity_type": {},
+    "by_list": {},
+    "by_exposure_country": {}
+  },
+  "hits": [],
+  "exposures": [],
+  "transactions": [
+    {
+      "number": 1,
+      "end_to_end_id": "E2E-FD046704582D",
+      "hit_ids": []
+    },
+    {
+      "number": 2,
+      "end_to_end_id": "E2E-9EE545816A57",
+      "hit_ids": []
+    },
+    {
+      "number": 3,
+      "end_to_end_id": "E2E-EC497D2163CC",
+      "hit_ids": []
+    },
+    {
+      "number": 4,
+      "end_to_end_id": "E2E-422B6B6AEE0E",
+      "hit_ids": []
+    },
+    {
+      "number": 5,
+      "end_to_end_id": "E2E-13D6F98FFC53",
+      "hit_ids": []
+    },
+    {
+      "number": 6,
+      "end_to_end_id": "E2E-CFBE02BA5EBE",
+      "hit_ids": []
+    },
+    {
+      "number": 7,
+      "end_to_end_id": "E2E-76FFC377E19E",
+      "hit_ids": []
+    },
+    {
+      "number": 8,
+      "end_to_end_id": "E2E-9486130F12EE",
+      "hit_ids": []
+    },
+    {
+      "number": 9,
+      "end_to_end_id": "E2E-B54DD9EBEDF4",
+      "hit_ids": []
+    },
+    {
+      "number": 10,
+      "end_to_end_id": "E2E-D2CC073BF507",
+      "hit_ids": []
+    }
+  ],
+  "warnings": []
+}

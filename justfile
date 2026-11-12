@@ -53,6 +53,11 @@ backend-typecheck:
 backend-test *args:
     uv run pytest {{ args }}
 
+# Rewrite the committed goldens from the current Generator Version; review the diff and bump the minor version
+[working-directory: 'backend']
+goldens:
+    UPDATE_GOLDENS=1 uv run pytest tests/test_goldens.py
+
 # Run the API natively with reload on http://127.0.0.1:8000
 [working-directory: 'backend']
 dev:
