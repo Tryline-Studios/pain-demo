@@ -12,3 +12,8 @@ import random
 def stream(seed: str, name: str) -> random.Random:
     digest = hashlib.sha256(f"{seed}\x1f{name}".encode()).digest()
     return random.Random(int.from_bytes(digest[:8], "big"))  # noqa: S311 - seeded test data, not cryptography
+
+
+def identifier(prefix: str, rng: random.Random) -> str:
+    """`MSG-`, `PMT-` or `E2E-` and 48 bits from `rng` as 12 hex digits."""
+    return f"{prefix}-{rng.getrandbits(48):012X}"

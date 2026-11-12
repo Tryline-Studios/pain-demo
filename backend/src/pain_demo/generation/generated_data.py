@@ -27,7 +27,7 @@ from pain_demo.generation.model import (
 )
 from pain_demo.generation.request import CURRENCY_BY_COUNTRY, EffectiveRequest
 from pain_demo.generation.screening import NameScreen
-from pain_demo.generation.seeds import stream
+from pain_demo.generation.seeds import identifier, stream
 
 ULTIMATE_CREDITOR_RATE = 0.10
 ULTIMATE_DEBTOR_RATE = 0.05
@@ -91,7 +91,7 @@ class GeneratedData:
             message_id=request.message_id,
             created_at=request.created_at,
             execution_date=request.execution_date,
-            payment_information_id=f"PMT-{self._stream('file/identifiers').getrandbits(48):012X}",
+            payment_information_id=identifier("PMT", self._stream("file/identifiers")),
             debtor=self._party(self._stream("file/debtor"), debtor_country, company=True),
             debtor_account=debtor_account,
             debtor_agent=debtor_agent,
@@ -122,7 +122,7 @@ class GeneratedData:
         )
         intermediary_stream = tx_stream("intermediary_agent")
         return Transaction(
-            end_to_end_id=f"E2E-{tx_stream('identifiers').getrandbits(48):012X}",
+            end_to_end_id=identifier("E2E", tx_stream("identifiers")),
             amount=Decimal(cents).scaleb(-2),
             currency=currency,
             creditor=self._party(creditor_stream, country, company=creditor_stream.random() < 0.5),

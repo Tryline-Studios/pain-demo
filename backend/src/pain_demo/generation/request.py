@@ -12,7 +12,7 @@ import pycountry
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from pain_demo.generation.clean_banks import SupportedCountry
-from pain_demo.generation.seeds import stream
+from pain_demo.generation.seeds import identifier, stream
 
 type MessageVersion = Literal[
     "pain.001.001.03",
@@ -117,7 +117,7 @@ class GenerationRequest(BaseModel):
                 "seed": seed,
                 "created_at": self.created_at or now,
                 "execution_date": self.execution_date or now.date(),
-                "message_id": self.message_id or f"MSG-{stream(seed, 'file/message_id').getrandbits(48):012X}",
+                "message_id": self.message_id or identifier("MSG", stream(seed, "file/message_id")),
                 "transaction_count": self.transaction_count or DEFAULT_TRANSACTION_COUNT,
             }
         )
