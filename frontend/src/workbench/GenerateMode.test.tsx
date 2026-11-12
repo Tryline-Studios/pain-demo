@@ -365,6 +365,7 @@ describe("Generate mode: Hits", () => {
         "End-to-end id",
         "XPath",
         "Placement",
+        "Element",
         "Rendering mode",
         "Entity",
         "Name Variant",
@@ -382,6 +383,7 @@ describe("Generate mode: Hits", () => {
         "/Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Nm",
         "debtor",
         "",
+        "",
         "daedong-credit-bank",
         "exact",
         "DAEDONG CREDIT BANK",
@@ -397,6 +399,7 @@ describe("Generate mode: Hits", () => {
         "E2E-1",
         "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[1]/CdtrAgt/FinInstnId/Nm",
         "creditor_agent",
+        "",
         "name_and_bic",
         "t-bank",
         "exact",
@@ -411,15 +414,16 @@ describe("Generate mode: Hits", () => {
         "transaction",
         "2",
         "E2E-2",
-        "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[2]/CdtrAgt/FinInstnId/Nm",
-        "creditor_agent",
-        "name_and_bic",
+        "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf[2]/RmtInf/Ustrd",
+        "remittance",
+        "ustrd",
+        "",
         "t-bank",
         "exact",
         "T-BANK",
-        "TICSRUMM",
         "",
-        "name, bic",
+        "",
+        "name",
         "ofac_sdn",
       ],
     ]);
@@ -496,7 +500,8 @@ describe("Generate mode: Hits", () => {
     expect(header).toContain("<Dbtr>\n        <Nm>[h1: DAEDONG CREDIT BANK]</Nm>");
     expect(first).toContain("<Nm>[h2: T-BANK]</Nm>");
     expect(first).toContain("<Nm>Jane Smith</Nm>");
-    expect(second).toContain("<Nm>[h3: T-BANK]</Nm>");
+    expect(second).toContain("<Nm>T-BANK</Nm>");
+    expect(second).toContain("<Ustrd>[h3: Invoice 447102 payment to T-BANK]</Ustrd>");
     expect(shown.querySelectorAll("mark")).toHaveLength(0);
     expect(shown.textContent?.match(/\[h\d/g)).toHaveLength(3);
   });

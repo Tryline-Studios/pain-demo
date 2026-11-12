@@ -36,7 +36,7 @@ from pain_demo.catalogue.schema import (
     SanctionsList,
     Script,
 )
-from pain_demo.generation.generated_data import GeneratedData
+from pain_demo.generation.generated_data import GeneratedData, digits
 from pain_demo.generation.model import (
     Account,
     Agent,
@@ -88,9 +88,33 @@ PLACEMENTS: dict[Placement, PlacementRule] = {
     "ultimate_creditor": _party("ultimate_creditor", "UltmtCdtr/Nm"),
     "ultimate_debtor": _party("ultimate_debtor", "UltmtDbtr/Nm"),
     "debtor": _party("debtor", "Dbtr/Nm", file_level=True),
+    # The name path is the element's, drawn per Hit; `RmtInf` only orders it among its transaction's Hits.
+    "remittance": PlacementRule("RmtInf", party_weight=25, bank_weight=5),
 }
-"""Every drawn Placement, in draw order: the order feeds `choices`, so changing it changes every Seed's Hits. The
-remittance mention (25 for a party, 5 for a Bank) joins with its own ticket."""
+"""Every drawn Placement, in draw order: the order feeds `choices`, so changing it changes every Seed's Hits."""
+type RemittanceElement = Literal["ustrd", "addtl_rmt_inf", "invcr", "invcee"]
+REMITTANCE_ELEMENTS: dict[RemittanceElement, tuple[str, float]] = {
+    "ustrd": ("RmtInf/Ustrd", 70),
+    "addtl_rmt_inf": ("RmtInf/Strd/AddtlRmtInf", 15),
+    "invcr": ("RmtInf/Strd/Invcr/Nm", 7.5),  # "Invcr or Invcee 15", split evenly
+    "invcee": ("RmtInf/Strd/Invcee/Nm", 7.5),
+}
+"""Where a remittance mention goes, with its path under `CdtTrfTxInf[n]` and its weight (spec 6.5, 6.7)."""
+_REMITTANCE_FIELDS: dict[RemittanceElement, str] = {
+    "ustrd": "unstructured",
+    "addtl_rmt_inf": "additional",
+    "invcr": "invoicer",
+    "invcee": "invoicee",
+}
+REMITTANCE_SENTENCES = (
+    "Invoice {n} payment to {name}",
+    "Payment for order {n}, supplier {name}",
+    "Settlement of contract {n} with {name}",
+    "Consulting fees ref {n} - {name}",
+    "{name} invoice {n}",
+)
+"""Seeded sentences around the rendered name in `Ustrd` and `AddtlRmtInf` (spec 6.7)."""
+_MAX_TEXT = 140
 NAME_VARIANT_WEIGHTS: dict[NameVariant, float] = {"exact": 40, "alias": 25, "native_script": 5}
 """The verbatim Name Variants (spec 6.5); transliteration and fuzzed join with their own tickets."""
 _PMT_INF = "/Document/CstmrCdtTrfInitn/PmtInf"
@@ -144,7 +168,7 @@ def _absent(value: object) -> bool:
 
 
 class Hit(BaseModel):
-    """One Placement of a Sanctioned Entity (spec 11.3), in wire order. `element` (remittance) arrives later."""
+    """One Placement of a Sanctioned Entity (spec 11.3), in wire order."""
 
     id: str
     scope: Literal["file", "transaction"]
@@ -153,6 +177,7 @@ class Hit(BaseModel):
     xpath: str
     entity: HitEntity
     placement: Placement
+    element: RemittanceElement | None = Field(default=None, exclude_if=_absent, description="Remittance only")
     rendering_mode: Literal["name_and_bic", "bic_only", "name_only"] | None = Field(
         default=None, exclude_if=_absent, description="Agents only"
     )
@@ -282,6 +307,13 @@ class _Placer:
             plan = planned[k]
             rng = stream(self.request.seed, f"hits/{k + 1}")
             name = _name(rng, plan.entity)
+            if plan.placement == "remittance" and plan.transaction is not None:  # always transaction-level
+                element, text = _mention(rng, name.rendered)
+                tx = transactions[plan.transaction - 1]
+                remittance = replace(tx.remittance, **{_REMITTANCE_FIELDS[element]: text})
+                transactions[plan.transaction - 1] = replace(tx, remittance=remittance)
+                hits.append(self._hit(ids[k], plan, tx.end_to_end_id, name, element=element))
+                continue
             agent_hit = PLACEMENTS[plan.placement].agent
             home = debtor_country if plan.placement == "debtor_agent" else None
             bic = None
@@ -313,31 +345,56 @@ class _Placer:
                 transactions[plan.transaction - 1] = self._place_tx(tx, rng, plan.placement, party_or_agent, account)
                 end_to_end_id = tx.end_to_end_id
             hits.append(
-                Hit(
-                    id=ids[k],
-                    scope="file" if plan.transaction is None else "transaction",
-                    transaction_number=plan.transaction,
-                    end_to_end_id=end_to_end_id,
-                    xpath=xpath(plan.placement, plan.transaction),
-                    entity=HitEntity(
-                        id=plan.entity.id,
-                        entity_type=plan.entity.entity_type,
-                        listings=[listing.ref for listing in plan.entity.listings],
-                    ),
-                    placement=plan.placement,
+                self._hit(
+                    ids[k],
+                    plan,
+                    end_to_end_id,
+                    name,
                     rendering_mode=("name_and_bic" if bic else "name_only") if agent_hit else None,
-                    name=name,
-                    bic=HitBic(value=bic.value, source="listing" if bic.listing else "gleif") if bic else None,
+                    bic=bic,
                     lei=lei,
-                    address_from_listing=address.listing.entry_id if address else None,
-                    triggers=_triggers(plan.entity, name.rendered, bic, lei),
-                    origin="drawn",
-                    paired_with=None,
-                    displaced=None,
+                    address=address,
                 )
             )
         model = replace(model, transactions=tuple(transactions))
         return model, sorted(hits, key=lambda hit: int(hit.id[1:]))
+
+    @staticmethod
+    def _hit(
+        hit_id: str,
+        plan: _Planned,
+        end_to_end_id: str | None,
+        name: HitName,
+        *,
+        element: RemittanceElement | None = None,
+        rendering_mode: Literal["name_and_bic", "name_only"] | None = None,
+        bic: Bic | None = None,
+        lei: str | None = None,
+        address: CatalogueAddress | None = None,
+    ) -> Hit:
+        return Hit(
+            id=hit_id,
+            scope="file" if plan.transaction is None else "transaction",
+            transaction_number=plan.transaction,
+            end_to_end_id=end_to_end_id,
+            xpath=xpath(plan.placement, plan.transaction, element),
+            entity=HitEntity(
+                id=plan.entity.id,
+                entity_type=plan.entity.entity_type,
+                listings=[listing.ref for listing in plan.entity.listings],
+            ),
+            placement=plan.placement,
+            element=element,
+            rendering_mode=rendering_mode,
+            name=name,
+            bic=HitBic(value=bic.value, source="listing" if bic.listing else "gleif") if bic else None,
+            lei=lei,
+            address_from_listing=address.listing.entry_id if address else None,
+            triggers=_triggers(plan.entity, name.rendered, bic, lei),
+            origin="drawn",
+            paired_with=None,
+            displaced=None,
+        )
 
     def _lei(self, entity: Entity) -> str | None:
         if isinstance(entity, Individual) or entity.lei is None:
@@ -379,11 +436,27 @@ def _place_file(model: SampleFileModel, placement: Placement, hit: Party | Agent
     return replace(model, debtor_agent=hit, debtor_account=account)
 
 
-def xpath(placement: Placement, transaction: int | None) -> str:
+def xpath(placement: Placement, transaction: int | None, element: RemittanceElement | None = None) -> str:
     """Built from the model: lxml's own paths are `/*/*/*[2]` under a default namespace."""
+    path = REMITTANCE_ELEMENTS[element][0] if element else PLACEMENTS[placement].name_path
     if transaction is None:
-        return f"{_PMT_INF}/{PLACEMENTS[placement].name_path}"
-    return f"{_PMT_INF}/CdtTrfTxInf[{transaction}]/{PLACEMENTS[placement].name_path}"
+        return f"{_PMT_INF}/{path}"
+    return f"{_PMT_INF}/CdtTrfTxInf[{transaction}]/{path}"
+
+
+def _mention(rng: random.Random, name: str) -> tuple[RemittanceElement, str]:
+    """The remittance element and its text: the bare name in an invoicer or invoicee `Nm`, else a sentence."""
+    elements = {element: weight for element, (_, weight) in REMITTANCE_ELEMENTS.items()}
+    (element,) = rng.choices(list(elements), weights=list(elements.values()))
+    if element in {"invcr", "invcee"}:
+        return element, name
+    number = digits(rng, 6)
+    # Drawing over the sentences that fit is the spec's redraw of one over 140, without the loop.
+    sentences = [s.format(n=number, name=name) for s in REMITTANCE_SENTENCES]
+    fitting = [sentence for sentence in sentences if len(sentence) <= _MAX_TEXT]
+    if not fitting:  # a name too long for any sentence (over 125 characters) goes bare to an invoice party
+        return rng.choice(["invcr", "invcee"]), name
+    return element, rng.choice(fitting)
 
 
 def _name(rng: random.Random, entity: Entity) -> HitName:

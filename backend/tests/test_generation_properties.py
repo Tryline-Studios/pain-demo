@@ -1,5 +1,5 @@
 """Property (spec 15.1): any valid request in any Message Version yields XSD-valid XML whose Answer Key matches,
-every Hit's XPath resolving to its rendered name."""
+every Hit's XPath resolving to the exact element that carries its rendered name."""
 
 import hashlib
 import json
@@ -63,7 +63,11 @@ def test_any_valid_request_yields_a_valid_file_its_answer_key_describes(request:
     bic_element = "BIC" if body["message_version"] == "pain.001.001.03" else "BICFI"
     for hit in key["hits"]:
         (element,) = resolve(document, hit["xpath"])
-        assert element.text == hit["name"]["rendered"]
+        if hit.get("element") in {"ustrd", "addtl_rmt_inf"}:  # a remittance sentence around the name
+            assert hit["name"]["rendered"] in str(element.text)
+            assert len(str(element.text)) <= 140
+        else:
+            assert element.text == hit["name"]["rendered"]
         if "rendering_mode" in hit:
             bics = [e.text for e in resolve(document, hit["xpath"].removesuffix("Nm") + bic_element)]
             assert bics == ([hit["bic"]["value"]] if hit["rendering_mode"] == "name_and_bic" else [])

@@ -515,7 +515,7 @@ export interface components {
         };
         /**
          * Hit
-         * @description One Placement of a Sanctioned Entity (spec 11.3), in wire order. `element` (remittance) arrives later.
+         * @description One Placement of a Sanctioned Entity (spec 11.3), in wire order.
          */
         Hit: {
             /** Id */
@@ -539,6 +539,8 @@ export interface components {
             xpath: string;
             entity: components["schemas"]["HitEntity"];
             placement: components["schemas"]["Placement"];
+            /** @description Remittance only */
+            element?: components["schemas"]["RemittanceElement"] | null;
             /**
              * Rendering Mode
              * @description Agents only
@@ -726,6 +728,8 @@ export interface components {
             country?: components["schemas"]["CountryCode"] | null;
             listing: components["schemas"]["ListingRef"];
         };
+        /** @enum {string} */
+        RemittanceElement: "ustrd" | "addtl_rmt_inf" | "invcr" | "invcee";
         /**
          * RequestValidationProblem
          * @description `type` is `validation_error`; `field` is a dotted path into the request model, e.g. `hits[2].name_variant`.

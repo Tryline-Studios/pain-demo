@@ -180,6 +180,12 @@ def _remittance(remittance: Remittance) -> dict[str, Any]:
     scenario: dict[str, Any] = {}
     if remittance.unstructured:
         scenario["unstructured"] = [remittance.unstructured]
-    if remittance.creditor_reference:
-        scenario["structured"] = [{"creditor_reference": {"reference": remittance.creditor_reference}}]
+    structured = {
+        "creditor_reference": remittance.creditor_reference and {"reference": remittance.creditor_reference},
+        "invoicer": remittance.invoicer and {"name": remittance.invoicer},
+        "invoicee": remittance.invoicee and {"name": remittance.invoicee},
+        "additional": remittance.additional and [remittance.additional],
+    }
+    if structured := {key: value for key, value in structured.items() if value}:
+        scenario["structured"] = [structured]
     return scenario
