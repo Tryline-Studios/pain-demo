@@ -5,7 +5,7 @@ import { server } from "@/test/server";
 
 // Listen before any test module loads: the generated client captures the global fetch when it is created,
 // so the mock server has to have patched it by then.
-server.listen({ onUnhandledRequest: "error" });
+server.listen({ onUnhandledFrame: "error" });
 
 afterEach(() => {
   cleanup();
