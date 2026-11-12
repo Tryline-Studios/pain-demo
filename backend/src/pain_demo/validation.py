@@ -10,12 +10,12 @@ from lxml import etree
 from pydantic import BaseModel, ConfigDict
 
 from pain_demo import renderer
+from pain_demo.generation.request import MESSAGE_VERSIONS
 
-MESSAGE_VERSIONS = tuple(f"pain.001.001.{n:02d}" for n in range(3, 14))
 _NAMESPACE_PREFIX = "urn:iso:std:iso:20022:tech:xsd:"
 _PARSER_POSITION = re.compile(r", line \d+, column \d+$")
 MAX_PROBLEMS = 100
-_SCHEMA_LOCKS = {version: threading.Lock() for version in MESSAGE_VERSIONS}
+_SCHEMA_LOCKS: dict[str, threading.Lock] = {version: threading.Lock() for version in MESSAGE_VERSIONS}
 _ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
 _EXPECTED = re.compile(r"Expected is (?:one of )?\( (.*) \)")
 _PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")

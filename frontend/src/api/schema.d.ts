@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/api/v1/sample-files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate a Sample File and its Answer Key */
+        post: operations["generate_sample_file"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/message-versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The eleven Message Versions */
+        get: operations["list_message_versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What a generation request may ask for, and its defaults */
+        get: operations["get_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -103,6 +154,44 @@ export interface components {
             country: components["schemas"]["CountryCode"];
             listing: components["schemas"]["ListingRef"];
         };
+        "Amount-Input": number | string;
+        "Amount-Output": string;
+        /**
+         * AnswerKey
+         * @description Key order is the wire order (spec 11.2).
+         */
+        AnswerKey: {
+            /**
+             * Answer Key Version
+             * @default 1
+             * @constant
+             */
+            answer_key_version: 1;
+            /** Seed */
+            seed: string;
+            message_version: components["schemas"]["MessageVersion"];
+            generator: components["schemas"]["GeneratorVersion"];
+            request: components["schemas"]["EffectiveRequest"];
+            file: components["schemas"]["FileFacts"];
+            summary: components["schemas"]["Summary"];
+            /** Hits */
+            hits: unknown[];
+            /** Exposures */
+            exposures: unknown[];
+            /** Transactions */
+            transactions: components["schemas"]["AnswerKeyTransaction"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** AnswerKeyTransaction */
+        AnswerKeyTransaction: {
+            /** Number */
+            number: number;
+            /** End To End Id */
+            end_to_end_id: string;
+            /** Hit Ids */
+            hit_ids: string[];
+        };
         /** BankDetail */
         BankDetail: {
             id: components["schemas"]["EntityId"];
@@ -198,6 +287,73 @@ export interface components {
         };
         /** @description ISO 3166-1 alpha-2 */
         CountryCode: string;
+        /** CountryOption */
+        CountryOption: {
+            country: components["schemas"]["SupportedCountry"];
+            /**
+             * Currency
+             * @description What a creditor in this country is paid in when `currencies` is absent
+             */
+            currency: string;
+        };
+        CurrencyCode: string;
+        /** Defaults */
+        Defaults: {
+            message_version: components["schemas"]["MessageVersion"];
+            /** Transaction Count */
+            transaction_count: number;
+            /** Countries */
+            countries: components["schemas"]["SupportedCountry"][];
+            /** Amount Min */
+            amount_min: string;
+            /** Amount Max */
+            amount_max: string;
+        };
+        /**
+         * EffectiveRequest
+         * @description The request with every default resolved, as embedded in the Answer Key.
+         */
+        EffectiveRequest: {
+            /** @default pain.001.001.03 */
+            message_version: components["schemas"]["MessageVersion"];
+            /** Seed */
+            seed: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Execution Date
+             * Format: date
+             */
+            execution_date: string;
+            /** Message Id */
+            message_id: string;
+            /** Transaction Count */
+            transaction_count: number;
+            /**
+             * Countries
+             * @description The Debtor takes the first; creditors and their agents draw from all of them
+             * @default [
+             *       "GB",
+             *       "DE",
+             *       "FR",
+             *       "NL",
+             *       "US"
+             *     ]
+             */
+            countries: components["schemas"]["SupportedCountry"][];
+            /**
+             * Currencies
+             * @description Each transaction draws one; absent means the creditor country's
+             */
+            currencies?: components["schemas"]["CurrencyCode"][] | null;
+            /** @default 10.00 */
+            amount_min: components["schemas"]["Amount-Output"];
+            /** @default 50000.00 */
+            amount_max: components["schemas"]["Amount-Output"];
+        };
         EntityDetail: components["schemas"]["BankDetail"] | components["schemas"]["CorporateDetail"] | components["schemas"]["IndividualDetail"];
         EntityId: string;
         /** EntitySummary */
@@ -223,6 +379,95 @@ export interface components {
         };
         /** @enum {string} */
         EntityType: "individual" | "bank" | "corporate";
+        /** FieldError */
+        FieldError: {
+            /** Field */
+            field: string;
+            /** Message */
+            message: string;
+            /** Code */
+            code: string;
+        };
+        /** FileFacts */
+        FileFacts: {
+            /** Message Id */
+            message_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Execution Date
+             * Format: date
+             */
+            execution_date: string;
+            /** Transaction Count */
+            transaction_count: number;
+            /** Hit Count */
+            hit_count: number;
+            /** Sha256 */
+            sha256: string;
+        };
+        /** GeneratedSampleFile */
+        GeneratedSampleFile: {
+            sample_file: components["schemas"]["SampleFile"];
+            answer_key: components["schemas"]["AnswerKey"];
+        };
+        /**
+         * GenerationRequest
+         * @description What a caller asks for, every field optional. `EffectiveRequest` is the same with every default resolved.
+         */
+        GenerationRequest: {
+            /** @default pain.001.001.03 */
+            message_version: components["schemas"]["MessageVersion"];
+            /**
+             * Seed
+             * @description Any string; absent means 16 hex characters from the OS random source
+             */
+            seed?: string | null;
+            /**
+             * Created At
+             * @description `GrpHdr/CreDtTm`; absent means now
+             */
+            created_at?: string | null;
+            /**
+             * Execution Date
+             * @description `ReqdExctnDt`; absent means today
+             */
+            execution_date?: string | null;
+            /**
+             * Message Id
+             * @description `GrpHdr/MsgId`; absent means drawn from the Seed
+             */
+            message_id?: string | null;
+            /**
+             * Transaction Count
+             * @description Absent means 10
+             */
+            transaction_count?: number | null;
+            /**
+             * Countries
+             * @description The Debtor takes the first; creditors and their agents draw from all of them
+             * @default [
+             *       "GB",
+             *       "DE",
+             *       "FR",
+             *       "NL",
+             *       "US"
+             *     ]
+             */
+            countries: components["schemas"]["SupportedCountry"][];
+            /**
+             * Currencies
+             * @description Each transaction draws one; absent means the creditor country's
+             */
+            currencies?: components["schemas"]["CurrencyCode"][] | null;
+            /** @default 10.00 */
+            amount_min: components["schemas"]["Amount-Input"];
+            /** @default 50000.00 */
+            amount_max: components["schemas"]["Amount-Input"];
+        };
         /**
          * GeneratorVersion
          * @description Recorded in every Answer Key and returned by `GET /version`; key order is the wire order.
@@ -247,11 +492,6 @@ export interface components {
              * Format: date
              */
             catalogue_snapshot: string;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
         };
         /** Health */
         Health: {
@@ -297,6 +537,13 @@ export interface components {
             /** @description The legal name on the GLEIF record, which may have moved on */
             gleif_legal_name: components["schemas"]["NonEmpty"];
         };
+        /** Limits */
+        Limits: {
+            /** Max Transactions */
+            max_transactions: number;
+            /** Max Seed Length */
+            max_seed_length: number;
+        };
         /** Listing */
         Listing: {
             list: components["schemas"]["SanctionsList"];
@@ -321,6 +568,14 @@ export interface components {
             list: components["schemas"]["SanctionsList"];
             entry_id: components["schemas"]["NonEmpty"];
         };
+        /** @enum {string} */
+        MessageVersion: "pain.001.001.03" | "pain.001.001.04" | "pain.001.001.05" | "pain.001.001.06" | "pain.001.001.07" | "pain.001.001.08" | "pain.001.001.09" | "pain.001.001.10" | "pain.001.001.11" | "pain.001.001.12" | "pain.001.001.13";
+        /** MessageVersionOption */
+        MessageVersionOption: {
+            message_version: components["schemas"]["MessageVersion"];
+            /** Default */
+            default: boolean;
+        };
         /** Name */
         Name: {
             value: components["schemas"]["NonEmpty"];
@@ -336,8 +591,34 @@ export interface components {
         /** @enum {string} */
         NameVariant: "exact" | "alias" | "native_script" | "transliteration" | "fuzzed";
         NonEmpty: string;
+        /** Options */
+        Options: {
+            /** Countries */
+            countries: components["schemas"]["CountryOption"][];
+            limits: components["schemas"]["Limits"];
+            defaults: components["schemas"]["Defaults"];
+        };
         /** @enum {string} */
         Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
+        /**
+         * Problem
+         * @description A problem details body. `type` is `about:blank` for plain HTTP errors and a stable token otherwise.
+         */
+        Problem: {
+            /**
+             * Type
+             * @default about:blank
+             */
+            type: string;
+            /** Title */
+            title: string;
+            /** Status */
+            status: number;
+            /** Detail */
+            detail: string;
+            /** Instance */
+            instance: string;
+        };
         /**
          * ProblemCode
          * @enum {string}
@@ -351,12 +632,92 @@ export interface components {
             country?: components["schemas"]["CountryCode"] | null;
             listing: components["schemas"]["ListingRef"];
         };
+        /**
+         * RequestValidationProblem
+         * @description `type` is `validation_error`; `field` is a dotted path into the request model, e.g. `hits[2].name_variant`.
+         */
+        RequestValidationProblem: {
+            /**
+             * Type
+             * @default validation_error
+             */
+            type: string;
+            /**
+             * Title
+             * @default Validation error
+             */
+            title: string;
+            /**
+             * Status
+             * @default 422
+             */
+            status: number;
+            /** Detail */
+            detail: string;
+            /** Instance */
+            instance: string;
+            /** Errors */
+            errors: components["schemas"]["FieldError"][];
+        };
+        /** SampleFile */
+        SampleFile: {
+            /** Filename */
+            filename: string;
+            /**
+             * Content Type
+             * @default application/xml
+             * @constant
+             */
+            content_type: "application/xml";
+            /** Xml */
+            xml: string;
+        };
         /** @enum {string} */
         SanctionsList: "ofac_sdn" | "uk";
         /** @enum {string} */
         Script: "latin" | "cyrillic" | "arabic" | "han";
         /** @enum {string} */
         ScriptSource: "stated" | "derived";
+        /** Summary */
+        Summary: {
+            /**
+             * By Placement
+             * @default {}
+             */
+            by_placement: {
+                [key: string]: number;
+            };
+            /**
+             * By Name Variant
+             * @default {}
+             */
+            by_name_variant: {
+                [key: string]: number;
+            };
+            /**
+             * By Entity Type
+             * @default {}
+             */
+            by_entity_type: {
+                [key: string]: number;
+            };
+            /**
+             * By List
+             * @default {}
+             */
+            by_list: {
+                [key: string]: number;
+            };
+            /**
+             * By Exposure Country
+             * @default {}
+             */
+            by_exposure_country: {
+                [key: string]: number;
+            };
+        };
+        /** @enum {string} */
+        SupportedCountry: "GB" | "IE" | "DE" | "FR" | "IT" | "ES" | "NL" | "BE" | "PL" | "AT" | "PT" | "US";
         /** UploadedFile */
         UploadedFile: {
             /** Name */
@@ -365,19 +726,6 @@ export interface components {
             size_bytes: number;
             /** Sha256 */
             sha256: string;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
         /** ValidationProblem */
         ValidationProblem: {
@@ -432,6 +780,115 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    generate_sample_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeneratedSampleFile"];
+                };
+            };
+            /** @description The request body is over the cap */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_message_versions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageVersionOption"][];
+                };
+            };
+            /** @description An unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Options"];
+                };
+            };
+            /** @description An unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_health: {
         parameters: {
             query?: never;
@@ -448,6 +905,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+            /** @description An unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -468,6 +934,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GeneratorVersion"];
+                };
+            };
+            /** @description An unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -494,13 +969,22 @@ export interface operations {
                     "application/json": components["schemas"]["EntitySummary"][];
                 };
             };
-            /** @description Validation Error */
+            /** @description `validation_error`: the request does not fit the model */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description An unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -525,13 +1009,31 @@ export interface operations {
                     "application/json": components["schemas"]["EntityDetail"];
                 };
             };
-            /** @description Validation Error */
+            /** @description No Entity with that id */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description An unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -560,6 +1062,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationReport"];
+                };
+            };
+            /** @description The request body is over the cap */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body's content type is refused */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description An unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

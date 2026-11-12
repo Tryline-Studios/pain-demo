@@ -1,0 +1,408 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- pain-demo 0.1.0 seed="golden-clean" -->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.13">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-B06C0CB80A48</MsgId>
+      <CreDtTm>2026-01-02T09:00:00+00:00</CreDtTm>
+      <NbOfTxs>10</NbOfTxs>
+      <CtrlSum>184935.70</CtrlSum>
+      <InitgPty>
+        <Nm>Harrison and Sons</Nm>
+        <PstlAdr>
+          <StrtNm>Patel Harbor</StrtNm>
+          <BldgNb>8</BldgNb>
+          <PstCd>B82 9NJ</PstCd>
+          <TwnNm>Jenkinstown</TwnNm>
+          <Ctry>GB</Ctry>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>PMT-1C99986D80C0</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>10</NbOfTxs>
+      <CtrlSum>184935.70</CtrlSum>
+      <ReqdExctnDt>
+        <Dt>2026-01-05</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Harrison and Sons</Nm>
+        <PstlAdr>
+          <StrtNm>Patel Harbor</StrtNm>
+          <BldgNb>8</BldgNb>
+          <PstCd>B82 9NJ</PstCd>
+          <TwnNm>Jenkinstown</TwnNm>
+          <Ctry>GB</Ctry>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>GB13RBOS42407783423659</IBAN>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>RBOSGB2LXXX</BICFI>
+          <Nm>THE ROYAL BANK OF SCOTLAND PUBLIC LIMITED COMPANY</Nm>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-FD046704582D</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">193.06</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>HOLVDEB1XXX</BICFI>
+            <Nm>Holvi Payment Services Zweigniederlassung Deutschland</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Lachmann AG</Nm>
+          <PstlAdr>
+            <StrtNm>Bährring</StrtNm>
+            <BldgNb>9</BldgNb>
+            <PstCd>88260</PstCd>
+            <TwnNm>Vilsbiburg</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE83100179971993438815</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Order 020512</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-9EE545816A57</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">20643.02</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>BYLADEM1001</BICFI>
+            <Nm>Deutsche Kreditbank Berlin</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Adina Lindner B.Eng.</Nm>
+          <PstlAdr>
+            <StrtNm>Guiseppe-Loos-Ring</StrtNm>
+            <BldgNb>47</BldgNb>
+            <PstCd>92277</PstCd>
+            <TwnNm>Weißenfels</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE36120300005169931481</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Order 553946</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-EC497D2163CC</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">18092.47</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>VBANDEMMXXX</BICFI>
+            <Nm>V-Bank</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Lieselotte Meister MBA.</Nm>
+          <PstlAdr>
+            <StrtNm>Roswitha-Röhricht-Weg</StrtNm>
+            <BldgNb>6/8</BldgNb>
+            <PstCd>00191</PstCd>
+            <TwnNm>Pfaffenhofen an der Ilm</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE05700123002358060456</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Strd>
+            <CdtrRefInf>
+              <Ref>RF53054539861743</Ref>
+            </CdtrRefInf>
+          </Strd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-422B6B6AEE0E</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="GBP">27335.78</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>PAEDGB21XXX</BICFI>
+            <Nm>PAYSEND PLC</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Davies-Begum</Nm>
+          <PstlAdr>
+            <StrtNm>Susan Track</StrtNm>
+            <BldgNb>7</BldgNb>
+            <PstCd>W54 7XF</PstCd>
+            <TwnNm>Port Hugh</TwnNm>
+            <Ctry>GB</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>GB55PAED29559748871254</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Services rendered, ref 637836</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-13D6F98FFC53</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">7658.54</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>CPMEFRPPXXX</BICFI>
+            <Nm>BPIFRANCE FINANCEMENT</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Emmanuel Voisin</Nm>
+          <PstlAdr>
+            <StrtNm>chemin Hélène Louis</StrtNm>
+            <BldgNb>86</BldgNb>
+            <PstCd>08876</PstCd>
+            <TwnNm>Saint Julienboeuf</TwnNm>
+            <Ctry>FR</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>FR7618359322136469586403826</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Order 138039</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-CFBE02BA5EBE</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">24988.96</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>FTBCUS3C</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>042000314</MmbId>
+            </ClrSysMmbId>
+            <Nm>Fifth Third Bank, N.A.</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Mooney LLC</Nm>
+          <PstlAdr>
+            <StrtNm>Denise Center</StrtNm>
+            <BldgNb>6650</BldgNb>
+            <PstCd>38593</PstCd>
+            <TwnNm>Grayberg</TwnNm>
+            <Ctry>US</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>4990460470</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Contract 631729 instalment</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-76FFC377E19E</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">8661.73</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>VTPSNL2R</BICFI>
+            <Nm>VITESSE PSP</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Liv van de Elzas</Nm>
+          <PstlAdr>
+            <StrtNm>Lotteweg</StrtNm>
+            <BldgNb>99</BldgNb>
+            <PstCd>9710 XM</PstCd>
+            <TwnNm>Langeveen</TwnNm>
+            <Ctry>NL</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>NL07VTPS1671620021</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Strd>
+            <CdtrRefInf>
+              <Ref>RF11843588102776</Ref>
+            </CdtrRefInf>
+          </Strd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-9486130F12EE</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">24037.51</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>WOFTNL22</BICFI>
+            <Nm>World First Netherlands B.V.</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Ernst &amp; Wutke</Nm>
+          <PstlAdr>
+            <StrtNm>Victorbaan</StrtNm>
+            <BldgNb>1</BldgNb>
+            <PstCd>7801 PR</PstCd>
+            <TwnNm>Wichmond</TwnNm>
+            <Ctry>NL</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>NL59WOFT2164741161</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Strd>
+            <CdtrRefInf>
+              <Ref>RF93364628359588</Ref>
+            </CdtrRefInf>
+          </Strd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-B54DD9EBEDF4</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">18294.10</InstdAmt>
+        </Amt>
+        <UltmtDbtr>
+          <Nm>Aaron John</Nm>
+        </UltmtDbtr>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>WFBIUS6S</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>121000248</MmbId>
+            </ClrSysMmbId>
+            <Nm>Wells Fargo Bank, N.A.</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Christopher Webster</Nm>
+          <PstlAdr>
+            <StrtNm>Adams Stream</StrtNm>
+            <BldgNb>10165</BldgNb>
+            <PstCd>45455</PstCd>
+            <TwnNm>Waltershire</TwnNm>
+            <Ctry>US</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>7126988743</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Contract 454905 instalment</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-D2CC073BF507</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">35030.53</InstdAmt>
+        </Amt>
+        <UltmtDbtr>
+          <Nm>Mrs Marion Baxter</Nm>
+        </UltmtDbtr>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>COMMDEFFXXX</BICFI>
+            <Nm>Bank of Communications Frankfurt branch</Nm>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Kabus Söding GbR</Nm>
+          <PstlAdr>
+            <StrtNm>Textorweg</StrtNm>
+            <BldgNb>3</BldgNb>
+            <PstCd>89233</PstCd>
+            <TwnNm>Greiz</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE44501206004990492463</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Invoice 968487</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>
