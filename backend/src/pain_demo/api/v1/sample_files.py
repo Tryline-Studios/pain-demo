@@ -73,11 +73,10 @@ async def generate_sample_file(
         raise
     add_log_fields(request, outcome="generated", warning_count=len(generated.answer_key.warnings))
     if format == "zip":
-        name = generated.sample_file.filename.removesuffix(".xml")
         return Response(
             zip_bytes(generated),
             media_type="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{name}.zip"'},
+            headers={"Content-Disposition": f'attachment; filename="{generated.sample_file.zip_filename}"'},
         )
     return generated
 

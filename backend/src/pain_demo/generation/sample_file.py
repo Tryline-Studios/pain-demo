@@ -27,6 +27,16 @@ class SampleFile(BaseModel):
     content_type: Literal["application/xml"] = "application/xml"
     xml: str
 
+    @property
+    def answer_key_filename(self) -> str:
+        """`<name>.answer-key.json` beside `<name>.xml` (spec 12.2)."""
+        return self.filename.removesuffix(".xml") + ".answer-key.json"
+
+    @property
+    def zip_filename(self) -> str:
+        """`<name>.zip` (spec 12.2)."""
+        return self.filename.removesuffix(".xml") + ".zip"
+
 
 class FileFacts(BaseModel):
     message_id: str
@@ -81,12 +91,12 @@ def answer_key_json(answer_key: AnswerKey) -> str:
 
 def zip_bytes(generated: GeneratedSampleFile) -> bytes:
     """`<name>.xml` and `<name>.answer-key.json` (spec 12.2), with fixed timestamps so the same file zips the same."""
-    name = generated.sample_file.filename.removesuffix(".xml")
+    sample_file = generated.sample_file
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         for member, text in (
-            (f"{name}.xml", generated.sample_file.xml),
-            (f"{name}.answer-key.json", answer_key_json(generated.answer_key)),
+            (sample_file.filename, sample_file.xml),
+            (sample_file.answer_key_filename, answer_key_json(generated.answer_key)),
         ):
             archive.writestr(zipfile.ZipInfo(member, date_time=_ZIP_EPOCH), text, zipfile.ZIP_DEFLATED)
     return buffer.getvalue()
