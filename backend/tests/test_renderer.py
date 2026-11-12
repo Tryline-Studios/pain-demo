@@ -1,5 +1,6 @@
 """The renderer seam (spec 10.2 and 10.4): our resolved Sample File model in, XML bytes and build drops out."""
 
+import re
 from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
@@ -7,6 +8,7 @@ from decimal import Decimal
 import pytest
 from sample_files import assert_valid_sample_file
 
+from pain_demo import renderer
 from pain_demo.generation.model import (
     Address,
     Agent,
@@ -17,7 +19,7 @@ from pain_demo.generation.model import (
     SampleFileModel,
     Transaction,
 )
-from pain_demo.renderer import RenderFailed, placement_drops, render
+from pain_demo.renderer import RenderFailed, render
 from pain_demo.validation import MESSAGE_VERSIONS
 
 
@@ -86,8 +88,19 @@ def test_output_the_xsd_refuses_fails_the_build_with_the_xsd_message() -> None:
         render(too_long)
 
 
+def test_an_element_the_message_version_cannot_hold_is_dropped_and_reported() -> None:
+    with_lei = replace(MODEL, debtor_agent=Agent(bic="COBADEFFXXX", name="Commerzbank", lei="851WYGNLUQLFZBSYGB56"))
+
+    assert render(replace(with_lei, message_version="pain.001.001.09")).dropped == []
+    rendered = render(replace(with_lei, message_version="pain.001.001.03"))
+
+    assert rendered.dropped == ["/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/LEI"]
+    assert b"851WYGNLUQLFZBSYGB56" not in rendered.xml
+    assert_valid_sample_file(rendered.xml, "pain.001.001.03")
+
+
 @pytest.mark.parametrize(
-    ("dropped", "placement_drops_found"),
+    ("dropped", "carries_a_placement"),
     [
         ("/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/LEI", False),
         ("/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/BldgNm", False),
@@ -100,6 +113,20 @@ def test_output_the_xsd_refuses_fails_the_build_with_the_xsd_message() -> None:
     ],
 )
 def test_a_dropped_element_that_can_carry_a_placement_is_a_build_failure(
-    dropped: str, placement_drops_found: bool
+    monkeypatch: pytest.MonkeyPatch, dropped: str, carries_a_placement: bool
 ) -> None:
-    assert bool(placement_drops([dropped])) is placement_drops_found
+    real_build = renderer.build
+
+    def build_that_drops(scenario: dict, version: str) -> object:
+        result = real_build(scenario, version)
+        result.report.dropped.append(dropped)
+        return result
+
+    # No model of ours makes pain001 drop a Placement, so the drop is injected at the pain001 boundary.
+    monkeypatch.setattr(renderer, "build", build_that_drops)
+
+    if carries_a_placement:
+        with pytest.raises(RenderFailed, match=re.escape(f"{dropped} dropped in pain.001.001.09")):
+            render(MODEL)
+    else:
+        assert render(MODEL).dropped == [dropped]

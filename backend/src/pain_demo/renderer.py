@@ -128,6 +128,8 @@ def _agent(agent: Agent) -> dict[str, Any]:
     scenario: dict[str, Any] = {"bic": agent.bic, "name": agent.name}
     if agent.routing_number:
         scenario["clearing"] = {"system": {"code": "USABA"}, "member_id": agent.routing_number}
+    if agent.lei:
+        scenario["lei"] = agent.lei
     return scenario
 
 

@@ -3,6 +3,7 @@
 import hashlib
 import json
 import re
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 
@@ -19,6 +20,8 @@ from pain_demo.app import create_app
 from pain_demo.catalogue import load_catalogue
 from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES as COUNTRIES
 from pain_demo.generation.clean_banks import load_clean_banks
+from pain_demo.generation.generated_data import GeneratedData
+from pain_demo.generation.model import SampleFileModel
 from pain_demo.renderer import RenderFailed
 from pain_demo.settings import Settings
 from pain_demo.validation import MESSAGE_VERSIONS
@@ -337,6 +340,29 @@ def test_a_build_failure_is_a_500_problem_and_logs_the_effective_request(
     assert failure["effective_request"]["seed"] == "broken"
     (request_event,) = [e for e in events if e["event"] == "request"]
     assert (request_event["outcome"], request_event["status"]) == ("build_failed", 500)
+
+
+def test_generated_data_the_message_version_cannot_hold_is_an_answer_key_warning(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    draw = GeneratedData.model
+
+    def draw_with_debtor_agent_lei(self: GeneratedData) -> SampleFileModel:
+        model = draw(self)
+        return replace(model, debtor_agent=replace(model.debtor_agent, lei="851WYGNLUQLFZBSYGB56"))
+
+    # Generated Data has no LEI yet; this stands in for any element older Message Versions cannot carry.
+    monkeypatch.setattr(GeneratedData, "model", draw_with_debtor_agent_lei)
+    with TestClient(create_app(Settings(log_format="json", log_level="INFO"))) as client:
+        old = generate(client, seed="lei", message_version="pain.001.001.03")
+        new = generate(client, seed="lei", message_version="pain.001.001.09")
+
+    assert old["answer_key"]["warnings"] == [
+        "/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/LEI dropped: not in pain.001.001.03"
+    ]
+    assert new["answer_key"]["warnings"] == []
+    events = [json.loads(line) for line in capsys.readouterr().out.splitlines() if line.startswith("{")]
+    assert [e["warning_count"] for e in events if e["event"] == "request"] == [1, 0]
 
 
 def test_generation_logs_its_summary_but_no_content(capsys: pytest.CaptureFixture[str]) -> None:
