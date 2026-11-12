@@ -23,19 +23,22 @@ export function useGeneration() {
   const zip = api.useMutation("post", "/api/v1/sample-files");
   const answerKeyCsv = api.useMutation("post", "/api/v1/answer-keys/csv");
 
-  const generate = (body: Partial<GenerationRequest>) => {
+  /** A new Generate clears the downloads and the other endpoint's result. */
+  const resetFor = (other: typeof fromJson | typeof fromCsv) => {
     zip.reset();
     answerKeyCsv.reset();
-    fromCsv.reset();
+    other.reset();
+  };
+
+  const generate = (body: Partial<GenerationRequest>) => {
+    resetFor(fromCsv);
     // Every field is optional on the wire; the generated type marks the ones with defaults as required.
     fromJson.mutate({ body: body as GenerationRequest });
   };
 
   /** `POST /api/v1/sample-files/csv`: the settings and Hits as the `request` part, the file as `supplied_data`. */
   const generateFromCsv = (body: Partial<GenerationRequest>, csv: File) => {
-    zip.reset();
-    answerKeyCsv.reset();
-    fromJson.reset();
+    resetFor(fromJson);
     const form = new FormData();
     form.append("request", JSON.stringify(body));
     form.append("supplied_data", csv);
@@ -55,9 +58,8 @@ export function useGeneration() {
   // The CSV projection lives in the API alone (spec 11.1), so the Workbench posts the Answer Key back for it.
   const downloadAnswerKeyCsv = (generated: GeneratedSampleFile) =>
     answerKeyCsv.mutate(
-      // The Answer Key goes back as it came. openapi-fetch's `Writable` reads a null-only property (`displaced`) as
-      // read-only (`NonNullable<null>` is `never`) and forbids it, so no Answer Key type fits its body type.
-      { body: generated.answer_key as never, parseAs: "blob" },
+      // The Answer Key goes back as it came.
+      { body: generated.answer_key, parseAs: "blob" },
       {
         onSuccess: (blob) =>
           saveFile(blob as unknown as Blob, siblingFilename(generated.sample_file.filename, ".answer-key.csv")),

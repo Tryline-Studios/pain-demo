@@ -144,7 +144,7 @@ up:
 down:
     docker compose down
 
-# Playwright smoke test against the running compose stack
+# Playwright smoke test against the running compose stack; E2E_BASE_URL overrides http://localhost:8080
 [working-directory: 'frontend']
 e2e *args:
     pnpm exec playwright test {{ args }}
