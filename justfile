@@ -58,6 +58,11 @@ backend-test *args:
 goldens:
     UPDATE_GOLDENS=1 uv run pytest tests/test_goldens.py
 
+# Bump generator pins (pain001, faker, schwifty, iuliia, rapidfuzz; `name==version` for a given one), regenerate the goldens and show the diff
+[working-directory: 'backend']
+upgrade-generators +libraries:
+    uv run python -m pain_demo.upgrade_generators {{ libraries }}
+
 # Run the API natively with reload on http://127.0.0.1:8000
 [working-directory: 'backend']
 dev:
