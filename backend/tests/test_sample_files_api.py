@@ -365,3 +365,27 @@ def test_a_generated_name_matching_the_catalogue_is_redrawn(tmp_path: Path) -> N
 
     assert redrawn != drawn
     assert JaroWinkler.normalized_similarity(redrawn.upper(), drawn.upper()) < 0.85
+
+
+def test_message_versions_lists_the_eleven_with_the_default_flagged(client: TestClient) -> None:
+    response = client.get("/api/v1/message-versions")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {"message_version": version, "default": version == "pain.001.001.03"} for version in MESSAGE_VERSIONS
+    ]
+
+
+def test_options_publish_countries_limits_and_defaults(client: TestClient) -> None:
+    options = client.get("/api/v1/options").json()
+
+    assert options["countries"][:2] == [{"country": "GB", "currency": "GBP"}, {"country": "IE", "currency": "EUR"}]
+    assert [c["country"] for c in options["countries"]] == list(COUNTRIES)
+    assert options["limits"] == {"max_transactions": 100, "max_seed_length": 64}
+    assert options["defaults"] == {
+        "message_version": "pain.001.001.03",
+        "transaction_count": 10,
+        "countries": ["GB", "DE", "FR", "NL", "US"],
+        "amount_min": "10.00",
+        "amount_max": "50000.00",
+    }

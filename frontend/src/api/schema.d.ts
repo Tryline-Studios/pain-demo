@@ -21,6 +21,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/message-versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The eleven Message Versions */
+        get: operations["list_message_versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What a generation request may ask for, and its defaults */
+        get: operations["get_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -253,7 +287,28 @@ export interface components {
         };
         /** @description ISO 3166-1 alpha-2 */
         CountryCode: string;
+        /** CountryOption */
+        CountryOption: {
+            country: components["schemas"]["SupportedCountry"];
+            /**
+             * Currency
+             * @description What a creditor in this country is paid in when `currencies` is absent
+             */
+            currency: string;
+        };
         CurrencyCode: string;
+        /** Defaults */
+        Defaults: {
+            message_version: components["schemas"]["MessageVersion"];
+            /** Transaction Count */
+            transaction_count: number;
+            /** Countries */
+            countries: components["schemas"]["SupportedCountry"][];
+            /** Amount Min */
+            amount_min: string;
+            /** Amount Max */
+            amount_max: string;
+        };
         /**
          * EffectiveRequest
          * @description The request with every default resolved, as embedded in the Answer Key.
@@ -478,6 +533,13 @@ export interface components {
             /** @description The legal name on the GLEIF record, which may have moved on */
             gleif_legal_name: components["schemas"]["NonEmpty"];
         };
+        /** Limits */
+        Limits: {
+            /** Max Transactions */
+            max_transactions: number;
+            /** Max Seed Length */
+            max_seed_length: number;
+        };
         /** Listing */
         Listing: {
             list: components["schemas"]["SanctionsList"];
@@ -504,6 +566,12 @@ export interface components {
         };
         /** @enum {string} */
         MessageVersion: "pain.001.001.03" | "pain.001.001.04" | "pain.001.001.05" | "pain.001.001.06" | "pain.001.001.07" | "pain.001.001.08" | "pain.001.001.09" | "pain.001.001.10" | "pain.001.001.11" | "pain.001.001.12" | "pain.001.001.13";
+        /** MessageVersionOption */
+        MessageVersionOption: {
+            message_version: components["schemas"]["MessageVersion"];
+            /** Default */
+            default: boolean;
+        };
         /** Name */
         Name: {
             value: components["schemas"]["NonEmpty"];
@@ -519,6 +587,13 @@ export interface components {
         /** @enum {string} */
         NameVariant: "exact" | "alias" | "native_script" | "transliteration" | "fuzzed";
         NonEmpty: string;
+        /** Options */
+        Options: {
+            /** Countries */
+            countries: components["schemas"]["CountryOption"][];
+            limits: components["schemas"]["Limits"];
+            defaults: components["schemas"]["Defaults"];
+        };
         /** @enum {string} */
         Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
         /**
@@ -697,6 +772,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_message_versions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageVersionOption"][];
+                };
+            };
+        };
+    };
+    get_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Options"];
                 };
             };
         };

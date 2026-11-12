@@ -46,6 +46,52 @@
         }
       }
     },
+    "/api/v1/message-versions": {
+      "get": {
+        "tags": [
+          "sample-files"
+        ],
+        "summary": "The eleven Message Versions",
+        "operationId": "list_message_versions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MessageVersionOption"
+                  },
+                  "type": "array",
+                  "title": "Response List Message Versions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/options": {
+      "get": {
+        "tags": [
+          "sample-files"
+        ],
+        "summary": "What a generation request may ask for, and its defaults",
+        "operationId": "get_options",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Options"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -682,9 +728,62 @@
         "pattern": "^[A-Z]{2}$",
         "description": "ISO 3166-1 alpha-2"
       },
+      "CountryOption": {
+        "properties": {
+          "country": {
+            "$ref": "#/components/schemas/SupportedCountry"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "What a creditor in this country is paid in when `currencies` is absent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country",
+          "currency"
+        ],
+        "title": "CountryOption"
+      },
       "CurrencyCode": {
         "type": "string",
         "pattern": "^[A-Z]{3}$"
+      },
+      "Defaults": {
+        "properties": {
+          "message_version": {
+            "$ref": "#/components/schemas/MessageVersion"
+          },
+          "transaction_count": {
+            "type": "integer",
+            "title": "Transaction Count"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/SupportedCountry"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "amount_min": {
+            "type": "string",
+            "title": "Amount Min"
+          },
+          "amount_max": {
+            "type": "string",
+            "title": "Amount Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message_version",
+          "transaction_count",
+          "countries",
+          "amount_min",
+          "amount_max"
+        ],
+        "title": "Defaults"
       },
       "EffectiveRequest": {
         "properties": {
@@ -1235,6 +1334,24 @@
         ],
         "title": "Lei"
       },
+      "Limits": {
+        "properties": {
+          "max_transactions": {
+            "type": "integer",
+            "title": "Max Transactions"
+          },
+          "max_seed_length": {
+            "type": "integer",
+            "title": "Max Seed Length"
+          }
+        },
+        "type": "object",
+        "required": [
+          "max_transactions",
+          "max_seed_length"
+        ],
+        "title": "Limits"
+      },
       "Listing": {
         "properties": {
           "list": {
@@ -1306,6 +1423,23 @@
           "pain.001.001.13"
         ]
       },
+      "MessageVersionOption": {
+        "properties": {
+          "message_version": {
+            "$ref": "#/components/schemas/MessageVersion"
+          },
+          "default": {
+            "type": "boolean",
+            "title": "Default"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message_version",
+          "default"
+        ],
+        "title": "MessageVersionOption"
+      },
       "Name": {
         "properties": {
           "value": {
@@ -1369,6 +1503,30 @@
       "NonEmpty": {
         "type": "string",
         "minLength": 1
+      },
+      "Options": {
+        "properties": {
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/CountryOption"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/Defaults"
+          }
+        },
+        "type": "object",
+        "required": [
+          "countries",
+          "limits",
+          "defaults"
+        ],
+        "title": "Options"
       },
       "Placement": {
         "type": "string",
