@@ -3,11 +3,15 @@
 import hashlib
 import json
 import logging
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
 from pain_demo.app import create_app
+from pain_demo.generation import sample_file
+from pain_demo.generation.model import SampleFileModel
+from pain_demo.renderer import RenderFailed, RenderResult
 from pain_demo.settings import Settings
 
 
@@ -17,7 +21,7 @@ def quiet_test_client() -> None:
     logging.getLogger("httpx2").setLevel(logging.WARNING)
 
 
-def json_lines(captured: str) -> list[dict[str, object]]:
+def json_lines(captured: str) -> list[dict[str, Any]]:
     return [json.loads(line) for line in captured.splitlines() if line.strip()]
 
 
@@ -101,3 +105,60 @@ def test_uvicorn_loggers_join_the_structlog_pipeline(capsys: pytest.CaptureFixtu
     assert [(e["event"], e["level"], e["logger"]) for e in events] == [
         ("Waiting for application startup.", "warning", "uvicorn.error")
     ]
+
+
+def test_no_body_name_or_xml_reaches_info_on_any_path(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    names: list[str] = []
+    render = sample_file.render
+
+    def recording_render(model: SampleFileModel) -> RenderResult:
+        names.extend(p.name for p in (model.debtor, *(tx.creditor for tx in model.transactions)))
+        return render(model)
+
+    def failing_render(model: SampleFileModel) -> RenderResult:
+        names.append(model.debtor.name)
+        raise RenderFailed(["Cdtr/Nm: value length cannot be greater than 140"])
+
+    with TestClient(create_app(Settings(log_format="json", log_level="INFO"))) as client:
+        monkeypatch.setattr(sample_file, "render", recording_render)
+        generated = client.post("/api/v1/sample-files", json={"seed": "leak", "transaction_count": 3})
+        client.post("/api/v1/sample-files", json={"seed": "leak"}, params={"format": "zip"})
+        client.post("/api/v1/sample-files", json={"seed": "leak", "customer": "Secret Customer Ltd"})
+        client.post("/api/v1/sample-files", json={"countries": ["Secret Country"]})
+        client.post("/api/v1/validations", files={"file": ("f.xml", generated.json()["sample_file"]["xml"])})
+        monkeypatch.setattr(sample_file, "render", failing_render)
+        client.post("/api/v1/sample-files", json={"seed": "leak"})
+
+    lines = [json.loads(line) for line in capsys.readouterr().out.splitlines() if line.strip()]
+    info = json.dumps([e for e in lines if e["level"] == "info"])
+    assert [(e["status"], e.get("outcome")) for e in lines if e["event"] == "request"] == [
+        (200, "generated"),
+        (200, "generated"),
+        (422, "validation_error"),
+        (422, "validation_error"),
+        (200, None),
+        (500, "build_failed"),
+    ]
+    assert names
+    for leaked in (*names, "Secret Customer", "Secret Country", "<Document", "CstmrCdtTrfInitn", "MsgId"):
+        assert leaked not in info
+
+
+def test_debug_adds_the_corpus_build_scenario_and_report_per_request(capsys: pytest.CaptureFixture[str]) -> None:
+    body = {"seed": "debug", "transaction_count": 2, "message_version": "pain.001.001.03"}
+    with TestClient(create_app(Settings(log_format="json", log_level="INFO"))) as client:
+        client.post("/api/v1/sample-files", json=body)
+    assert {e["event"] for e in json_lines(capsys.readouterr().out)} == {"request"}
+
+    with TestClient(create_app(Settings(log_format="json", log_level="DEBUG"))) as client:
+        client.post("/api/v1/sample-files", json=body, headers={"X-Request-Id": "req-debug"})
+    events = {e["event"]: e for e in json_lines(capsys.readouterr().out) if e.get("request_id") == "req-debug"}
+
+    scenario, report = events["corpus_build_scenario"], events["corpus_build_report"]
+    assert (scenario["level"], report["level"]) == ("debug", "debug")
+    assert len(scenario["scenario"]["transactions"]) == 2
+    assert scenario["scenario"]["versions"] == ["pain.001.001.03"]
+    assert report["report"]["version"] == "pain.001.001.03"
+    assert isinstance(report["report"]["dropped"], list)

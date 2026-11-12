@@ -8,10 +8,11 @@ in a worker thread.
 import importlib.resources
 import re
 import threading
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any
 
 import pain001
+import structlog
 from lxml import etree
 from pain001.corpus import BuildError, ScenarioError, build
 
@@ -19,6 +20,8 @@ from pain_demo.generation.model import Account, Address, Agent, Iban, Party, Rem
 
 _SCENARIO_ID = "xx.pain-demo.sample-file"
 """corpus.build requires a scenario id; it never reaches the output because every identifier is explicit."""
+
+log = structlog.get_logger("pain_demo.renderer")
 
 _PLACEMENT_ELEMENTS = re.compile(
     r"Nm|BIC|BICFI|FinInstnId|Ustrd|AddtlRmtInf|Invcr|Invcee|RmtInf|Strd"
@@ -64,10 +67,13 @@ def placement_drops(dropped: list[str]) -> list[str]:
 
 
 def render(model: SampleFileModel) -> RenderResult:
+    scenario = _scenario(model)
+    log.debug("corpus_build_scenario", scenario=scenario)  # spec 14.5: DEBUG only, it carries names
     try:
-        result = build(_scenario(model), model.message_version)
+        result = build(scenario, model.message_version)
     except (BuildError, ScenarioError) as error:
         raise RenderFailed([str(error)]) from error
+    log.debug("corpus_build_report", report=asdict(result.report))
     dropped = list(dict.fromkeys(result.report.dropped))
     if lost := placement_drops(dropped):
         raise RenderFailed([f"{path} dropped in {model.message_version}" for path in lost])
