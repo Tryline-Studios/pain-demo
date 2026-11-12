@@ -36,7 +36,9 @@ function Downloads({ generation }: { generation: Generation }) {
   );
 }
 
-function Result({ generation }: { generation: Generation }) {
+type OnValidate = (file: File) => void;
+
+function Result({ generation, onValidate }: { generation: Generation; onValidate: OnValidate }) {
   const generated = generation.data;
   if (generated === undefined) {
     return null;
@@ -44,7 +46,18 @@ function Result({ generation }: { generation: Generation }) {
   const { warnings } = generated.answer_key;
   return (
     <>
-      <Downloads generation={generation} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Downloads generation={generation} />
+        <Button
+          onClick={() =>
+            onValidate(
+              new File([generated.sample_file.xml], generated.sample_file.filename, { type: "application/xml" }),
+            )
+          }
+        >
+          Validate this Sample File
+        </Button>
+      </div>
       {generation.zipError === null ? null : <ProblemBlock error={generation.zipError} />}
       <Tabs defaultValue="xml">
         <TabsList>
@@ -73,7 +86,7 @@ function Result({ generation }: { generation: Generation }) {
 }
 
 /** Summary tiles above the results; before the first generate, the empty state (spec 13.3). */
-export function OutputPane({ generation }: { generation: Generation }) {
+export function OutputPane({ generation, onValidate }: { generation: Generation; onValidate: OnValidate }) {
   const generated = generation.data;
   const file = generated?.answer_key.file;
 
@@ -94,7 +107,7 @@ export function OutputPane({ generation }: { generation: Generation }) {
       {generation.error !== null ? (
         <ProblemBlock error={generation.error} />
       ) : generated !== undefined ? (
-        <Result generation={generation} />
+        <Result generation={generation} onValidate={onValidate} />
       ) : (
         <div className="flex min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed text-center">
           <p className="font-medium text-lg">{generation.isPending ? "Generating…" : "No Sample File yet"}</p>

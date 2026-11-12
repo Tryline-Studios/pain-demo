@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { components } from "@/api/schema";
 import "@/test/multipart";
 import { renderWithQueries } from "@/test/render";
-import { server } from "@/test/server";
+import { generated, sampleXml, server } from "@/test/server";
 import { Workbench } from "@/workbench/Workbench";
 
 async function openValidate() {
@@ -401,6 +401,40 @@ describe("Validate mode", () => {
       const source = await sourceOf(utf8, "X-NOT-AN-ENCODING");
 
       expect(within(source).getByText("<Nm>Société</Nm>")).toBeInTheDocument();
+    });
+  });
+
+  describe("from a generated Sample File", () => {
+    it("is offered only once a Sample File exists", async () => {
+      const user = userEvent.setup();
+      renderWithQueries(<Workbench />);
+      const output = screen.getByRole("region", { name: "Output" });
+      expect(within(output).queryByRole("button", { name: "Validate this Sample File" })).not.toBeInTheDocument();
+
+      await user.click(
+        within(screen.getByRole("complementary", { name: "Settings" })).getByRole("button", { name: "Generate" }),
+      );
+
+      expect(await within(output).findByRole("button", { name: "Validate this Sample File" })).toBeInTheDocument();
+    });
+
+    it("switches to Validate and validates the generated XML as a file named like the Sample File", async () => {
+      const { filename } = generated.sample_file;
+      const seen = answerWith({ ...validReport, file: { name: filename, size_bytes: 11, sha256: SHA256 } });
+      const user = userEvent.setup();
+      renderWithQueries(<Workbench />);
+      await user.click(
+        within(screen.getByRole("complementary", { name: "Settings" })).getByRole("button", { name: "Generate" }),
+      );
+
+      await user.click(await screen.findByRole("button", { name: "Validate this Sample File" }));
+
+      expect(screen.getByRole("button", { name: "Validate" })).toHaveAttribute("aria-pressed", "true");
+      expect(await within(report()).findByText(filename)).toBeInTheDocument();
+      expect(tile("Verdict")).toHaveTextContent(/^Verdict\s*Valid$/);
+      expect(seen).toEqual([
+        { contentType: expect.stringMatching(/^multipart\/form-data; boundary=/), text: sampleXml, fileName: filename },
+      ]);
     });
   });
 });

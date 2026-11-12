@@ -25,7 +25,15 @@ export function Workbench() {
       inputLabel: "Settings",
       input: <SettingsPane generation={generation} />,
       outputLabel: "Output",
-      output: <OutputPane generation={generation} />,
+      output: (
+        <OutputPane
+          generation={generation}
+          onValidate={(file) => {
+            setMode("Validate");
+            validation.validateFile(file);
+          }}
+        />
+      ),
     },
     Validate: {
       inputLabel: "Message",
