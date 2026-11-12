@@ -205,7 +205,42 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
             free_transactions -= 1
         planned.append(_Planned(entity, placement))
     numbers = iter(rng.sample(range(1, request.transaction_count + 1), request.transaction_count - free_transactions))
-    return [p if PLACEMENTS[p.placement].file_level else replace(p, transaction=next(numbers)) for p in planned]
+    planned = [p if PLACEMENTS[p.placement].file_level else replace(p, transaction=next(numbers)) for p in planned]
+    return _debtor_agent_at_home(planned, entities, rng, request)
+
+
+def _debtor_agent_at_home(
+    planned: list[_Planned], entities: list[Entity], rng: random.Random, request: EffectiveRequest
+) -> list[_Planned]:
+    """A sanctioned Debtor Agent beside a sanctioned Debtor is a Bank in the Debtor's Listing country, when one is
+    free, so the Debtor's account stays at home (spec 6.9). Otherwise the placer keeps the Debtor's own account."""
+    file_level = {plan.placement: plan for plan in planned if plan.transaction is None}
+    debtor, agent = file_level.get("debtor"), file_level.get("debtor_agent")
+    if debtor is None or agent is None:
+        return planned
+    homes = {address.country for address in _addresses(debtor.entity)} or {_home_country(debtor.entity, None, request)}
+    if _bank_countries(agent.entity) & homes:
+        return planned
+    used = {plan.entity.id for plan in planned}
+    banks = [e for e in entities if e.id not in used and _bank_countries(e) & homes]
+    if not banks:
+        return planned
+    bank = rng.choice(banks)
+    return [replace(plan, entity=bank) if plan is agent else plan for plan in planned]
+
+
+def _bank_countries(entity: Entity) -> set[str]:
+    """Where a Bank can service an account: its BICs' countries, or its Listing addresses' without a BIC."""
+    if not isinstance(entity, Bank):
+        return set()
+    return {bic_country(bic.value) for bic in entity.bics} if entity.bics else set(entity.countries)
+
+
+def _home_country(entity: Entity, address: CatalogueAddress | None, request: EffectiveRequest) -> str:
+    """Where a sanctioned party banks: its Listing address, else its stated countries, else the Debtor's."""
+    if address:
+        return address.country
+    return entity.countries[0] if entity.countries else request.countries[0]
 
 
 def _wire_order(plan: _Planned) -> tuple[bool, int, str]:
@@ -242,28 +277,34 @@ class _Placer:
         ids = {k: f"h{n}" for n, k in enumerate(wire_order, start=1)}
         # The agent's account wins over its Debtor's: the account is serviced by the Bank.
         order = sorted(range(len(planned)), key=lambda k: PLACEMENTS[planned[k].placement].agent)
+        debtor_country: str | None = None  # set by a Debtor Hit, which the agents follow
         for k in order:
             plan = planned[k]
             rng = stream(self.request.seed, f"hits/{k + 1}")
             name = _name(rng, plan.entity)
             agent_hit = PLACEMENTS[plan.placement].agent
-            bic = (
-                rng.choice(plan.entity.bics)
-                if agent_hit and isinstance(plan.entity, Bank) and plan.entity.bics
-                else None
-            )
-            address = _address(rng, plan.entity, bic_country(bic.value) if bic else None)
+            home = debtor_country if plan.placement == "debtor_agent" else None
+            bic = None
+            if agent_hit and isinstance(plan.entity, Bank) and plan.entity.bics:
+                bic = rng.choice([b for b in plan.entity.bics if bic_country(b.value) == home] or plan.entity.bics)
+            address = _address(rng, plan.entity, bic_country(bic.value) if bic else home)
             listed = _listed(address) if address else None
             lei = self._lei(plan.entity) if agent_hit else None
             if agent_hit:
                 party_or_agent: Party | Agent = Agent(
                     bic=bic.value if bic else None, name=name.rendered, lei=lei, address=listed
                 )
-                country = bic_country(bic.value) if bic else self._country(plan.entity, address)
-                account = self.data.account(rng, country, _bank_code(bic.value) if bic else None)
+                country = bic_country(bic.value) if bic else _home_country(plan.entity, address, self.request)
+                if home is None or country == home:
+                    account = self.data.account(rng, country, _bank_code(bic.value) if bic else None)
+                else:  # beside a sanctioned Debtor elsewhere, the Debtor's account stands (spec 6.9)
+                    account = model.debtor_account
             else:
                 party_or_agent = Party(name=name.rendered, address=listed)
-                account = self.data.account(rng, self._country(plan.entity, address), None)
+                country = _home_country(plan.entity, address, self.request)
+                account = self.data.account(rng, country, None)
+                if plan.placement == "debtor":
+                    debtor_country = country
             if plan.transaction is None:
                 model = _place_file(model, plan.placement, party_or_agent, account)
                 end_to_end_id = None
@@ -302,12 +343,6 @@ class _Placer:
         if isinstance(entity, Individual) or entity.lei is None:
             return None
         return entity.lei.value if _version_number(self.request.message_version) >= _FIRST_WITH_AGENT_LEI else None
-
-    def _country(self, entity: Entity, address: CatalogueAddress | None) -> str:
-        """Where a sanctioned party banks: its Listing address, else its stated countries, else the Debtor's."""
-        if address:
-            return address.country
-        return entity.countries[0] if entity.countries else self.request.countries[0]
 
     def _place_tx(
         self, tx: Transaction, rng: random.Random, placement: Placement, hit: Party | Agent, account: Account
@@ -361,12 +396,15 @@ def _name(rng: random.Random, entity: Entity) -> HitName:
     return HitName(variant=variant, rendered=name.value, source=source)
 
 
-def _address(rng: random.Random, entity: Entity, bic_country: str | None) -> CatalogueAddress | None:
-    """A Listing address; an agent's in its BIC's country when the Listing has one there."""
-    addresses = [] if isinstance(entity, Individual) else entity.addresses
-    in_bic_country = [a for a in addresses if a.country == bic_country]
-    pool = in_bic_country or addresses
+def _address(rng: random.Random, entity: Entity, country: str | None) -> CatalogueAddress | None:
+    """A Listing address, in `country` when the Listing has one there: an agent's BIC country, else its Debtor's."""
+    addresses = _addresses(entity)
+    pool = [a for a in addresses if a.country == country] or addresses
     return rng.choice(pool) if pool else None
+
+
+def _addresses(entity: Entity) -> list[CatalogueAddress]:
+    return [] if isinstance(entity, Individual) else entity.addresses
 
 
 def _listed(address: CatalogueAddress) -> ListedAddress:

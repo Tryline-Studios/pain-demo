@@ -976,3 +976,7 @@ All eight were reviewed and accepted as written on 2026-09-17 (see the resolutio
 7. **Kitchen-sink golden and Exposures.** The kitchen-sink golden was defined in [Seed contract](https://github.com/Tryline-Studios/pain-demo/issues/15) before Exposures existed. This spec adds "at least one Exposure" to it (section 15.3) so the exposures path is covered by goldens; this was an inference at assembly time and is now accepted.
 
 8. **Configuration surface.** Only two `PAIN_DEMO_` settings are named by any ticket (section 16). Host and port for uvicorn, and any Caddy settings, are left to compose and the FastAPI defaults; no ticket asked for more.
+
+Added while building [Drawn Hits on party and agent Placements](https://github.com/Tryline-Studios/pain-demo/issues/30):
+
+9. **Sanctioned Debtor beside a sanctioned Debtor Agent.** Both own the one `DbtrAcct` (section 6.9). The Debtor Agent's Entity is then a Bank in the Debtor's Listing country, drawn from the placement stream; if no such Bank is free, the Debtor's rule wins (its account is clean and in its own country) and the agent still renders its name and BIC.

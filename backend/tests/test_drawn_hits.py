@@ -16,6 +16,7 @@ from pain_demo.app import create_app
 from pain_demo.catalogue import load_catalogue
 from pain_demo.catalogue.schema import Bank
 from pain_demo.generation.clean_banks import IBAN_COUNTRIES, load_clean_banks
+from pain_demo.identifiers import bic_country
 from pain_demo.settings import Settings
 
 CATALOGUE = load_catalogue()
@@ -241,15 +242,52 @@ def test_a_sanctioned_party_carries_its_listed_address_and_banks_in_that_country
             assert_account_in(account(document, hit), address.country)
 
 
+def debtor_country(document: etree._Element, hit: dict) -> str | None:
+    """Where a sanctioned Debtor banks (spec 6.9): its Listing address, else its first stated country."""
+    if hit["address_from_listing"]:
+        return beside(document, hit["xpath"], "PstlAdr/Ctry")[0]
+    countries = CATALOGUE.entities[hit["entity"]["id"]].countries
+    return countries[0] if countries else None
+
+
+def test_a_sanctioned_debtor_keeps_its_account_at_home_beside_a_sanctioned_debtor_agent(client: TestClient) -> None:
+    envelope = generate(client, seed="s7", transaction_count=2, hit_count=4, message_version="pain.001.001.09")
+    document = tree(envelope)
+
+    debtor, debtor_agent = [hit for hit in envelope["answer_key"]["hits"] if hit["scope"] == "file"]
+    assert (debtor["entity"]["id"], debtor_country(document, debtor)) == ("irisl", "IR")
+    assert_account_in(account(document, debtor), "IR")
+    # An Iranian Bank is eligible, so the Debtor Agent is one and services the account.
+    assert bic_country(debtor_agent["bic"]["value"]) == "IR"
+    assert beside(document, debtor_agent["xpath"], "BICFI") == [debtor_agent["bic"]["value"]]
+
+
+@pytest.mark.parametrize("seed", [f"both-file-level-{n}" for n in range(40)])
+def test_a_sanctioned_debtors_account_is_always_in_its_listing_country(client: TestClient, seed: str) -> None:
+    envelope = generate(client, seed=seed, transaction_count=1, hit_count=3, message_version="pain.001.001.09")
+    document = tree(envelope)
+
+    debtor, debtor_agent = [hit for hit in envelope["answer_key"]["hits"] if hit["scope"] == "file"]
+    country = debtor_country(document, debtor)
+    if country:
+        assert_account_in(account(document, debtor), country)
+    assert resolve(document, debtor_agent["xpath"])[0].text == debtor_agent["name"]["rendered"]
+    if debtor_agent["bic"]:
+        assert beside(document, debtor_agent["xpath"], "BICFI") == [debtor_agent["bic"]["value"]]
+
+
 def test_a_sanctioned_bank_as_agent_carries_its_bic_lei_and_address_and_services_an_account_at_home(full: dict) -> None:
     document = tree(full)
     agents = [hit for hit in full["answer_key"]["hits"] if hit["placement"] not in PARTIES]
     assert {hit["placement"] for hit in agents} >= {"debtor_agent", "creditor_agent", "intermediary_agent_1"}
+    # A sanctioned Debtor elsewhere keeps its own account (spec 6.9).
+    (debtor,) = [hit for hit in full["answer_key"]["hits"] if hit["placement"] == "debtor"]
+    homes = {"debtor_agent": debtor_country(document, debtor)}
     for hit in agents:
         bank = CATALOGUE.entities[hit["entity"]["id"]]
         assert isinstance(bank, Bank)
         (bic,) = [b for b in bank.bics if b.value == hit["bic"]["value"]]
-        country = bic.value[4:6]
+        country = bic_country(bic.value)
         assert hit["rendering_mode"] == "name_and_bic"
         assert hit["bic"]["source"] == ("listing" if bic.listing else "gleif")
         assert beside(document, hit["xpath"], "BICFI") == [bic.value]
@@ -257,7 +295,7 @@ def test_a_sanctioned_bank_as_agent_carries_its_bic_lei_and_address_and_services
         assert beside(document, hit["xpath"], "LEI") == ([bank.lei.value] if bank.lei else [])
         if any(a.country == country for a in bank.addresses):
             assert beside(document, hit["xpath"], "PstlAdr/Ctry") == [country]
-        if hit["placement"] in ACCOUNT_OF:
+        if hit["placement"] in ACCOUNT_OF and country == homes.get(hit["placement"], country):
             assert_account_in(account(document, hit), country)
     assert {hit["entity"]["id"][:9] for hit in agents if hit["placement"] in ACCOUNT_OF} & {"bank-mell", "bank-dabr"}
 
