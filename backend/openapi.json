@@ -1189,6 +1189,20 @@
         ],
         "title": "FileFacts"
       },
+      "FuzzOperation": {
+        "type": "string",
+        "enum": [
+          "typo",
+          "drop_legal_form",
+          "abbreviate_legal_form",
+          "expand_legal_form",
+          "punctuation",
+          "reorder_tokens",
+          "drop_token",
+          "initial",
+          "whitespace"
+        ]
+      },
       "GeneratedSampleFile": {
         "properties": {
           "sample_file": {
@@ -1622,6 +1636,44 @@
           },
           "source": {
             "$ref": "#/components/schemas/NameSource"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransliterationScheme"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Transliteration only"
+          },
+          "base": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base",
+            "description": "Fuzzed only: the listed name altered"
+          },
+          "operations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FuzzOperation"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operations",
+            "description": "Fuzzed only: the operations, in the order applied"
           }
         },
         "type": "object",
@@ -2224,6 +2276,17 @@
           "AT",
           "PT",
           "US"
+        ]
+      },
+      "TransliterationScheme": {
+        "type": "string",
+        "enum": [
+          "icao",
+          "bgn_pcgn",
+          "iso_9",
+          "ala_lc",
+          "russian_passport_2013",
+          "wikipedia"
         ]
       },
       "Trigger": {

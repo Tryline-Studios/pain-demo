@@ -21,6 +21,8 @@ from pain_demo.catalogue.capabilities import (
     NameVariant,
     Placement,
     candidate_names,
+    supported_name_variants,
+    transliterations,
 )
 from pain_demo.catalogue.schema import (
     Address as CatalogueAddress,
@@ -32,10 +34,13 @@ from pain_demo.catalogue.schema import (
     EntityType,
     Individual,
     ListingRef,
+    Name,
     NameSourceType,
     SanctionsList,
     Script,
 )
+from pain_demo.catalogue.transliteration import TransliterationScheme
+from pain_demo.generation.fuzz import FuzzOperation, fuzz
 from pain_demo.generation.generated_data import GeneratedData, digits
 from pain_demo.generation.model import (
     Account,
@@ -115,8 +120,14 @@ REMITTANCE_SENTENCES = (
 )
 """Seeded sentences around the rendered name in `Ustrd` and `AddtlRmtInf` (spec 6.7)."""
 _MAX_TEXT = 140
-NAME_VARIANT_WEIGHTS: dict[NameVariant, float] = {"exact": 40, "alias": 25, "native_script": 5}
-"""The verbatim Name Variants (spec 6.5); transliteration and fuzzed join with their own tickets."""
+NAME_VARIANT_WEIGHTS: dict[NameVariant, float] = {
+    "exact": 40,
+    "alias": 25,
+    "fuzzed": 20,
+    "transliteration": 10,
+    "native_script": 5,
+}
+"""Spec 6.5, in draw order: the order feeds `choices`, so changing it changes every Seed's names."""
 _PMT_INF = "/Document/CstmrCdtTrfInitn/PmtInf"
 _FIRST_WITH_AGENT_LEI = 9
 """`FinInstnId/LEI` exists from .09; earlier versions get no LEI rather than a dropped one."""
@@ -131,6 +142,10 @@ def placement_weights(entity_type: EntityType) -> dict[Placement, float]:
     }
 
 
+def _absent(value: object) -> bool:
+    return value is None
+
+
 class NameSource(BaseModel):
     value: str
     type: NameSourceType
@@ -143,6 +158,12 @@ class HitName(BaseModel):
     rendered: str
     """Exactly as it appears in the XML."""
     source: NameSource
+    """The listed name it comes from: the Cyrillic name of a transliteration, the base of a fuzz."""
+    scheme: TransliterationScheme | None = Field(default=None, exclude_if=_absent, description="Transliteration only")
+    base: str | None = Field(default=None, exclude_if=_absent, description="Fuzzed only: the listed name altered")
+    operations: list[FuzzOperation] | None = Field(
+        default=None, exclude_if=_absent, description="Fuzzed only: the operations, in the order applied"
+    )
 
 
 class HitBic(BaseModel):
@@ -161,10 +182,6 @@ class Trigger(BaseModel):
     value: str
     listed_on: list[SanctionsList]
     """The lists that carry this value: a name case-insensitively, a BIC only on its Listing, an LEI on none."""
-
-
-def _absent(value: object) -> bool:
-    return value is None
 
 
 class Hit(BaseModel):
@@ -460,17 +477,33 @@ def _mention(rng: random.Random, name: str) -> tuple[RemittanceElement, str]:
 
 
 def _name(rng: random.Random, entity: Entity) -> HitName:
-    names = candidate_names(entity)  # never over 140 characters (spec 7.6)
-    candidates = {variant: [n for n in names if VERBATIM_SOURCES[variant](n)] for variant in NAME_VARIANT_WEIGHTS}
-    weights = {variant: w for variant, w in NAME_VARIANT_WEIGHTS.items() if candidates[variant]}
+    supported = supported_name_variants(entity)  # never a name over 140 characters (spec 7.6)
+    weights = {variant: w for variant, w in NAME_VARIANT_WEIGHTS.items() if variant in supported}
     (variant,) = rng.choices(list(weights), weights=list(weights.values()))
-    pool = candidates[variant]
+    if variant == "transliteration":  # a Cyrillic name, then a scheme that does not collide (spec 7.4)
+        offered = transliterations(entity)
+        name = rng.choice(list(dict.fromkeys(name for name, _, _ in offered)))
+        scheme, latin = rng.choice([(scheme, latin) for n, scheme, latin in offered if n == name])
+        return HitName(variant=variant, rendered=latin, source=_source(name), scheme=scheme)
+    if variant == "fuzzed":
+        fuzzed = fuzz(rng, entity)
+        return HitName(
+            variant=variant,
+            rendered=fuzzed.rendered,
+            source=_source(fuzzed.base),
+            base=fuzzed.base.value,
+            operations=list(fuzzed.operations),
+        )
+    pool = [n for n in candidate_names(entity) if VERBATIM_SOURCES[variant](n)]
     if variant == "exact":  # a Listing first, then one of its primary names (spec 7.1)
         listing = rng.choice(list(dict.fromkeys(name.listing for name in pool)))
         pool = [name for name in pool if name.listing == listing]
     name = rng.choice(pool)
-    source = NameSource(value=name.value, type=name.source_type, script=name.script, listing=name.listing)
-    return HitName(variant=variant, rendered=name.value, source=source)
+    return HitName(variant=variant, rendered=name.value, source=_source(name))
+
+
+def _source(name: Name) -> NameSource:
+    return NameSource(value=name.value, type=name.source_type, script=name.script, listing=name.listing)
 
 
 def _address(rng: random.Random, entity: Entity, country: str | None) -> CatalogueAddress | None:
