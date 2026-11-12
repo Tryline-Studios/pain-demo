@@ -14,10 +14,21 @@ XML = {"Content-Type": "application/xml"}
 
 
 def pain001(version: str = "03") -> bytes:
+    """A minimal XSD-valid message with one transaction; .08 onwards wraps the execution date in a choice."""
+    date = "2026-01-02" if int(version) < 8 else "<Dt>2026-01-02</Dt>"
     return (
         f'<?xml version="1.0" encoding="UTF-8"?>\n'
         f'<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.{version}">\n'
-        f"  <CstmrCdtTrfInitn/>\n"
+        f"  <CstmrCdtTrfInitn>\n"
+        f"    <GrpHdr><MsgId>M1</MsgId><CreDtTm>2026-01-01T09:00:00</CreDtTm><NbOfTxs>1</NbOfTxs><InitgPty/></GrpHdr>\n"
+        f"    <PmtInf>\n"
+        f"      <PmtInfId>P1</PmtInfId><PmtMtd>TRF</PmtMtd><ReqdExctnDt>{date}</ReqdExctnDt><Dbtr/>\n"
+        f"      <DbtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></DbtrAcct><DbtrAgt><FinInstnId/></DbtrAgt>\n"
+        f"      <CdtTrfTxInf>\n"
+        f'        <PmtId><EndToEndId>E1</EndToEndId></PmtId><Amt><InstdAmt Ccy="EUR">1.00</InstdAmt></Amt><Cdtr/>\n'
+        f"      </CdtTrfTxInf>\n"
+        f"    </PmtInf>\n"
+        f"  </CstmrCdtTrfInitn>\n"
         f"</Document>\n"
     ).encode()
 
@@ -32,7 +43,7 @@ def test_a_raw_xml_body_of_a_supported_version_reports_valid(client: TestClient)
         "valid": True,
         "message_version": "pain.001.001.03",
         "encoding": "UTF-8",
-        "transaction_count": None,
+        "transaction_count": 1,
         "file": {"name": None, "size_bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()},
         "problems": [],
         "truncated": False,
@@ -114,7 +125,7 @@ def test_malformed_xml_is_one_problem_with_its_position(client: TestClient) -> N
 
 
 def test_undecodable_bytes_are_malformed_xml(client: TestClient) -> None:
-    content = pain001().replace(b"<CstmrCdtTrfInitn/>", b"<CstmrCdtTrfInitn>\xff</CstmrCdtTrfInitn>")
+    content = pain001().replace(b"<CstmrCdtTrfInitn>", b"<CstmrCdtTrfInitn>\xff")
 
     (problem,) = problems_of(client, content)
 
@@ -133,7 +144,7 @@ def test_an_encoding_lxml_does_not_know_is_malformed_xml(client: TestClient) -> 
         pytest.param(pain001().split(b"\n", 1)[1], "UTF-8", id="no declaration"),
         pytest.param(b"\xef\xbb\xbf" + pain001().split(b"\n", 1)[1], "UTF-8", id="BOM, no declaration"),
         pytest.param(
-            pain001().replace(b"UTF-8", b"ISO-8859-1").replace(b"<CstmrCdtTrfInitn/>", b"<Nm>Soci\xe9t\xe9</Nm>"),
+            pain001().replace(b"UTF-8", b"ISO-8859-1").replace(b"<Dbtr/>", b"<Dbtr><Nm>Soci\xe9t\xe9</Nm></Dbtr>"),
             "ISO-8859-1",
             id="ISO-8859-1",
         ),
@@ -263,3 +274,134 @@ def test_other_routes_keep_the_one_megabyte_cap(client: TestClient) -> None:
     response = client.post("/api/v1/health", content=b" " * (1024 * 1024 + 1), headers=XML)
 
     assert response.json()["detail"] == "Request body exceeds 1 MB"
+
+
+TRANSACTION = (
+    b"      <CdtTrfTxInf>\n"
+    b'        <PmtId><EndToEndId>E2</EndToEndId></PmtId><Amt><InstdAmt Ccy="EUR">2.00</InstdAmt></Amt><Cdtr/>\n'
+    b"      </CdtTrfTxInf>\n"
+)
+TX = "/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf"
+
+
+def with_transactions(content: bytes, *transactions: bytes) -> bytes:
+    return content.replace(b"</CdtTrfTxInf>\n", b"</CdtTrfTxInf>\n" + b"".join(transactions))
+
+
+@pytest.mark.parametrize("version", [f"{n:02d}" for n in range(3, 14)])
+def test_a_valid_message_of_every_version_passes_the_xsd_and_counts_its_transactions(
+    client: TestClient, version: str
+) -> None:
+    report = client.post(URL, content=with_transactions(pain001(version), TRANSACTION), headers=XML).json()
+
+    assert (report["valid"], report["problems"], report["transaction_count"]) == (True, [], 2)
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "located", "message"),
+    [
+        pytest.param(
+            b"<PmtId><EndToEndId>E1</EndToEndId></PmtId>",
+            b"<PmtId/>",
+            (9, "PmtId", f"{TX}/PmtId", "missing_element"),
+            "PmtId on line 9 is missing a child element; expected InstrId, EndToEndId",
+            id="missing_element",
+        ),
+        pytest.param(
+            b"<InitgPty/>",
+            b"<InitgPty/><Foo>1</Foo>",
+            (4, "Foo", "/Document/CstmrCdtTrfInitn/GrpHdr/Foo", "unexpected_element"),
+            "Foo on line 4 is not expected here; expected FwdgAgt",
+            id="unexpected_element",
+        ),
+        pytest.param(
+            b"<FinInstnId/>",
+            b"<FinInstnId><BIC>ABCD12</BIC></FinInstnId>",
+            (7, "BIC", "/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BIC", "pattern_mismatch"),
+            "BIC 'ABCD12' on line 7 doesn't match the pattern [A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}",
+            id="pattern_mismatch",
+        ),
+        pytest.param(
+            b'Ccy="EUR"',
+            b'Ccy="eur"',
+            (9, "InstdAmt", f"{TX}/Amt/InstdAmt", "pattern_mismatch"),
+            "InstdAmt attribute Ccy 'eur' on line 9 doesn't match the pattern [A-Z]{3,3}",
+            id="pattern_mismatch on an attribute",
+        ),
+        pytest.param(
+            b"<PmtMtd>TRF</PmtMtd>",
+            b"<PmtMtd>XXX</PmtMtd>",
+            (6, "PmtMtd", "/Document/CstmrCdtTrfInitn/PmtInf/PmtMtd", "invalid_value"),
+            "PmtMtd 'XXX' on line 6 is not one of CHK, TRF, TRA",
+            id="invalid_value from an enumeration",
+        ),
+        pytest.param(
+            b"<ReqdExctnDt>2026-01-02</ReqdExctnDt>",
+            b"<ReqdExctnDt>tomorrow</ReqdExctnDt>",
+            (6, "ReqdExctnDt", "/Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt", "invalid_value"),
+            "ReqdExctnDt 'tomorrow' on line 6 is not a valid ISODate",
+            id="invalid_value from a datatype",
+        ),
+        pytest.param(
+            b"<MsgId>M1</MsgId>",
+            b"<MsgId>" + b"M" * 36 + b"</MsgId>",
+            (4, "MsgId", "/Document/CstmrCdtTrfInitn/GrpHdr/MsgId", "too_long"),
+            "MsgId on line 4 is 36 characters long; the maximum is 35",
+            id="too_long",
+        ),
+        pytest.param(
+            b"<MsgId>M1</MsgId>",
+            b"<MsgId></MsgId>",
+            (4, "MsgId", "/Document/CstmrCdtTrfInitn/GrpHdr/MsgId", "too_short"),
+            "MsgId on line 4 is 0 characters long; the minimum is 1",
+            id="too_short",
+        ),
+    ],
+)
+def test_an_xsd_error_is_a_located_classified_problem(
+    client: TestClient, old: bytes, new: bytes, located: tuple[int, str, str, str], message: str
+) -> None:
+    report = client.post(URL, content=pain001().replace(old, new), headers=XML).json()
+
+    assert (report["valid"], report["transaction_count"]) == (False, 1)
+    (problem,) = report["problems"]
+    assert (problem["line"], problem["tag"], problem["path"], problem["code"]) == located
+    assert problem["message"] == message
+    assert problem["cause"].startswith(f"Element '{{urn:iso:std:iso:20022:tech:xsd:pain.001.001.03}}{located[1]}'")
+
+
+def test_an_unclassified_xsd_error_is_a_schema_violation_explained_by_its_cause(client: TestClient) -> None:
+    (problem,) = problems_of(client, pain001().replace(b"<Dbtr/>", b"<Dbtr>text</Dbtr>"))
+
+    assert (problem["code"], problem["tag"], problem["line"]) == ("schema_violation", "Dbtr", 6)
+    assert problem["message"] == problem["cause"]
+    assert "Character content other than whitespace is not allowed" in problem["cause"]
+
+
+def test_paths_number_repeated_elements_and_problems_come_in_document_order(client: TestClient) -> None:
+    long_id = TRANSACTION.replace(b"<EndToEndId>E2</EndToEndId>", b"<EndToEndId>" + b"E" * 36 + b"</EndToEndId>")
+    content = with_transactions(pain001(), long_id).replace(b"<MsgId>M1</MsgId>", b"<MsgId></MsgId>")
+
+    problems = problems_of(client, content)
+
+    assert [(p["line"], p["path"]) for p in problems] == [
+        (4, "/Document/CstmrCdtTrfInitn/GrpHdr/MsgId"),
+        (12, f"{TX}[2]/PmtId/EndToEndId"),
+    ]
+
+
+BAD_CURRENCY = TRANSACTION.replace(b'Ccy="EUR"', b'Ccy="eur"')
+
+
+def test_problems_are_capped_at_one_hundred_and_marked_truncated(client: TestClient) -> None:
+    report = client.post(URL, content=with_transactions(pain001(), *[BAD_CURRENCY] * 101), headers=XML).json()
+
+    assert (report["valid"], report["truncated"], report["transaction_count"]) == (False, True, 102)
+    assert len(report["problems"]) == 100
+    assert report["problems"][-1]["path"] == f"{TX}[101]/Amt/InstdAmt"
+
+
+def test_exactly_one_hundred_problems_are_not_truncated(client: TestClient) -> None:
+    report = client.post(URL, content=with_transactions(pain001(), *[BAD_CURRENCY] * 100), headers=XML).json()
+
+    assert (len(report["problems"]), report["truncated"]) == (100, False)
