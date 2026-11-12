@@ -427,6 +427,43 @@ describe("Generate mode: Hits", () => {
     expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("3");
   });
 
+  it("posts the Hit Count the user set, limited to two more than the transactions", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+    await user.click(screen.getByRole("button", { name: "Hits" }));
+
+    const hitCount = screen.getByRole("spinbutton", { name: "Hit Count" });
+    expect(hitCount).toHaveValue(0);
+    expect(hitCount).toHaveAttribute("max", "12");
+    await user.clear(hitCount);
+    await user.type(hitCount, "3");
+    await user.click(generateButton());
+
+    await within(output()).findByRole("tab", { name: "Answer Key" });
+    expect(bodies).toEqual([{ hit_count: 3 }]);
+  });
+
+  it("holds Generate back while the Hit Count is above the limit", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+    await user.click(screen.getByRole("button", { name: "Hits" }));
+
+    await user.clear(screen.getByRole("spinbutton", { name: "Transactions" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Transactions" }), "3");
+    await user.clear(screen.getByRole("spinbutton", { name: "Hit Count" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Hit Count" }), "6");
+
+    expect(screen.getByText("At most 5 Hits for 3 transactions.")).toBeInTheDocument();
+    expect(generateButton()).toBeDisabled();
+
+    await user.clear(screen.getByRole("spinbutton", { name: "Hit Count" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Hit Count" }), "5");
+    await user.click(generateButton());
+
+    await within(output()).findByRole("tab", { name: "Answer Key" });
+    expect(bodies).toEqual([{ transaction_count: 3, hit_count: 5 }]);
+  });
+
   it("highlights each Hit's name where its XPath points, not every copy of the text", async () => {
     const user = await generateWithHits();
 
