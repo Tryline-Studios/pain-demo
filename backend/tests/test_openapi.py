@@ -37,6 +37,7 @@ def test_validate_message_takes_multipart_or_xml_and_returns_a_validation_report
         "dtd_not_allowed",
         "unsupported_message",
         "too_many_elements",
+        "validation_timed_out",
         "missing_element",
         "unexpected_element",
         "pattern_mismatch",

@@ -5,9 +5,9 @@ explicitly, and returns the XML bytes plus the elements the version fitter dropp
 in a worker thread.
 """
 
+import functools
 import importlib.resources
 import re
-import threading
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -55,20 +55,14 @@ class RenderResult:
     """Element paths the version fitter dropped, deduplicated, in first-seen order. None carries a Placement."""
 
 
-_THREAD_SCHEMAS = threading.local()
-"""Each thread's compiled schemas, by Message Version, in its `by_version` dict."""
-
-
+@functools.cache
 def schema(message_version: str) -> etree.XMLSchema:
-    """pain001's bundled XSD for a Message Version (pain.001.001.03 to .13), compiled once per thread and reused.
+    """pain001's bundled XSD for a Message Version (pain.001.001.03 to .13), compiled once and reused.
 
-    An XMLSchema's error log belongs to the schema, not the call, so threads never share one and never wait on each
-    other for it. Compiling takes about 1 ms on an idle process; see `validation._xsd_errors` for one that is not.
+    Only Upload Validation's worker processes use it, one validation at a time each: an XMLSchema's error log belongs
+    to the schema, not the call, so it must never be shared between threads.
     """
-    schemas: dict[str, etree.XMLSchema] = _THREAD_SCHEMAS.__dict__.setdefault("by_version", {})
-    if message_version not in schemas:
-        schemas[message_version] = etree.XMLSchema(xsd(message_version))
-    return schemas[message_version]
+    return etree.XMLSchema(xsd(message_version))
 
 
 def xsd(message_version: str) -> etree._Element:

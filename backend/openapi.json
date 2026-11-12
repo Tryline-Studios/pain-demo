@@ -2075,6 +2075,7 @@
           "dtd_not_allowed",
           "unsupported_message",
           "too_many_elements",
+          "validation_timed_out",
           "missing_element",
           "unexpected_element",
           "pattern_mismatch",

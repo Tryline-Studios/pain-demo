@@ -1,7 +1,6 @@
 """Upload Validation through the HTTP seam (spec section 17)."""
 
 import hashlib
-import threading
 import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -10,9 +9,8 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from lxml import etree
 
-from pain_demo import renderer
+from pain_demo import validation
 
 URL = "/api/v1/validations"
 XML = {"Content-Type": "application/xml"}
@@ -462,40 +460,51 @@ def test_a_message_at_the_element_limit_is_validated(client: TestClient) -> None
     assert (report["valid"], report["problems"], report["transaction_count"]) == (True, [], 1)
 
 
+HOSTILE = with_ustrd(240_000, b"<Ustrd/>")
+"""240,000 erroring siblings under one parent: minutes of XSD work (spec 17.3), far beyond any budget a test sets."""
+
+
+def test_a_validation_over_the_time_budget_is_stopped_and_says_so(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(validation, "XSD_BUDGET_SECONDS", 1)
+    started = time.perf_counter()
+
+    report = client.post(URL, content=HOSTILE, headers=XML).json()
+
+    assert time.perf_counter() - started < 20  # the uncapped XSD run takes minutes; this allows a cold worker
+    assert (report["valid"], report["message_version"], report["encoding"], report["transaction_count"]) == (
+        False,
+        "pain.001.001.03",
+        "UTF-8",
+        None,
+    )
+    assert report["problems"] == [
+        {
+            "line": None,
+            "column": None,
+            "tag": None,
+            "path": None,
+            "code": "validation_timed_out",
+            "cause": None,
+            "message": "The schema check took longer than its 1-second budget and was stopped",
+        }
+    ]
+    # The stopped worker's replacement serves the next upload.
+    assert client.post(URL, content=pain001(), headers=XML).json()["valid"] is True
+
+
 def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    real_schema = renderer.schema
-    slow_is_validating, quick_has_its_report = threading.Event(), threading.Event()
-    saw_quick_finish: list[bool] = []
-
-    class PausedSchema:
-        """The first upload's schema: its validation waits, inside the XSD layer, for the second upload's report."""
-
-        def __init__(self, version: str) -> None:
-            self.real = real_schema(version)
-
-        @property
-        def error_log(self) -> etree._ListErrorLog:
-            return self.real.error_log
-
-        def validate(self, root: etree._Element) -> bool:
-            slow_is_validating.set()
-            saw_quick_finish.append(quick_has_its_report.wait(5))
-            return self.real.validate(root)
-
-    def schema(version: str) -> object:
-        return real_schema(version) if slow_is_validating.is_set() else PausedSchema(version)
-
-    monkeypatch.setattr(renderer, "schema", schema)
+    monkeypatch.setattr(validation, "XSD_BUDGET_SECONDS", 3)
     with ThreadPoolExecutor(1) as pool:
-        slow = pool.submit(client.post, URL, content=pain001(), headers=XML)
-        assert slow_is_validating.wait(5)
+        slow = pool.submit(client.post, URL, content=HOSTILE, headers=XML)
         quick = client.post(URL, content=pain001(), headers=XML)
-        quick_has_its_report.set()
+        slow_was_running = not slow.done()
 
-    # Behind a shared schema lock the quick upload could only finish after the slow one's validation.
-    assert (quick.json()["valid"], slow.result().json()["valid"], saw_quick_finish) == (True, True, [True])
+    assert (quick.json()["valid"], slow_was_running) == (True, True)
+    assert slow.result().json()["problems"][0]["code"] == "validation_timed_out"
 
 
 def with_creditor(version: str, inside: bytes) -> bytes:
