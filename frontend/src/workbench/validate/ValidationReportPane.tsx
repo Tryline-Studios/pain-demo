@@ -1,4 +1,5 @@
 import { Tile } from "@/workbench/Tile";
+import { ProblemRail } from "@/workbench/validate/ProblemRail";
 import type { Validation } from "@/workbench/validate/useValidation";
 
 /** The right pane in Validate mode: summary tiles, the file line and the problems (spec 17.9). */
@@ -34,7 +35,15 @@ export function ValidationReportPane({ validation }: { validation: Validation })
             <div className="rounded-xl border border-green-600/40 bg-green-600/5 p-8 text-center">
               <p className="font-medium text-lg">No problems found</p>
             </div>
-          ) : null}
+          ) : (
+            // The source view (spec 17.9) goes to the left of the rail.
+            <div className="flex flex-col gap-3">
+              {report.truncated ? (
+                <p className="text-muted-foreground text-sm">Only the first 100 problems are shown.</p>
+              ) : null}
+              <ProblemRail problems={report.problems} />
+            </div>
+          )}
         </>
       )}
     </div>

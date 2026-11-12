@@ -28,6 +28,40 @@ const validReport: ValidationReport = {
   truncated: false,
 };
 
+const invalidReport: ValidationReport = {
+  ...validReport,
+  valid: false,
+  problems: [
+    {
+      line: 9,
+      column: 18,
+      tag: "Cd",
+      path: "/Document/CstmrCdtTrfInitn/PmtInf[1]/DbtrAcct/Tp/Cd",
+      code: "invalid_value",
+      cause: "Element 'Cd': [facet 'enumeration'] The value 'SAVING' is not an element of the set.",
+      message: "Cd 'SAVING' on line 9 is not one of the allowed values",
+    },
+    {
+      line: 12,
+      column: 30,
+      tag: "BIC",
+      path: "/Document/CstmrCdtTrfInitn/PmtInf[1]/CdtTrfTxInf[1]/CdtrAgt/FinInstnId/BIC",
+      code: "pattern_mismatch",
+      cause: "Element 'BIC': [facet 'pattern'] The value 'COBA12' is not accepted by the pattern.",
+      message: "BIC 'COBA12' on line 12 doesn't match the pattern",
+    },
+    {
+      line: null,
+      column: null,
+      tag: null,
+      path: null,
+      code: "dtd_not_allowed",
+      cause: null,
+      message: "The message carries a DTD, which is not allowed",
+    },
+  ],
+};
+
 /** Answers every validation with `body`, recording what the request carried. */
 function answerWith(body: ValidationReport, status = 200) {
   const seen: { contentType: string | null; text: string; fileName: string | null }[] = [];
@@ -113,5 +147,43 @@ describe("Validate mode", () => {
 
     expect(await within(report()).findByText("dropped.xml")).toBeInTheDocument();
     expect(seen.map((request) => request.fileName)).toEqual(["dropped.xml"]);
+  });
+
+  it("lists every Validation Problem in report order with its code, line, message, path and cause", async () => {
+    answerWith(invalidReport);
+    const user = await openValidate();
+
+    await user.type(screen.getByRole("textbox", { name: "Paste XML" }), "<Document/>");
+    await user.click(screen.getByRole("button", { name: "Validate pasted XML" }));
+
+    const rail = await within(report()).findByRole("list", { name: "Validation Problems" });
+    const items = within(rail).getAllByRole("listitem");
+    expect(items).toHaveLength(3);
+    const [first, second, last] = items as [HTMLElement, HTMLElement, HTMLElement];
+    expect(first).toHaveTextContent("invalid_value");
+    expect(second).toHaveTextContent("pattern_mismatch");
+    expect(second).toHaveTextContent("Line 12");
+    expect(last).toHaveTextContent("dtd_not_allowed");
+    expect(first).toHaveTextContent("Line 9");
+    expect(first).toHaveTextContent("Cd 'SAVING' on line 9 is not one of the allowed values");
+    expect(first).toHaveTextContent("/Document/CstmrCdtTrfInitn/PmtInf[1]/DbtrAcct/Tp/Cd");
+    expect(first).toHaveTextContent(
+      "Element 'Cd': [facet 'enumeration'] The value 'SAVING' is not an element of the set.",
+    );
+    expect(last).toHaveTextContent("No line");
+    expect(tile("Verdict")).toHaveTextContent("Invalid");
+    expect(tile("Problems")).toHaveTextContent("3");
+    expect(within(report()).queryByText("No problems found")).not.toBeInTheDocument();
+  });
+
+  it("shows 100+ problems and says only the first 100 are listed when the report is truncated", async () => {
+    answerWith({ ...invalidReport, truncated: true });
+    const user = await openValidate();
+
+    await user.type(screen.getByRole("textbox", { name: "Paste XML" }), "<Document/>");
+    await user.click(screen.getByRole("button", { name: "Validate pasted XML" }));
+
+    expect(await within(report()).findByText("Only the first 100 problems are shown.")).toBeInTheDocument();
+    expect(tile("Problems")).toHaveTextContent("100+");
   });
 });
