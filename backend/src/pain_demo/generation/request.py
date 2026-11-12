@@ -1,6 +1,6 @@
 """The generation request (spec 5.1, 5.5, 12.4) and its Effective Request (spec 5.7).
 
-Named Hits and Exposures arrive with their own tickets.
+Named Hits arrive with their own ticket.
 """
 
 import secrets
@@ -11,6 +11,7 @@ from typing import Annotated, Literal, Self, get_args
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
 from pain_demo.generation.clean_banks import SupportedCountry
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES, ExposureCountry
 from pain_demo.generation.seeds import identifier, stream
 from pain_demo.generation.supplied import (
     Amount,
@@ -87,6 +88,14 @@ class GenerationRequest(BaseModel):
     )
     amount_min: Amount = DEFAULT_AMOUNT_MIN
     amount_max: Amount = DEFAULT_AMOUNT_MAX
+    exposure_countries: list[ExposureCountry] = Field(
+        default=list(EXPOSURE_COUNTRIES), min_length=1, description="Each Exposure draws its country from them"
+    )
+    exposure_count: int = Field(
+        default=0,
+        ge=0,
+        description="Clean transactions with the creditor side in an exposure country, none of them carrying a Hit",
+    )
     payment: SuppliedPayment | None = Field(
         default=None, exclude_if=_absent, description="File-level Supplied Data; absent means all generated"
     )
@@ -126,6 +135,16 @@ class GenerationRequest(BaseModel):
                     ("hit_count",),
                     self.hit_count,
                     f"hit_count must not exceed the transaction count plus two ({count + 2})",
+                )
+            )
+        # Exposures take transactions no Hit touches; Hits beyond the two file-level ones take one each (spec 8.2).
+        exposure_cap = count - max(0, self.hit_count - 2)
+        if self.hit_count <= count + 2 and self.exposure_count > exposure_cap:
+            errors.append(
+                field_error(
+                    ("exposure_count",),
+                    self.exposure_count,
+                    f"exposure_count must not exceed the transactions left free of Hits ({exposure_cap})",
                 )
             )
         if errors:

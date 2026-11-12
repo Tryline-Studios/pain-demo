@@ -11,6 +11,7 @@ from starlette.concurrency import run_in_threadpool
 
 from pain_demo.generation import sample_file
 from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES, SupportedCountry
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES, ExposureCountry
 from pain_demo.generation.generated_data import COUNTRIES
 from pain_demo.generation.request import (
     DEFAULT_AMOUNT_MAX,
@@ -24,7 +25,7 @@ from pain_demo.generation.request import (
     GenerationRequest,
     MessageVersion,
 )
-from pain_demo.generation.sample_file import GeneratedSampleFile, zip_bytes
+from pain_demo.generation.sample_file import AnswerKey, GeneratedSampleFile, answer_key_csv, zip_bytes
 from pain_demo.generation.screening import NameScreen
 from pain_demo.generation.supplied import SuppliedAgent, roles
 from pain_demo.problems import BODY_TOO_LARGE, BUILD_FAILED, VALIDATION_ERROR
@@ -43,7 +44,8 @@ log = structlog.get_logger("pain_demo.generation")
     response_model=GeneratedSampleFile,
     responses={
         200: {
-            "description": "The JSON envelope, or with `format=zip` a zip of `<name>.xml` and `<name>.answer-key.json`",
+            "description": "The JSON envelope, or with `format=zip` a zip of `<name>.xml`, `<name>.answer-key.json`"
+            " and `<name>.answer-key.csv`",
             "content": {"application/zip": {"schema": {"type": "string", "format": "binary"}}},
         },
         **BODY_TOO_LARGE,
@@ -109,6 +111,22 @@ def catalogue_errors(body: GenerationRequest, screen: NameScreen) -> list[dict[s
     ]
 
 
+@router.post(
+    "/answer-keys/csv",
+    operation_id="answer_key_to_csv",
+    summary="The CSV projection of an Answer Key's hits",
+    response_class=Response,
+    responses={
+        200: {"description": "One row per Hit (spec 11.1)", "content": {"text/csv": {"schema": {"type": "string"}}}},
+        **BODY_TOO_LARGE,
+        **VALIDATION_ERROR,
+    },
+)
+def answer_key_to_csv(answer_key: AnswerKey) -> Response:
+    """A pure transform: any Answer Key of the current `answer_key_version`; another version is a 422."""
+    return Response(answer_key_csv(answer_key), media_type="text/csv; charset=utf-8")
+
+
 class MessageVersionOption(BaseModel):
     message_version: MessageVersion
     default: bool
@@ -117,6 +135,11 @@ class MessageVersionOption(BaseModel):
 class CountryOption(BaseModel):
     country: SupportedCountry
     currency: str = Field(description="What a creditor in this country is paid in when `currencies` is absent")
+
+
+class ExposureCountryOption(BaseModel):
+    country: ExposureCountry
+    currency: str = Field(description="What an exposed transaction is paid in, whatever `currencies` says")
 
 
 class Limits(BaseModel):
@@ -130,10 +153,12 @@ class Defaults(BaseModel):
     countries: list[SupportedCountry]
     amount_min: Decimal
     amount_max: Decimal
+    exposure_countries: list[ExposureCountry]
 
 
 class Options(BaseModel):
     countries: list[CountryOption]
+    exposure_countries: list[ExposureCountryOption]
     limits: Limits
     defaults: Defaults
 
@@ -150,6 +175,9 @@ def list_message_versions() -> list[MessageVersionOption]:
 def get_options() -> Options:
     return Options(
         countries=[CountryOption(country=c, currency=COUNTRIES[c].currency) for c in SUPPORTED_COUNTRIES],
+        exposure_countries=[
+            ExposureCountryOption(country=c, currency=p.currency) for c, p in EXPOSURE_COUNTRIES.items()
+        ],
         limits=Limits(max_transactions=MAX_TRANSACTIONS, max_seed_length=MAX_SEED_LENGTH),
         defaults=Defaults(
             message_version=DEFAULT_MESSAGE_VERSION,
@@ -157,5 +185,6 @@ def get_options() -> Options:
             countries=list(DEFAULT_COUNTRIES),
             amount_min=DEFAULT_AMOUNT_MIN,
             amount_max=DEFAULT_AMOUNT_MAX,
+            exposure_countries=list(EXPOSURE_COUNTRIES),
         ),
     )

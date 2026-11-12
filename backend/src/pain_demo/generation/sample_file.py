@@ -1,17 +1,19 @@
 """One Sample File and its Answer Key from an Effective Request (spec 9.4, 11, 12.2)."""
 
+import csv
 import hashlib
 import io
 import json
 import re
 import zipfile
 from datetime import date, datetime
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel
 
 from pain_demo.catalogue import Catalogue
 from pain_demo.generation.clean_banks import CleanBankList
+from pain_demo.generation.exposures import Exposure, by_exposure_country, place_exposures
 from pain_demo.generation.generated_data import GeneratedData
 from pain_demo.generation.hits import Hit, place_hits, summary_counts
 from pain_demo.generation.request import EffectiveRequest, MessageVersion
@@ -33,6 +35,11 @@ class SampleFile(BaseModel):
     def answer_key_filename(self) -> str:
         """`<name>.answer-key.json` beside `<name>.xml` (spec 12.2)."""
         return self.filename.removesuffix(".xml") + ".answer-key.json"
+
+    @property
+    def answer_key_csv_filename(self) -> str:
+        """`<name>.answer-key.csv` beside `<name>.xml` (spec 12.2)."""
+        return self.filename.removesuffix(".xml") + ".answer-key.csv"
 
     @property
     def zip_filename(self) -> str:
@@ -75,7 +82,7 @@ class AnswerKey(BaseModel):
     file: FileFacts
     summary: Summary
     hits: list[Hit]
-    exposures: list[Any]
+    exposures: list[Exposure]
     transactions: list[AnswerKeyTransaction]
     warnings: list[str]
     """Elements of Generated Data the Message Version could not carry and the build dropped."""
@@ -91,14 +98,62 @@ def answer_key_json(answer_key: AnswerKey) -> str:
     return answer_key.model_dump_json(indent=2) + "\n"
 
 
+CSV_COLUMNS = (
+    "hit_id", "scope", "transaction_number", "end_to_end_id", "entity_id", "entity_type", "lists", "placement",
+    "element", "rendering_mode", "name_variant", "rendered_text", "source_value", "source_type", "scheme",
+    "operations", "bic", "origin", "paired_hit", "xpath",
+)  # fmt: skip
+
+
+def answer_key_csv(answer_key: AnswerKey) -> str:
+    """One row per Hit, columns in the spec's order; lists and fuzz operations joined by `|` (spec 11.1).
+
+    A fuzzed name's `base` is its `source_value`, so it needs no column of its own.
+    """
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(CSV_COLUMNS)
+    for hit in answer_key.hits:
+        name = hit.name
+        writer.writerow(
+            (
+                hit.id,
+                hit.scope,
+                hit.transaction_number,
+                hit.end_to_end_id,
+                hit.entity.id,
+                hit.entity.entity_type,
+                "|".join(dict.fromkeys(listing.list for listing in hit.entity.listings)),
+                hit.placement,
+                hit.element,
+                hit.rendering_mode,
+                name and name.variant,
+                name and name.rendered,
+                name and name.source.value,
+                name and name.source.type,
+                name and name.scheme,
+                name and "|".join(name.operations or ()),
+                hit.bic and hit.bic.value,
+                hit.origin,
+                hit.paired_with,
+                hit.xpath,
+            )
+        )
+    return buffer.getvalue()
+
+
 def zip_bytes(generated: GeneratedSampleFile) -> bytes:
-    """`<name>.xml` and `<name>.answer-key.json` (spec 12.2), with fixed timestamps so the same file zips the same."""
+    """`<name>.xml`, `<name>.answer-key.json` and `<name>.answer-key.csv` (spec 12.2).
+
+    Fixed timestamps, so the same file zips the same.
+    """
     sample_file = generated.sample_file
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         for member, text in (
             (sample_file.filename, sample_file.xml),
             (sample_file.answer_key_filename, answer_key_json(generated.answer_key)),
+            (sample_file.answer_key_csv_filename, answer_key_csv(generated.answer_key)),
         ):
             archive.writestr(zipfile.ZipInfo(member, date_time=_ZIP_EPOCH), text, zipfile.ZIP_DEFLATED)
     return buffer.getvalue()
@@ -127,6 +182,7 @@ def generate(
     """Blocking: run it in a worker thread."""
     data = GeneratedData(request, clean_banks, screen)
     model, hits = place_hits(data.sample_file_model(), request, catalogue, data)
+    model, exposures = place_exposures(model, request, hits, data)
     file_hit_ids = [hit.id for hit in hits if hit.scope == "file"]
     rendered = render(model)
     declaration, _, body = rendered.xml.decode("utf-8").partition("\n")
@@ -144,9 +200,9 @@ def generate(
             hit_count=len(hits),
             sha256=hashlib.sha256(xml.encode("utf-8")).hexdigest(),
         ),
-        summary=Summary(**summary_counts(hits, catalogue)),
+        summary=Summary(**summary_counts(hits, catalogue), by_exposure_country=by_exposure_country(exposures)),
         hits=hits,
-        exposures=[],
+        exposures=exposures,
         transactions=[
             AnswerKeyTransaction(
                 number=number,

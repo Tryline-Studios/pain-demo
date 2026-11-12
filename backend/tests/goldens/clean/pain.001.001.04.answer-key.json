@@ -3,7 +3,7 @@
   "seed": "golden-clean",
   "message_version": "pain.001.001.04",
   "generator": {
-    "app_version": "0.2.0",
+    "app_version": "0.3.0",
     "git_sha": "golden",
     "pain001": "0.0.70",
     "faker": "40.39.0",
@@ -29,7 +29,16 @@
     ],
     "currencies": null,
     "amount_min": "10.00",
-    "amount_max": "50000.00"
+    "amount_max": "50000.00",
+    "exposure_countries": [
+      "RU",
+      "BY",
+      "IR",
+      "KP",
+      "SY",
+      "VE"
+    ],
+    "exposure_count": 0
   },
   "file": {
     "message_id": "MSG-B06C0CB80A48",
@@ -37,7 +46,7 @@
     "execution_date": "2026-01-05",
     "transaction_count": 10,
     "hit_count": 0,
-    "sha256": "418f0da9c1235ab7bc5f1f18766274d37ef5ef15d9f28a77442c51ed6a402e1c"
+    "sha256": "e1dd26d40dde2d7a23e9394b45b21dbf3ee790cb79a1ed9ffb05fbcdf8e41e54"
   },
   "summary": {
     "by_placement": {},

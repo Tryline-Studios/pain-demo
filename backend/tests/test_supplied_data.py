@@ -259,3 +259,12 @@ def test_drawn_hits_fall_back_to_supplied_transactions_when_there_is_no_room(cli
 )
 def test_supplied_data_cannot_name_a_catalogue_entity(client: TestClient, row: dict, field: str) -> None:
     assert [error["field"] for error in problems(client, transactions=[row])] == [field]
+
+
+@pytest.mark.parametrize("seed", [f"exposed-{n}" for n in range(4)])
+def test_exposures_prefer_transactions_whose_creditor_side_was_not_supplied(client: TestClient, seed: str) -> None:
+    rows = [{"creditor": {"name": "Supplied Creditor"}}] * 5
+    envelope = post(client, seed=seed, transactions=rows, transaction_count=10, exposure_count=5)
+
+    assert sorted(e["transaction_number"] for e in envelope["answer_key"]["exposures"]) == [6, 7, 8, 9, 10]
+    assert text(tree(envelope), f"{PMT_INF}/CdtTrfTxInf/Cdtr/Nm")[:5] == ["Supplied Creditor"] * 5

@@ -1,10 +1,15 @@
 """Upload Validation: check an Uploaded Message layer by layer and build its Validation Report (spec section 17)."""
 
+import asyncio
 import functools
 import hashlib
 import itertools
+import multiprocessing
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from enum import StrEnum
+from multiprocessing.connection import Connection
 
 from lxml import etree
 from pydantic import BaseModel, ConfigDict
@@ -17,6 +22,10 @@ _PARSER_POSITION = re.compile(r", line \d+, column \d+$")
 MAX_PROBLEMS = 100
 MAX_ELEMENTS = 500_000
 """Above the richest realistic 10 MB pain.001 (about 400,000 elements) and well below a flood (about 1.3 million)."""
+XSD_BUDGET_SECONDS = 10
+"""The longest the XSD layer may run before its worker process is stopped."""
+XSD_WORKERS = 4
+"""Upload Validations running at once; later ones queue for a worker."""
 _ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
 _EXPECTED = re.compile(r"Expected is (?:one of )?\( (.*) \)")
 _PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
@@ -104,6 +113,7 @@ class ProblemCode(StrEnum):
     DTD_NOT_ALLOWED = "dtd_not_allowed"
     UNSUPPORTED_MESSAGE = "unsupported_message"
     TOO_MANY_ELEMENTS = "too_many_elements"
+    VALIDATION_TIMED_OUT = "validation_timed_out"
     MISSING_ELEMENT = "missing_element"
     UNEXPECTED_ELEMENT = "unexpected_element"
     PATTERN_MISMATCH = "pattern_mismatch"
@@ -210,14 +220,9 @@ def _layers_before_xsd(content: bytes) -> tuple[str, str, etree._Element]:
 
 
 def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
-    schema = renderer.schema(version)  # this thread's own, so concurrent uploads never wait on a shared one
+    schema = renderer.schema(version)
     schema.validate(root)
-    # shortcut: lxml offers no error cap and records every XSD error with a path that walks the preceding siblings,
-    # so the cost grows at least with the square of the erroring siblings under one parent: 40k took 1.5 s and 120k
-    # 12.6 s on an idle M3 Pro; under CPU load 40k took 21 s and 240k about 240 s. A file at MAX_ELEMENTS is
-    # unmeasured and may take far more than minutes. lxml takes the GIL once per error, which slows (never blocks)
-    # every other thread meanwhile: beside 50k errors a quick upload took 0.5 to 1.7 s. The follow-up ticket adds a
-    # time-budgeted worker.
+    # lxml offers no error cap, so a hostile file runs until the worker's time budget stops it.
     return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
 
 
@@ -306,20 +311,96 @@ def _schema_problem(find: etree.XPathDocumentEvaluator, version: str, error: etr
     )
 
 
+def _xsd_layer(content: bytes, version: str) -> tuple[list[ValidationProblem], int]:
+    """The XSD layer's problems and the transaction count, for content that passed the earlier layers."""
+    root = etree.fromstring(content, _parser())
+    tree = root.getroottree()
+    # lxml's error paths use the document's own prefixes, so the XPath needs them all.
+    namespaces = {prefix: uri for el in tree.iter() for prefix, uri in el.nsmap.items() if prefix}
+    find = etree.XPathDocumentEvaluator(tree, namespaces=namespaces)
+    problems = [_schema_problem(find, version, error) for error in _xsd_errors(root, version)]
+    return problems, len(root.findall(f".//{{{etree.QName(root).namespace}}}CdtTrfTxInf"))
+
+
+def _serve(conn: Connection) -> None:
+    """A worker process: answers XSD layer requests until its parent goes away."""
+    conn.send(None)  # ready: imports done
+    while True:
+        try:
+            content, version = conn.recv()
+        except EOFError:
+            return
+        conn.send(_xsd_layer(content, version))
+
+
+_SPAWN = multiprocessing.get_context("spawn")  # fork is unsafe in a threaded server
+
+
+class _Worker:
+    """One worker process, reused between uploads so it compiles each Message Version's schema once."""
+
+    def __init__(self) -> None:
+        self.conn, child = _SPAWN.Pipe()
+        self.process = _SPAWN.Process(target=_serve, args=(child,), daemon=True, name="xsd-worker")
+        self.process.start()
+        child.close()
+        self.ready = False
+
+    def run(self, content: bytes, version: str) -> tuple[list[ValidationProblem], int] | None:
+        """The XSD layer's result, or None past the budget."""
+        if not self.ready:
+            self.ready = self.conn.recv() is None  # start-up is not the upload's budget
+        self.conn.send((content, version))
+        return self.conn.recv() if self.conn.poll(XSD_BUDGET_SECONDS) else None
+
+    def stop(self) -> None:
+        self.process.kill()  # libxml2 cannot be interrupted any other way
+        self.process.join()
+        self.conn.close()
+
+
+_THREADS = ThreadPoolExecutor(XSD_WORKERS, thread_name_prefix="upload-validation")
+"""Never the pool generation uses, so a slow validation holds none of its threads."""
+_idle: list[_Worker] = []
+_idle_lock = threading.Lock()
+
+
+def _run_xsd_layer(content: bytes, version: str) -> tuple[list[ValidationProblem], int] | None:
+    with _idle_lock:
+        worker = _idle.pop() if _idle else None
+    worker = worker or _Worker()
+    try:
+        result = worker.run(content, version)
+    except BaseException:
+        worker.stop()
+        raise
+    if result is None:
+        worker.stop()
+        worker = _Worker()
+    with _idle_lock:
+        _idle.append(worker)  # last in, first out: a replacement serves the next upload
+    return result
+
+
+async def validate(content: bytes, name: str | None) -> ValidationReport:
+    """`validate_message` on the Upload Validation threads."""
+    return await asyncio.wrap_future(_THREADS.submit(validate_message, content, name))
+
+
 def validate_message(content: bytes, name: str | None) -> ValidationReport:
-    """Blocking: callers on the event loop run it in a thread."""
+    """Blocking: the XSD layer runs in a worker process within `XSD_BUDGET_SECONDS`."""
     try:
         encoding, version, root = _layers_before_xsd(content)
     except _Rejected as rejected:
         encoding, version, problems, transaction_count = rejected.encoding, rejected.version, [rejected.problem], None
     else:
-        tree = root.getroottree()
-        # lxml's error paths use the document's own prefixes, so the XPath needs them all.
-        namespaces = {prefix: uri for el in tree.iter() for prefix, uri in el.nsmap.items() if prefix}
-        find = etree.XPathDocumentEvaluator(tree, namespaces=namespaces)
-        errors = _xsd_errors(root, version)
-        problems = [_schema_problem(find, version, error) for error in errors]
-        transaction_count = len(root.findall(f".//{{{etree.QName(root).namespace}}}CdtTrfTxInf"))
+        del root  # the worker parses its own copy; free this one while it runs
+        if (result := _run_xsd_layer(content, version)) is None:
+            message = f"The schema check took longer than its {XSD_BUDGET_SECONDS:g}-second budget and was stopped"
+            problems = [ValidationProblem(code=ProblemCode.VALIDATION_TIMED_OUT, message=message)]
+            transaction_count = None
+        else:
+            problems, transaction_count = result
     return ValidationReport(
         valid=not problems,
         message_version=version,

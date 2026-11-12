@@ -322,6 +322,24 @@ describe("Generate mode: downloads", () => {
     expect(JSON.parse(await (saved[0]?.blob.text() ?? Promise.resolve("")))).toEqual(generated.answer_key);
   });
 
+  it("saves the Answer Key CSV the API projects from the Answer Key", async () => {
+    const csv = "hit_id,scope\r\nh1,file\r\n";
+    const csvRequests: unknown[] = [];
+    server.use(
+      http.post("/api/v1/answer-keys/csv", async ({ request }) => {
+        csvRequests.push(await request.json());
+        return new HttpResponse(csv, { headers: { "Content-Type": "text/csv; charset=utf-8" } });
+      }),
+    );
+    const user = await generateOnce();
+
+    await user.click(within(output()).getByRole("button", { name: "Answer Key CSV" }));
+
+    await vi.waitFor(() => expect(saved.map((s) => s.name)).toEqual(["pain.001.001.09-echoed-seed.answer-key.csv"]));
+    expect(csvRequests).toEqual([generated.answer_key]);
+    expect(await saved[0]?.blob.text()).toBe(csv);
+  });
+
   it("fetches the zip by replaying the Effective Request, so it holds the same file", async () => {
     const zipRequests: { format: string | null; body: unknown }[] = [];
     server.use(
@@ -343,6 +361,67 @@ describe("Generate mode: downloads", () => {
     expect(new Uint8Array(await (saved[0]?.blob.arrayBuffer() ?? Promise.resolve(new ArrayBuffer(0))))).toEqual(
       new Uint8Array([80, 75, 3, 4]),
     );
+  });
+});
+
+describe("Generate mode: Exposures", () => {
+  it("offers every exposure country, all chosen, and no Exposures until asked", async () => {
+    await openFileSection();
+
+    for (const code of ["RU", "BY", "IR", "KP", "SY", "VE"]) {
+      expect(chip("Exposure countries", code)).toHaveAttribute("aria-pressed", "true");
+    }
+    expect(screen.getByRole("spinbutton", { name: "Exposures" })).toHaveValue(0);
+  });
+
+  it("posts the Exposure count and the exposure countries the user chose", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+
+    await user.click(chip("Exposure countries", "KP"));
+    await user.click(chip("Exposure countries", "SY"));
+    await user.clear(screen.getByRole("spinbutton", { name: "Exposures" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Exposures" }), "4");
+    await user.click(generateButton());
+
+    await within(output()).findByRole("group", { name: "Seed" });
+    expect(bodies).toEqual([{ exposure_countries: ["RU", "BY", "IR", "VE"], exposure_count: 4 }]);
+  });
+
+  it("lists the Exposures apart from the Hits in the Answer Key", async () => {
+    server.use(
+      http.post("/api/v1/sample-files", () =>
+        HttpResponse.json({
+          ...generated,
+          answer_key: {
+            ...generated.answer_key,
+            summary: { ...generated.answer_key.summary, by_exposure_country: { IR: 1 } },
+            exposures: [
+              {
+                transaction_number: 2,
+                end_to_end_id: "E2E-2",
+                country: "IR",
+                currency: "IRR",
+                elements: ["creditor_address", "agent_bic", "account"],
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    const user = await openFileSection();
+    await user.click(generateButton());
+
+    const exposures = await within(output()).findByRole("table", { name: "Exposures" });
+    expect(
+      within(exposures)
+        .getAllByRole("row")
+        .map((row) => [...row.children].map((cell) => cell.textContent)),
+    ).toEqual([
+      ["Transaction", "End-to-end id", "Country", "Currency", "Elements"],
+      ["2", "E2E-2", "IR", "IRR", "creditor_address, agent_bic, account"],
+    ]);
+    expect(within(output()).getByRole("group", { name: "Exposures" })).toHaveTextContent(/^Exposures1$/);
   });
 });
 
