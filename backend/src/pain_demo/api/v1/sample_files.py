@@ -1,7 +1,6 @@
 """The `sample-files` endpoints: generation and what a client needs to build a request (spec 12.1)."""
 
 from decimal import Decimal
-from typing import get_args
 
 import structlog
 from fastapi import APIRouter, Request
@@ -19,6 +18,7 @@ from pain_demo.generation.request import (
     DEFAULT_TRANSACTION_COUNT,
     MAX_SEED_LENGTH,
     MAX_TRANSACTIONS,
+    MESSAGE_VERSIONS,
     GenerationRequest,
     MessageVersion,
 )
@@ -96,7 +96,7 @@ class Options(BaseModel):
 def list_message_versions() -> list[MessageVersionOption]:
     return [
         MessageVersionOption(message_version=version, default=version == DEFAULT_MESSAGE_VERSION)
-        for version in get_args(MessageVersion.__value__)
+        for version in MESSAGE_VERSIONS
     ]
 
 

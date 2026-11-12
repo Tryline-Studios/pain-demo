@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
+from pain_demo.generation.request import CurrencyCode, MessageVersion
+
 
 @dataclass(frozen=True)
 class Address:
@@ -60,7 +62,7 @@ class Remittance:
 class Transaction:
     end_to_end_id: str
     amount: Decimal
-    currency: str
+    currency: CurrencyCode
     creditor: Party
     creditor_agent: Agent
     creditor_account: Account
@@ -74,7 +76,7 @@ class Transaction:
 class SampleFileModel:
     """One `PmtInf`: one Debtor, Debtor Agent and Debtor account per file. The Debtor is also `GrpHdr/InitgPty`."""
 
-    message_version: str
+    message_version: MessageVersion
     message_id: str
     created_at: datetime
     execution_date: date

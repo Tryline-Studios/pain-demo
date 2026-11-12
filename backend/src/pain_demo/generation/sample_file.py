@@ -76,7 +76,7 @@ def answer_key_json(answer_key: AnswerKey) -> str:
     return answer_key.model_dump_json(indent=2) + "\n"
 
 
-def filename(message_version: str, seed: str) -> str:
+def filename(message_version: MessageVersion, seed: str) -> str:
     """`<message_version>-<seed>.xml`, with a Seed outside `[A-Za-z0-9._-]` replaced by a hash of it (spec 12.2)."""
     safe = seed if _FILENAME_SAFE.fullmatch(seed) else hashlib.sha256(seed.encode()).hexdigest()[:16]
     return f"{message_version}-{safe}.xml"

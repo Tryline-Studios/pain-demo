@@ -6,7 +6,7 @@ Only the generation settings exist so far; Hits, Supplied Data and Exposures arr
 import secrets
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Literal, get_args
 
 import pycountry
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
@@ -28,6 +28,7 @@ type MessageVersion = Literal[
     "pain.001.001.13",
 ]
 
+MESSAGE_VERSIONS: tuple[MessageVersion, ...] = get_args(MessageVersion.__value__)
 DEFAULT_MESSAGE_VERSION: MessageVersion = "pain.001.001.03"
 # shortcut: published as `maximum` on `transaction_count` until `transactions[]` exists; the Supplied Data ticket
 # adds `maxItems: 100` to it.
