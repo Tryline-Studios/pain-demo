@@ -18,6 +18,7 @@ from pain_demo.catalogue.schema import (
     Individual,
     SanctionsList,
 )
+from pain_demo.generation.named_hits import controllers
 from pain_demo.problems import VALIDATION_ERROR, Problem
 
 router = APIRouter(tags=["catalogue"])
@@ -34,6 +35,9 @@ class EntitySummary(BaseModel):
     name_variants: list[NameVariant]
     placements: list[Placement]
     has_bic: bool
+    has_controller: bool = Field(
+        description="A Control Relationship names it as controlled: it may take `with_controller`"
+    )
 
 
 class BankDetail(Bank):
@@ -53,7 +57,7 @@ type EntityDetail = Annotated[BankDetail | CorporateDetail | IndividualDetail, F
 _detail_adapter: TypeAdapter[EntityDetail] = TypeAdapter(EntityDetail)
 
 
-def summarise(entity: Entity) -> EntitySummary:
+def summarise(entity: Entity, catalogue: Catalogue) -> EntitySummary:
     return EntitySummary(
         id=entity.id,
         entity_type=entity.entity_type,
@@ -63,6 +67,7 @@ def summarise(entity: Entity) -> EntitySummary:
         name_variants=supported_name_variants(entity),
         placements=supported_placements(entity.entity_type),
         has_bic=entity.entity_type == "bank" and bool(entity.bics),
+        has_controller=bool(controllers(catalogue, entity.id)),
     )
 
 
@@ -82,9 +87,10 @@ def list_entities(
     sanctions_list: Annotated[SanctionsList | None, Query(alias="list")] = None,
     country: Annotated[CountryCode | None, Query()] = None,
 ) -> list[EntitySummary]:
+    catalogue = catalogue_of(request)
     return [
-        summarise(entity)
-        for entity in catalogue_of(request).entities.values()
+        summarise(entity, catalogue)
+        for entity in catalogue.entities.values()
         if (entity_type is None or entity.entity_type == entity_type)
         and (sanctions_list is None or sanctions_list in entity.lists)
         and (country is None or country in entity.countries)

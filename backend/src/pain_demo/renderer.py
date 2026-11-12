@@ -158,7 +158,7 @@ def _address(address: Address | ListedAddress) -> dict[str, Any]:
 
 
 def _agent(agent: Agent) -> dict[str, Any]:
-    scenario: dict[str, Any] = {"name": agent.name}
+    scenario: dict[str, Any] = {"name": agent.name} if agent.name else {}  # None is `bic_only` (spec 6.6)
     if agent.bic:
         scenario["bic"] = agent.bic
     if agent.routing_number:

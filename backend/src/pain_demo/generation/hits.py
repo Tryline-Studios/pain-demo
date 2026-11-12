@@ -16,6 +16,8 @@ from schwifty import BIC
 
 from pain_demo.catalogue import Catalogue
 from pain_demo.catalogue.capabilities import (
+    CONTROLLER_PLACEMENTS,
+    FILE_LEVEL_PLACEMENTS,
     PLACEMENT_ELIGIBILITY,
     VERBATIM_SOURCES,
     NameVariant,
@@ -50,7 +52,8 @@ from pain_demo.generation.model import (
     SampleFileModel,
     Transaction,
 )
-from pain_demo.generation.request import EffectiveRequest
+from pain_demo.generation.named_hits import HitsInvalid, check, controllers, error, placement_options
+from pain_demo.generation.request import EffectiveRequest, NamedHit, RenderingMode
 from pain_demo.generation.seeds import stream
 from pain_demo.identifiers import bic_country
 
@@ -129,6 +132,7 @@ NAME_VARIANT_WEIGHTS: dict[NameVariant, float] = {
 }
 """Spec 6.5, in draw order: the order feeds `choices`, so changing it changes every Seed's names."""
 _PMT_INF = "/Document/CstmrCdtTrfInitn/PmtInf"
+_FIRST_WITH_BICFI = 4
 _FIRST_WITH_AGENT_LEI = 9
 """`FinInstnId/LEI` exists from .09; earlier versions get no LEI rather than a dropped one."""
 
@@ -195,9 +199,7 @@ class Hit(BaseModel):
     entity: HitEntity
     placement: Placement
     element: RemittanceElement | None = Field(default=None, exclude_if=_absent, description="Remittance only")
-    rendering_mode: Literal["name_and_bic", "bic_only", "name_only"] | None = Field(
-        default=None, exclude_if=_absent, description="Agents only"
-    )
+    rendering_mode: RenderingMode | None = Field(default=None, exclude_if=_absent, description="Agents only")
     name: HitName | None
     bic: HitBic | None
     lei: str | None
@@ -206,7 +208,7 @@ class Hit(BaseModel):
     triggers: list[Trigger]
     origin: Literal["named", "drawn"]
     paired_with: str | None
-    """Always null until named Hits with `with_controller` pair them."""
+    """The other half of a `with_controller` pair (spec 6.8); drawn Hits never pair."""
     displaced: None
     """Always null until Supplied Data can be displaced by a Hit."""
 
@@ -216,27 +218,47 @@ class _Planned:
     entity: Entity
     placement: Placement
     transaction: int | None = None
+    stream: str = ""
+    """The Hit's own randomness: `hits/<k>` for the k-th drawn Hit, `hits/named/<i>` for named Hit i."""
+    origin: Literal["named", "drawn"] = "drawn"
+    name_variant: NameVariant | None = None
+    rendering_mode: RenderingMode | None = None
+    pair: int | None = None
+    """The index of the other half of a `with_controller` pair (spec 6.8)."""
 
 
 def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
-    """Entities, Placements and transaction numbers, all from the placement stream (spec 6.3, 6.5).
+    """Named Hits first, then the drawn ones: Entities, Placements and transaction numbers, all from the placement
+    stream (spec 6.3, 6.5), constrained by the allowlists and kept off what the named Hits took.
 
-    Every valid Hit Count succeeds: once the Hits left outnumber the free transactions, the Hit must go to a free
-    file-level Placement, and a Hit that can only take the Debtor Agent goes to the next Bank in the queue.
+    Every valid Hit Count succeeds without allowlists: once the Hits left outnumber the free transactions, the Hit
+    must go to a free file-level Placement, and a Hit that can only take the Debtor Agent goes to the next Bank in
+    the queue. Allowlists that leave a drawn Hit nowhere to go are a validation error.
     """
+    check(request, catalogue)
+    named = _plan_named(request, catalogue)
     rng = stream(request.seed, "hits/placement")
-    entities = list(catalogue.entities.values())
+    allowed = set(request.name_variants or NAME_VARIANT_WEIGHTS)
+    entities = [e for e in catalogue.entities.values() if allowed & set(supported_name_variants(e))]
     queue: list[Entity] = []
-    taken: set[Placement] = set()
-    free_transactions = request.transaction_count
+    taken: set[Placement] = {p.placement for p in named if p.transaction is None}
+    used = {p.transaction for p in named if p.transaction is not None}
+    free_transactions = request.transaction_count - len(used)
+    count = request.hit_count - len(named)
     planned: list[_Planned] = []
-    for drawn in range(request.hit_count):
-        forced = request.hit_count - drawn > free_transactions
+    for drawn in range(count):
+        forced = count - drawn > free_transactions
 
         def weights(entity: Entity, *, forced: bool = forced) -> dict[Placement, float]:
             # Leaving taken file-level Placements out is the spec's "redrawn", without the loop.
             table = placement_weights(entity.entity_type)
-            return {p: w for p, w in table.items() if p not in taken and (PLACEMENTS[p].file_level or not forced)}
+            return {
+                p: w
+                for p, w in table.items()
+                if p not in taken
+                and (PLACEMENTS[p].file_level or not forced)
+                and (request.placements is None or p in request.placements)
+            }
 
         entity = _next_entity(queue, entities, rng, lambda entity: bool(weights(entity)))
         options = weights(entity)
@@ -245,10 +267,68 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
             taken.add(placement)
         else:
             free_transactions -= 1
-        planned.append(_Planned(entity, placement))
-    numbers = iter(rng.sample(range(1, request.transaction_count + 1), request.transaction_count - free_transactions))
+        planned.append(_Planned(entity, placement, stream=f"hits/{drawn + 1}"))
+    free = [n for n in range(1, request.transaction_count + 1) if n not in used]
+    numbers = iter(rng.sample(free, len(free) - free_transactions))
     planned = [p if PLACEMENTS[p.placement].file_level else replace(p, transaction=next(numbers)) for p in planned]
-    return _debtor_agent_at_home(planned, entities, rng, request)
+    return _debtor_agent_at_home([*named, *planned], list(catalogue.entities.values()), rng, request)
+
+
+def _plan_named(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
+    """What each named Hit leaves out is drawn from `hits/named`; unpinned transactions avoid the pinned ones."""
+    rng = stream(request.seed, "hits/named")
+    pinned = {hit.transaction for hit in request.hits if hit.transaction is not None}
+    taken = {hit.placement for hit in request.hits if hit.placement in FILE_LEVEL_PLACEMENTS}
+    free = [n for n in range(1, request.transaction_count + 1) if n not in pinned]
+    rng.shuffle(free)
+    planned: list[_Planned] = []
+    for index, hit in enumerate(request.hits):
+        entity = catalogue.entities[hit.entity]
+
+        def needs(placement: Placement, hit: NamedHit = hit) -> int:
+            """Free transactions this Placement would use: its own, or the Ultimate Debtor beside a Debtor."""
+            if placement in FILE_LEVEL_PLACEMENTS:
+                return int(hit.with_controller)
+            return int(hit.transaction is None)
+
+        placement = hit.placement
+        if placement is None:
+            table = placement_weights(entity.entity_type)
+            options = {p: table[p] for p in placement_options(hit, entity) if p not in taken and needs(p) <= len(free)}
+            if not options:
+                msg = f"{entity.id}: no Placement is left free for this Hit"
+                raise HitsInvalid([error("hits", index, "placement", msg=msg)])
+            (placement,) = rng.choices(list(options), weights=list(options.values()))
+            if placement in FILE_LEVEL_PLACEMENTS:
+                taken.add(placement)
+        elif needs(placement) > len(free):
+            msg = f"{entity.id}: no transaction is left free for this Hit"
+            raise HitsInvalid([error("hits", index, "transaction", msg=msg)])
+        file_level = placement in FILE_LEVEL_PLACEMENTS
+        transaction = None if file_level else hit.transaction or free.pop()
+        plan = _Planned(
+            entity,
+            placement,
+            transaction,
+            stream=f"hits/named/{index + 1}",
+            origin="named",
+            name_variant=hit.name_variant,
+            rendering_mode=hit.rendering_mode,
+        )
+        if not hit.with_controller:
+            planned.append(plan)
+            continue
+        controller = catalogue.entities[rng.choice(controllers(catalogue, entity.id))]
+        ultimate = _Planned(
+            controller,
+            CONTROLLER_PLACEMENTS[placement],
+            free.pop() if file_level else transaction,
+            stream=f"hits/named/{index + 1}/controller",
+            origin="named",
+            pair=len(planned),
+        )
+        planned.extend([replace(plan, pair=len(planned) + 1), ultimate])
+    return planned
 
 
 def _debtor_agent_at_home(
@@ -258,7 +338,7 @@ def _debtor_agent_at_home(
     free, so the Debtor's account stays at home (spec 6.9). Otherwise the placer keeps the Debtor's own account."""
     file_level = {plan.placement: plan for plan in planned if plan.transaction is None}
     debtor, agent = file_level.get("debtor"), file_level.get("debtor_agent")
-    if debtor is None or agent is None:
+    if debtor is None or agent is None or agent.origin == "named":
         return planned
     homes = {address.country for address in _addresses(debtor.entity)} or {_home_country(debtor.entity, None, request)}
     if _bank_countries(agent.entity) & homes:
@@ -300,8 +380,8 @@ def _next_entity(
         refill = entities.copy()
         rng.shuffle(refill)
         queue.extend(refill)
-    msg = "the catalogue has no Bank for the Debtor Agent Hit"
-    raise RuntimeError(msg)
+    msg = "the drawn Hits cannot all be placed: the allowlists or named Hits leave one nowhere to go"
+    raise HitsInvalid([error("hit_count", msg=msg)])
 
 
 class _Placer:
@@ -322,33 +402,42 @@ class _Placer:
         debtor_country: str | None = None  # set by a Debtor Hit, which the agents follow
         for k in order:
             plan = planned[k]
-            rng = stream(self.request.seed, f"hits/{k + 1}")
-            name = _name(rng, plan.entity)
+            rng = stream(self.request.seed, plan.stream)
+            paired_with = ids[plan.pair] if plan.pair is not None else None
+            allowed = self.request.name_variants if plan.origin == "drawn" else None
             if plan.placement == "remittance" and plan.transaction is not None:  # always transaction-level
+                name = _name(rng, plan.entity, plan.name_variant, allowed)
                 element, text = _mention(rng, name.rendered)
                 tx = transactions[plan.transaction - 1]
                 remittance = replace(tx.remittance, **{_REMITTANCE_FIELDS[element]: text})
                 transactions[plan.transaction - 1] = replace(tx, remittance=remittance)
-                hits.append(self._hit(ids[k], plan, tx.end_to_end_id, name, element=element))
+                hits.append(self._hit(ids[k], plan, tx.end_to_end_id, name, paired_with, element=element))
                 continue
             agent_hit = PLACEMENTS[plan.placement].agent
+            bic_only = plan.rendering_mode == "bic_only"
+            name = None if bic_only else _name(rng, plan.entity, plan.name_variant, allowed)
             home = debtor_country if plan.placement == "debtor_agent" else None
             bic = None
             if agent_hit and isinstance(plan.entity, Bank) and plan.entity.bics:
                 bic = rng.choice([b for b in plan.entity.bics if bic_country(b.value) == home] or plan.entity.bics)
-            address = _address(rng, plan.entity, bic_country(bic.value) if bic else home)
+            address = None if bic_only else _address(rng, plan.entity, bic_country(bic.value) if bic else home)
             listed = _listed(address) if address else None
-            lei = self._lei(plan.entity) if agent_hit else None
+            lei = self._lei(plan.entity) if agent_hit and not bic_only else None
+            rendering_mode: RenderingMode | None = None
             if agent_hit:
-                party_or_agent: Party | Agent = Agent(
-                    bic=bic.value if bic else None, name=name.rendered, lei=lei, address=listed
-                )
+                rendering_mode = plan.rendering_mode or ("name_and_bic" if bic else "name_only")
                 country = bic_country(bic.value) if bic else _home_country(plan.entity, address, self.request)
                 if home is None or country == home:
                     account = self.data.account(rng, country, _bank_code(bic.value) if bic else None)
                 else:  # beside a sanctioned Debtor elsewhere, the Debtor's account stands (spec 6.9)
                     account = model.debtor_account
+                if rendering_mode == "name_only":  # the BIC still decides the account's country, but is not sent
+                    bic = None
+                party_or_agent: Party | Agent = Agent(
+                    bic=bic.value if bic else None, name=name.rendered if name else None, lei=lei, address=listed
+                )
             else:
+                assert name is not None  # noqa: S101 - only an agent can be bic_only
                 party_or_agent = Party(name=name.rendered, address=listed)
                 country = _home_country(plan.entity, address, self.request)
                 account = self.data.account(rng, country, None)
@@ -367,10 +456,12 @@ class _Placer:
                     plan,
                     end_to_end_id,
                     name,
-                    rendering_mode=("name_and_bic" if bic else "name_only") if agent_hit else None,
+                    paired_with,
+                    rendering_mode=rendering_mode,
                     bic=bic,
                     lei=lei,
                     address=address,
+                    version=_version_number(self.request.message_version),
                 )
             )
         model = replace(model, transactions=tuple(transactions))
@@ -381,20 +472,25 @@ class _Placer:
         hit_id: str,
         plan: _Planned,
         end_to_end_id: str | None,
-        name: HitName,
+        name: HitName | None,
+        paired_with: str | None,
         *,
         element: RemittanceElement | None = None,
-        rendering_mode: Literal["name_and_bic", "name_only"] | None = None,
+        rendering_mode: RenderingMode | None = None,
         bic: Bic | None = None,
         lei: str | None = None,
         address: CatalogueAddress | None = None,
+        version: int = 0,
     ) -> Hit:
+        leaf = None
+        if name is None:  # bic_only: the Hit is the BIC, renamed from .04 on
+            leaf = "BIC" if version < _FIRST_WITH_BICFI else "BICFI"
         return Hit(
             id=hit_id,
             scope="file" if plan.transaction is None else "transaction",
             transaction_number=plan.transaction,
             end_to_end_id=end_to_end_id,
-            xpath=xpath(plan.placement, plan.transaction, element),
+            xpath=xpath(plan.placement, plan.transaction, element, leaf),
             entity=HitEntity(
                 id=plan.entity.id,
                 entity_type=plan.entity.entity_type,
@@ -407,9 +503,9 @@ class _Placer:
             bic=HitBic(value=bic.value, source="listing" if bic.listing else "gleif") if bic else None,
             lei=lei,
             address_from_listing=address.listing.entry_id if address else None,
-            triggers=_triggers(plan.entity, name.rendered, bic, lei),
-            origin="drawn",
-            paired_with=None,
+            triggers=_triggers(plan.entity, name.rendered if name else None, bic, lei),
+            origin=plan.origin,
+            paired_with=paired_with,
             displaced=None,
         )
 
@@ -431,10 +527,11 @@ class _Placer:
             case "ultimate_creditor":
                 return replace(tx, ultimate_creditor=hit)
         slot = int(placement[-1])
-        agents = list(tx.intermediary_agents[: slot - 1])
+        agents = list(tx.intermediary_agents)
         while len(agents) < slot - 1:  # contiguous from 1: clean generated banks below the Hit (spec 6.2)
             agents.append(self.data.clean_agent(rng, rng.choice(self.request.countries))[0])
-        return replace(tx, intermediary_agents=(*agents, hit))
+        # A named Hit already in a higher slot keeps it.
+        return replace(tx, intermediary_agents=(*agents[: slot - 1], hit, *agents[slot:]))
 
 
 def place_hits(
@@ -443,7 +540,8 @@ def place_hits(
     catalogue: Catalogue,
     data: GeneratedData,
 ) -> tuple[SampleFileModel, list[Hit]]:
-    """Overlay `request.hit_count` drawn Hits on the clean model; the Hits come back ordered and numbered."""
+    """Overlay the named and drawn Hits on the clean model; the Hits come back ordered and numbered. Raises
+    `HitsInvalid` for a request the catalogue cannot satisfy."""
     return _Placer(request, catalogue, data).place(model)
 
 
@@ -453,9 +551,13 @@ def _place_file(model: SampleFileModel, placement: Placement, hit: Party | Agent
     return replace(model, debtor_agent=hit, debtor_account=account)
 
 
-def xpath(placement: Placement, transaction: int | None, element: RemittanceElement | None = None) -> str:
-    """Built from the model: lxml's own paths are `/*/*/*[2]` under a default namespace."""
+def xpath(
+    placement: Placement, transaction: int | None, element: RemittanceElement | None = None, leaf: str | None = None
+) -> str:
+    """Built from the model: lxml's own paths are `/*/*/*[2]` under a default namespace. `leaf` replaces `Nm`."""
     path = REMITTANCE_ELEMENTS[element][0] if element else PLACEMENTS[placement].name_path
+    if leaf:
+        path = path.removesuffix("Nm") + leaf
     if transaction is None:
         return f"{_PMT_INF}/{path}"
     return f"{_PMT_INF}/CdtTrfTxInf[{transaction}]/{path}"
@@ -476,11 +578,16 @@ def _mention(rng: random.Random, name: str) -> tuple[RemittanceElement, str]:
     return element, rng.choice(fitting)
 
 
-def _name(rng: random.Random, entity: Entity) -> HitName:
+def _name(
+    rng: random.Random, entity: Entity, pinned: NameVariant | None = None, allowed: list[NameVariant] | None = None
+) -> HitName:
+    """A `pinned` variant was checked supported; otherwise one is drawn from those supported and `allowed`."""
     offered = transliterations(entity)
-    supported = supported_name_variants(entity, offered)  # never a name over 140 characters (spec 7.6)
-    weights = {variant: w for variant, w in NAME_VARIANT_WEIGHTS.items() if variant in supported}
-    (variant,) = rng.choices(list(weights), weights=list(weights.values()))
+    variant = pinned
+    if variant is None:
+        supported = supported_name_variants(entity, offered)  # never a name over 140 characters (spec 7.6)
+        weights = {v: w for v, w in NAME_VARIANT_WEIGHTS.items() if v in supported and (not allowed or v in allowed)}
+        (variant,) = rng.choices(list(weights), weights=list(weights.values()))
     if variant == "transliteration":  # a Cyrillic name, then a scheme that does not collide (spec 7.4)
         name = rng.choice(list(dict.fromkeys(t.name for t in offered)))
         chosen = rng.choice([t for t in offered if t.name == name])
@@ -534,9 +641,12 @@ def _version_number(message_version: str) -> int:
     return int(message_version.rsplit(".", 1)[1])
 
 
-def _triggers(entity: Entity, rendered: str, bic: Bic | None, lei: str | None) -> list[Trigger]:
-    listed_on = sorted({n.listing.list for n in entity.names if n.value.casefold() == rendered.casefold()})
-    triggers = [Trigger(kind="name", value=rendered, listed_on=listed_on)]
+def _triggers(entity: Entity, rendered: str | None, bic: Bic | None, lei: str | None) -> list[Trigger]:
+    """A GLEIF-sourced BIC is on no list, and the UK list has no BIC field (spec 11.3)."""
+    triggers = []
+    if rendered is not None:
+        listed_on = sorted({n.listing.list for n in entity.names if n.value.casefold() == rendered.casefold()})
+        triggers.append(Trigger(kind="name", value=rendered, listed_on=listed_on))
     if bic is not None:
         triggers.append(Trigger(kind="bic", value=bic.value, listed_on=[bic.listing.list] if bic.listing else []))
     if lei is not None:

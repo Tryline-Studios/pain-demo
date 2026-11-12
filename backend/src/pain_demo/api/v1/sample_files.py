@@ -1,16 +1,25 @@
 """The `sample-files` endpoints: generation and what a client needs to build a request (spec 12.1)."""
 
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, get_args
 
 import structlog
 from fastapi import APIRouter, Request, Response
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
+from pain_demo.catalogue.capabilities import (
+    AGENT_PLACEMENTS,
+    FILE_LEVEL_PLACEMENTS,
+    PLACEMENT_ELIGIBILITY,
+    NameVariant,
+    Placement,
+)
 from pain_demo.generation import sample_file
 from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES, SupportedCountry
 from pain_demo.generation.generated_data import COUNTRIES
+from pain_demo.generation.named_hits import HitsInvalid
 from pain_demo.generation.request import (
     DEFAULT_AMOUNT_MAX,
     DEFAULT_AMOUNT_MIN,
@@ -20,8 +29,10 @@ from pain_demo.generation.request import (
     MAX_SEED_LENGTH,
     MAX_TRANSACTIONS,
     MESSAGE_VERSIONS,
+    RENDERING_MODES,
     GenerationRequest,
     MessageVersion,
+    RenderingMode,
 )
 from pain_demo.generation.sample_file import GeneratedSampleFile, zip_bytes
 from pain_demo.generation.screening import NameScreen
@@ -59,7 +70,7 @@ async def generate_sample_file(
         message_version=effective.message_version,
         transaction_count=effective.transaction_count,
         hit_count=effective.hit_count,
-        named_hit_count=0,
+        named_hit_count=len(effective.hits),
         data_source="generated",
         seed=effective.seed,
     )
@@ -72,6 +83,8 @@ async def generate_sample_file(
             NameScreen(state.catalogue),
             state.generator_version,
         )
+    except HitsInvalid as invalid:
+        raise RequestValidationError(invalid.errors) from invalid
     except RenderFailed as error:
         add_log_fields(request, outcome="build_failed")
         log.error("build_failed", xsd_messages=error.messages, effective_request=effective.model_dump(mode="json"))
@@ -109,8 +122,17 @@ class Defaults(BaseModel):
     amount_max: Decimal
 
 
+class PlacementOption(BaseModel):
+    placement: Placement
+    file_level: bool = Field(description="Debtor and Debtor Agent: one per file, and a named Hit takes no transaction")
+    agent: bool = Field(description="Takes a rendering mode")
+
+
 class Options(BaseModel):
     countries: list[CountryOption]
+    placements: list[PlacementOption]
+    name_variants: list[NameVariant]
+    rendering_modes: list[RenderingMode]
     limits: Limits
     defaults: Defaults
 
@@ -127,6 +149,12 @@ def list_message_versions() -> list[MessageVersionOption]:
 def get_options() -> Options:
     return Options(
         countries=[CountryOption(country=c, currency=COUNTRIES[c].currency) for c in SUPPORTED_COUNTRIES],
+        placements=[
+            PlacementOption(placement=p, file_level=p in FILE_LEVEL_PLACEMENTS, agent=p in AGENT_PLACEMENTS)
+            for p in PLACEMENT_ELIGIBILITY
+        ],
+        name_variants=list(get_args(NameVariant.__value__)),
+        rendering_modes=list(RENDERING_MODES),
         limits=Limits(max_transactions=MAX_TRANSACTIONS, max_seed_length=MAX_SEED_LENGTH),
         defaults=Defaults(
             message_version=DEFAULT_MESSAGE_VERSION,

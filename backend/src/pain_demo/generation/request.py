@@ -1,7 +1,7 @@
 """The generation request (spec 5.1, 5.5, 12.4) and its Effective Request (spec 5.7).
 
-Only the generation settings and the Hit Count exist so far; named Hits, Supplied Data and Exposures arrive with
-their own tickets.
+Generation settings, the Hit Count with its named Hits and allowlists (spec 6.4); Supplied Data and Exposures arrive
+with their own tickets.
 """
 
 import secrets
@@ -12,6 +12,7 @@ from typing import Annotated, Literal, get_args
 import pycountry
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
+from pain_demo.catalogue.capabilities import NameVariant, Placement
 from pain_demo.generation.clean_banks import SupportedCountry
 from pain_demo.generation.seeds import identifier, stream
 
@@ -54,6 +55,29 @@ type Amount = Annotated[Decimal, Field(gt=0, max_digits=17, decimal_places=2)]
 Seed = Annotated[str, Field(min_length=1, max_length=MAX_SEED_LENGTH)]
 MessageId = Annotated[str, Field(min_length=1, max_length=35)]
 TransactionCount = Annotated[int, Field(ge=1, le=MAX_TRANSACTIONS)]
+type RenderingMode = Literal["name_and_bic", "bic_only", "name_only"]
+RENDERING_MODES: tuple[RenderingMode, ...] = get_args(RenderingMode.__value__)
+
+
+class NamedHit(BaseModel):
+    """One Hit the caller pins (spec 6.4); anything left out is drawn. Checked against the catalogue at generation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    entity: str = Field(description="Catalogue id")
+    placement: Placement | None = None
+    name_variant: NameVariant | None = None
+    transaction: int | None = Field(default=None, ge=1, description="1-based; must be absent for file-level Placements")
+    rendering_mode: RenderingMode | None = Field(default=None, description="Agents only")
+    with_controller: bool = Field(
+        default=False,
+        description="Controlled Legal Entities only: its controller becomes the matching Ultimate party; two Hits",
+    )
+
+    @property
+    def weight(self) -> int:
+        """What it counts toward `hit_count`."""
+        return 2 if self.with_controller else 1
 
 
 class GenerationRequest(BaseModel):
@@ -84,6 +108,13 @@ class GenerationRequest(BaseModel):
     )
     amount_min: Amount = DEFAULT_AMOUNT_MIN
     amount_max: Amount = DEFAULT_AMOUNT_MAX
+    hits: list[NamedHit] = Field(default=[], description="Named Hits; they count toward `hit_count`")
+    placements: list[Placement] | None = Field(
+        default=None, min_length=1, description="Allowlist for the drawn Hits; absent means every Placement"
+    )
+    name_variants: list[NameVariant] | None = Field(
+        default=None, min_length=1, description="Allowlist for the drawn Hits; absent means every Name Variant"
+    )
 
     @field_validator("amount_max")
     @classmethod

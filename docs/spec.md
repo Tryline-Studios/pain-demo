@@ -661,7 +661,7 @@ Resource nouns; nothing is stored, the response is the resource.
 | `POST /sample-files/csv` | `generate_sample_file_from_csv` | Same, as multipart: a `request` JSON part (generation settings and Hits) plus a `supplied_data` CSV file (section 5.6). |
 | `POST /answer-keys/csv` | `answer_key_to_csv` | Pure transform: an Answer Key JSON in, the CSV projection of its hits out. |
 | `GET /message-versions` | `list_message_versions` | The eleven Message Versions, default flagged. |
-| `GET /entities` | `list_entities` | Catalogue listing: id, Entity Type, display name (first primary), lists, countries, supported Name Variants, supported Placements, has BIC. Filters `entity_type`, `list`, `country`. No pagination. |
+| `GET /entities` | `list_entities` | Catalogue listing: id, Entity Type, display name (first primary), lists, countries, supported Name Variants, supported Placements, has BIC, has controller (may take `with_controller`). Filters `entity_type`, `list`, `country`. No pagination. |
 | `GET /entities/{id}` | `get_entity` | Detail: every name with source, Listings, BICs, LEIs, addresses, Control Relationships. Individuals expose only what the catalogue holds. |
 | `GET /options` | `get_options` | Supported countries with currency, exposure countries with currency, Placements, Name Variants, rendering modes, limits (max transactions) and defaults, so the UI hardcodes nothing. |
 | `GET /version` | `get_version` | The Generator Version block (section 9.4). |

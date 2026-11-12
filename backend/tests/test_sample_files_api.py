@@ -310,7 +310,8 @@ def test_no_generated_party_name_resembles_a_catalogue_name(client: TestClient) 
         ({"hit_count": -1}, "hit_count", "greater_than_equal"),
         ({"transaction_count": 3, "hit_count": 6}, "hit_count", "value_error"),
         ({"hit_count": 13}, "hit_count", "value_error"),
-        ({"hits": []}, "hits", "extra_forbidden"),
+        ({"hits": [{"entity": "sberbank", "transaction": 0}]}, "hits[0].transaction", "greater_than_equal"),
+        ({"placements": ["teller"]}, "placements[0]", "literal_error"),
     ],
 )
 def test_invalid_settings_are_422_problems_naming_the_field(
@@ -483,3 +484,15 @@ def test_options_publish_countries_limits_and_defaults(client: TestClient) -> No
         "amount_min": "10.00",
         "amount_max": "50000.00",
     }
+
+
+def test_options_publish_placements_name_variants_and_rendering_modes(client: TestClient) -> None:
+    options = client.get("/api/v1/options").json()
+
+    placements = {p["placement"]: p for p in options["placements"]}
+    assert len(placements) == 10
+    assert placements["debtor"] == {"placement": "debtor", "file_level": True, "agent": False}
+    assert placements["debtor_agent"] == {"placement": "debtor_agent", "file_level": True, "agent": True}
+    assert placements["remittance"] == {"placement": "remittance", "file_level": False, "agent": False}
+    assert options["name_variants"] == ["exact", "alias", "native_script", "transliteration", "fuzzed"]
+    assert options["rendering_modes"] == ["name_and_bic", "bic_only", "name_only"]

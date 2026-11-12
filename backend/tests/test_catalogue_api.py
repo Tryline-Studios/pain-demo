@@ -126,6 +126,7 @@ def test_list_entities_summarises_every_entity_in_id_order(client: TestClient, r
             "remittance",
         ],
         "has_bic": True,
+        "has_controller": True,
     }
 
 
@@ -153,6 +154,13 @@ def test_only_an_entity_with_a_cyrillic_name_supports_transliteration(client: Te
     # Bank Melli Iran's one non-Latin name is Persian: no transliteration in v1 (spec 7.4).
     assert summary_of(client, "bank-melli-iran")["name_variants"] == ["exact", "alias", "native_script", "fuzzed"]
     assert summary_of(client, "evraz-plc")["name_variants"] == ["exact", "native_script", "transliteration", "fuzzed"]
+
+
+def test_only_a_controlled_legal_entity_can_bring_its_controller(client: TestClient) -> None:
+    # `with_controller` needs a Control Relationship naming the Entity as the controlled side (spec 6.8).
+    assert summary_of(client, "evraz-ntmk")["has_controller"] is True  # its controller is Evraz PLC
+    assert summary_of(client, "bank-mellat")["has_controller"] is False
+    assert summary_of(client, "roman-abramovich")["has_controller"] is False  # a controller, never controlled
 
 
 def test_a_bank_with_only_a_gleif_bic_has_a_bic(client: TestClient) -> None:
