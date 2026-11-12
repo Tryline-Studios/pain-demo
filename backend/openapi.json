@@ -173,6 +173,52 @@
           }
         }
       }
+    },
+    "/api/v1/validations": {
+      "post": {
+        "tags": [
+          "validation"
+        ],
+        "summary": "Validate an Uploaded Message: always 200 with a Validation Report",
+        "operationId": "validate_message",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "file"
+                ]
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationReport"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -907,6 +953,22 @@
           "remittance"
         ]
       },
+      "ProblemCode": {
+        "type": "string",
+        "enum": [
+          "malformed_xml",
+          "dtd_not_allowed",
+          "unsupported_message",
+          "missing_element",
+          "unexpected_element",
+          "pattern_mismatch",
+          "invalid_value",
+          "too_long",
+          "too_short",
+          "schema_violation"
+        ],
+        "title": "ProblemCode"
+      },
       "RegistrationNumber": {
         "properties": {
           "value": {
@@ -962,6 +1024,36 @@
           "derived"
         ]
       },
+      "UploadedFile": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "size_bytes",
+          "sha256"
+        ],
+        "title": "UploadedFile"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -1001,6 +1093,149 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "ValidationProblem": {
+        "properties": {
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "code": {
+            "$ref": "#/components/schemas/ProblemCode"
+          },
+          "cause": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cause"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "column",
+          "tag",
+          "path",
+          "code",
+          "cause",
+          "message"
+        ],
+        "title": "ValidationProblem"
+      },
+      "ValidationReport": {
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "message_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Version"
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encoding"
+          },
+          "transaction_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Count"
+          },
+          "file": {
+            "$ref": "#/components/schemas/UploadedFile"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid",
+          "message_version",
+          "encoding",
+          "transaction_count",
+          "file",
+          "problems",
+          "truncated"
+        ],
+        "title": "ValidationReport"
       },
       "Verification": {
         "properties": {
