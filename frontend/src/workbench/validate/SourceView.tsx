@@ -10,19 +10,17 @@ const ROW = 20;
 /**
  * The Uploaded Message with line numbers, each problem's `code` and `message` inline under its line (spec 17.9).
  * Windowed by hand: only the lines inside the viewport are in the DOM, so a 10 MB message stays responsive.
- * `target` scrolls to a line and marks it; pass a new object to jump again.
+ * `lines` is the source split by `splitLines`. `target` scrolls to a line and marks it; pass a new object to jump again.
  */
 export function SourceView({
-  source,
+  lines,
   problems,
   target,
 }: {
-  source: string;
+  lines: string[];
   problems: ValidationProblem[];
   target: { line: number } | null;
 }) {
-  // libxml2 counts lines after normalising CRLF and lone CR to LF.
-  const lines = useMemo(() => source.split(/\r\n?|\n/), [source]);
   const byLine = useMemo(() => {
     const grouped = new Map<number, ValidationProblem[]>();
     for (const problem of problems) {
@@ -103,6 +101,11 @@ export function SourceView({
       </ol>
     </div>
   );
+}
+
+/** The source's lines as the report counts them: libxml2 normalises CRLF and lone CR to LF. */
+export function splitLines(source: string) {
+  return source.split(/\r\n?|\n/);
 }
 
 /** The index of the line whose row holds pixel `y`. */

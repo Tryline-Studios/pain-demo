@@ -4,9 +4,18 @@ type ValidationProblem = components["schemas"]["ValidationProblem"];
 
 /**
  * Every Validation Problem in report order: code, line, message, then the path and the parser's raw cause.
- * A problem with a line is a button that jumps the source view to it; one without stays in the rail only.
+ * A problem with a line in the source is a button that jumps the source view to it; one without a line, or with
+ * a line past the end of a source of `lineCount` lines, stays in the rail only.
  */
-export function ProblemRail({ problems, onJump }: { problems: ValidationProblem[]; onJump: (line: number) => void }) {
+export function ProblemRail({
+  problems,
+  lineCount,
+  onJump,
+}: {
+  problems: ValidationProblem[];
+  lineCount: number;
+  onJump: (line: number) => void;
+}) {
   return (
     <ol aria-label="Validation Problems" className="flex flex-col gap-3">
       {problems.map((problem) => {
@@ -35,7 +44,7 @@ export function ProblemRail({ problems, onJump }: { problems: ValidationProblem[
             key={`${line}:${problem.column}:${problem.code}:${problem.path}:${problem.message}`}
             className="rounded-xl border bg-card text-sm"
           >
-            {line === null ? (
+            {line === null || line > lineCount ? (
               <div className="px-4 py-3">{body}</div>
             ) : (
               <button

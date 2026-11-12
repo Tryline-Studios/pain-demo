@@ -324,6 +324,21 @@ describe("Validate mode", () => {
       expect(within(noLine).queryByRole("button")).not.toBeInTheDocument();
     });
 
+    it("treats a problem whose line is past the end of the source like one with no line", async () => {
+      answerWith({
+        ...invalidReport,
+        problems: invalidReport.problems.slice(0, 1).map((problem) => ({ ...problem, line: 13 })),
+      });
+      const user = await openValidate();
+
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([source], "batch.xml"));
+      const rail = await within(report()).findByRole("list", { name: "Validation Problems" });
+
+      expect(within(rail).getByRole("listitem")).toHaveTextContent("invalid_value");
+      expect(within(rail).queryByRole("button")).not.toBeInTheDocument();
+      expect(sourceView()).not.toHaveTextContent("invalid_value");
+    });
+
     it("renders only a window of a long source and jumps to its last line", async () => {
       const lineCount = 300_000;
       const long = Array.from({ length: lineCount }, (_, at) => `<Ln${at + 1}/>`).join("\n");
