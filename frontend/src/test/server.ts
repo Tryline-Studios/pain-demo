@@ -132,7 +132,7 @@ export const xmlWithHits = `<?xml version='1.0' encoding='UTF-8'?>
           <Nm>John Doe</Nm>
         </Cdtr>
         <RmtInf>
-          <Ustrd>Invoice 447102 payment to T-BANK</Ustrd>
+          <Ustrd>Invoice 447102 payment to T BANK</Ustrd>
         </RmtInf>
       </CdtTrfTxInf>
     </PmtInf>
@@ -214,9 +214,21 @@ export const generatedWithHits: components["schemas"]["GeneratedSampleFile"] = {
         placement: "remittance",
         element: "ustrd",
         rendering_mode: undefined,
+        name: {
+          variant: "fuzzed",
+          rendered: "T BANK",
+          source: {
+            value: "T-BANK",
+            type: "primary",
+            script: "latin",
+            listing: { list: "ofac_sdn", entry_id: "44259" },
+          },
+          base: "T-BANK",
+          operations: ["punctuation"],
+        },
         bic: null,
         address_from_listing: null,
-        triggers: [{ kind: "name", value: "T-BANK", listed_on: ["ofac_sdn"] }],
+        triggers: [{ kind: "name", value: "T BANK", listed_on: [] }],
       },
     ],
     transactions: [

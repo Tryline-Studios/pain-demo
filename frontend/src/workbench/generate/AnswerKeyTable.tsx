@@ -17,6 +17,8 @@ const COLUMNS: [string, (hit: Hit) => string | number | null | undefined][] = [
   ["Entity", (hit) => hit.entity.id],
   ["Name Variant", (hit) => hit.name?.variant],
   ["Rendered name", (hit) => hit.name?.rendered],
+  ["Scheme", (hit) => hit.name?.scheme],
+  ["Operations", (hit) => hit.name?.operations?.join(" | ")],
   ["BIC", (hit) => hit.bic?.value],
   ["LEI", (hit) => hit.lei],
   ["Triggers", (hit) => hit.triggers.map((trigger) => trigger.kind).join(", ")],
