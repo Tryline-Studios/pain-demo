@@ -1,6 +1,7 @@
 """Upload Validation: check an Uploaded Message layer by layer and build its Validation Report (spec section 17)."""
 
 import hashlib
+import itertools
 import re
 import threading
 from enum import StrEnum
@@ -132,22 +133,24 @@ def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
     # One compiled schema is shared by every request thread, and its error log is per schema, not per call.
     with _SCHEMA_LOCKS[version]:
         schema.validate(root)
-        return list(schema.error_log)
+        # shortcut: lxml offers no error cap, so libxml2 logs every XSD error with a sibling-counting path; 40k
+        # errors (a 6 MB file of bad transactions) take about 10 s under this lock. Cap elements up front if that bites.
+        return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
 
 
-def _path(tree: etree._ElementTree, lxml_path: str) -> str | None:
+def _path(find: etree.XPathDocumentEvaluator, lxml_path: str) -> str | None:
     """lxml's path uses `*` for default-namespace steps; rebuild it from local names with 1-based positions."""
-    namespaces = {prefix: uri for el in tree.iter() for prefix, uri in el.nsmap.items() if prefix}
     try:
-        (element,) = tree.xpath(lxml_path, namespaces=namespaces)
+        (element,) = find(lxml_path)
     except (etree.XPathError, ValueError):
         return None
     steps = []
     for el in [*reversed(list(element.iterancestors())), element]:
         name = etree.QName(el).localname
-        twins = [s for s in el.itersiblings(preceding=True) if etree.QName(s).localname == name]
-        later = any(etree.QName(s).localname == name for s in el.itersiblings())
-        steps.append(f"{name}[{len(twins) + 1}]" if twins or later else name)
+        same_name = f"{{*}}{name}"  # any namespace: positions count local names
+        twins = sum(1 for _ in el.itersiblings(same_name, preceding=True))
+        later = next(el.itersiblings(same_name), None) is not None
+        steps.append(f"{name}[{twins + 1}]" if twins or later else name)
     return "/" + "/".join(steps)
 
 
@@ -180,7 +183,7 @@ def _classify(tag: str, attribute: str | None, line: int, error: etree._LogEntry
     return ProblemCode.SCHEMA_VIOLATION, cause
 
 
-def _schema_problem(tree: etree._ElementTree, error: etree._LogEntry) -> ValidationProblem:
+def _schema_problem(find: etree.XPathDocumentEvaluator, error: etree._LogEntry) -> ValidationProblem:
     element = _ELEMENT.match(error.message)
     tag, attribute = element.groups() if element else (None, None)
     if tag is None:
@@ -191,7 +194,7 @@ def _schema_problem(tree: etree._ElementTree, error: etree._LogEntry) -> Validat
         line=error.line or None,
         column=error.column or None,  # libxml2 reports no column for schema errors (0); null rather than a fake one
         tag=tag,
-        path=_path(tree, error.path) if error.path else None,
+        path=_path(find, error.path) if error.path else None,
         code=code,
         cause=error.message,
         message=message,
@@ -206,8 +209,11 @@ def validate_message(content: bytes, name: str | None) -> ValidationReport:
         encoding, version, problems, transaction_count = rejected.encoding, None, [rejected.problem], None
     else:
         tree = root.getroottree()
+        # lxml's error paths use the document's own prefixes, so the XPath needs them all.
+        namespaces = {prefix: uri for el in tree.iter() for prefix, uri in el.nsmap.items() if prefix}
+        find = etree.XPathDocumentEvaluator(tree, namespaces=namespaces)
         errors = _xsd_errors(root, version)
-        problems = [_schema_problem(tree, error) for error in errors[: MAX_PROBLEMS + 1]]
+        problems = [_schema_problem(find, error) for error in errors]
         transaction_count = len(root.findall(f".//{{{etree.QName(root).namespace}}}CdtTrfTxInf"))
     return ValidationReport(
         valid=not problems,
