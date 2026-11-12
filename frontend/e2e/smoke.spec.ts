@@ -8,7 +8,7 @@ test("the Workbench loads through Caddy and the header shows the app version fro
   await expect(page.getByRole("banner").getByText(/^\d+\.\d+\.\d+$/)).toBeVisible();
 });
 
-test("Generate mode generates a clean Sample File through Caddy and downloads it", async ({ page }) => {
+test("Generate mode generates a clean Sample File through Caddy, downloads it and validates it", async ({ page }) => {
   await page.goto("/");
   const settings = page.getByRole("complementary", { name: "Settings" });
   await settings.getByRole("button", { name: "File" }).click();
@@ -32,6 +32,12 @@ test("Generate mode generates a clean Sample File through Caddy and downloads it
     await output.getByRole("button", { name: button, exact: true }).click();
     expect((await download).suggestedFilename()).toBe(name);
   }
+
+  await output.getByRole("button", { name: "Validate this Sample File" }).click();
+  const report = page.getByRole("region", { name: "Validation Report" });
+  await expect(report.getByRole("group", { name: "Verdict" })).toHaveText(/^Verdict\s*Valid$/);
+  await expect(report.getByRole("group", { name: "Message Version" })).toHaveText(/pain\.001\.001\.09/);
+  await expect(report.getByText("pain.001.001.09-smoke.xml")).toBeVisible();
 });
 
 // The minimal XSD-valid .03 message the backend's validation tests use.
