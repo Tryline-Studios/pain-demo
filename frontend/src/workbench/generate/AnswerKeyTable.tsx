@@ -9,11 +9,14 @@ const COLUMNS: [string, (hit: Hit) => string | number | null | undefined][] = [
   ["Scope", (hit) => hit.scope],
   ["Transaction", (hit) => hit.transaction_number],
   ["End-to-end id", (hit) => hit.end_to_end_id],
+  ["XPath", (hit) => hit.xpath],
   ["Placement", (hit) => hit.placement],
+  ["Rendering mode", (hit) => hit.rendering_mode],
   ["Entity", (hit) => hit.entity.id],
   ["Name Variant", (hit) => hit.name?.variant],
   ["Rendered name", (hit) => hit.name?.rendered],
   ["BIC", (hit) => hit.bic?.value],
+  ["LEI", (hit) => hit.lei],
   ["Triggers", (hit) => hit.triggers.map((trigger) => trigger.kind).join(", ")],
   ["Lists", (hit) => [...new Set(hit.entity.listings.map((listing) => listing.list))].join(", ")],
 ];
@@ -36,9 +39,16 @@ export function AnswerKeyTable({ hits }: { hits: Hit[] }) {
         <TableBody>
           {hits.map((hit) => (
             <TableRow key={hit.id}>
-              {COLUMNS.map(([label, value]) => (
-                <TableCell key={label}>{value(hit)}</TableCell>
-              ))}
+              {COLUMNS.map(([label, value]) =>
+                label === "XPath" ? (
+                  // Long paths are cut to keep the table readable; the tooltip has the whole one.
+                  <TableCell key={label} className="max-w-56 truncate" title={hit.xpath}>
+                    {hit.xpath}
+                  </TableCell>
+                ) : (
+                  <TableCell key={label}>{value(hit)}</TableCell>
+                ),
+              )}
             </TableRow>
           ))}
         </TableBody>
