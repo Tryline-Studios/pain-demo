@@ -598,12 +598,14 @@ summary: { by_placement, by_name_variant, by_entity_type, by_list, by_exposure_c
 hits: [ ... ]
 exposures: [ { transaction_number, end_to_end_id, country, currency,
                elements: [creditor_address | agent_bic | account, ...] } ]
-transactions: [ { number, end_to_end_id, hit_ids: [] } ]   every transaction; clean ones have an empty list
+transactions: [ { number, end_to_end_id, hit_ids: [] } ]   every transaction, with the ids of every Hit
+                               that touches it, file-level ones included (section 6.3); a clean transaction
+                               (no Hit touches it) has an empty list
 warnings: [ ... ]              build-report drops for Generated Data
 ```
 
 - `file.sha256` is the hash of the Sample File's XML bytes, so a saved file can be matched to its Answer Key and checked for alteration before it reaches the Screening Tool.
-- The full `transactions` list lets a Screening Tool alert on a transaction with no hit ids be counted as a false positive.
+- The full `transactions` list lets a Screening Tool alert on a transaction with no hit ids be counted as a false positive. A file-level Hit (Debtor or Debtor Agent) touches every transaction, so while there is one no transaction is clean.
 - Nothing the catalogue already holds (programmes, full Listing detail) is repeated.
 
 ### 11.3 Per Hit
@@ -980,3 +982,4 @@ All eight were reviewed and accepted as written on 2026-09-17 (see the resolutio
 Added while building [Drawn Hits on party and agent Placements](https://github.com/Tryline-Studios/pain-demo/issues/30):
 
 9. **Sanctioned Debtor beside a sanctioned Debtor Agent.** Both own the one `DbtrAcct` (section 6.9). The Debtor Agent's Entity is then a Bank in the Debtor's Listing country, drawn from the placement stream; if no such Bank is free, the Debtor's rule wins (its account is clean and in its own country) and the agent still renders its name and BIC.
+10. **Sanctioned Creditor outside the request's countries.** Its account is in its Listing country (section 6.9), but its Creditor Agent is a clean bank from the request's countries, so e.g. Alrosa holds a Russian `Othr/Id` at a US bank. Known limit: synthetic agents for sanctioned countries arrive with Exposures ([#37](https://github.com/Tryline-Studios/pain-demo/issues/37)).
