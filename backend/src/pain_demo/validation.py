@@ -91,7 +91,7 @@ class _Rejected(Exception):
         self.version = version
 
 
-def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
+def _layers_before_xsd(content: bytes) -> tuple[str, str, etree._Element]:
     """The first four layers: returns the encoding, the Message Version and the root, or raises `_Rejected`."""
     try:
         root = etree.fromstring(content, _parser())
@@ -135,11 +135,14 @@ def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
 
 
 def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
-    schema = renderer.schema(version)  # this thread's own, so concurrent uploads never wait for each other
+    schema = renderer.schema(version)  # this thread's own, so concurrent uploads never wait on a shared one
     schema.validate(root)
     # shortcut: lxml offers no error cap and records every XSD error with a path that walks the preceding siblings,
-    # so a hostile file under MAX_ELEMENTS can take minutes on its own worker thread (an estimate: 120k erroring
-    # siblings took 15 s and the cost grows with their square). The follow-up ticket adds a time-budgeted worker.
+    # so the cost grows at least with the square of the erroring siblings under one parent: 40k took 1.5 s and 120k
+    # 12.6 s on an idle M3 Pro; under CPU load 40k took 21 s and 240k about 240 s. A file at MAX_ELEMENTS is
+    # unmeasured and may take far more than minutes. lxml takes the GIL once per error, which slows (never blocks)
+    # every other thread meanwhile: beside 50k errors a quick upload took 0.5 to 1.7 s. The follow-up ticket adds a
+    # time-budgeted worker.
     return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
 
 
@@ -209,7 +212,7 @@ def _schema_problem(find: etree.XPathDocumentEvaluator, error: etree._LogEntry) 
 def validate_message(content: bytes, name: str | None) -> ValidationReport:
     """Blocking: callers on the event loop run it in a thread."""
     try:
-        encoding, version, root = _parse_message(content)
+        encoding, version, root = _layers_before_xsd(content)
     except _Rejected as rejected:
         encoding, version, problems, transaction_count = rejected.encoding, rejected.version, [rejected.problem], None
     else:

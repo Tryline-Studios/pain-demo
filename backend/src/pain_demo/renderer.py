@@ -42,15 +42,17 @@ class RenderResult:
     """Element paths the version fitter dropped, deduplicated, in first-seen order. None carries a Placement."""
 
 
-_THREAD = threading.local()
+_THREAD_SCHEMAS = threading.local()
+"""Each thread's compiled schemas, by Message Version, in its `by_version` dict."""
 
 
 def schema(message_version: str) -> etree.XMLSchema:
     """pain001's bundled XSD for a Message Version (pain.001.001.03 to .13), compiled once per thread and reused.
 
-    An XMLSchema's error log belongs to the schema, not the call, so threads never share one; compiling takes ms.
+    An XMLSchema's error log belongs to the schema, not the call, so threads never share one and never wait on each
+    other for it. Compiling takes about 1 ms on an idle process; see `validation._xsd_errors` for one that is not.
     """
-    schemas: dict[str, etree.XMLSchema] = _THREAD.__dict__.setdefault("schemas", {})
+    schemas: dict[str, etree.XMLSchema] = _THREAD_SCHEMAS.__dict__.setdefault("by_version", {})
     if message_version not in schemas:
         xsd = importlib.resources.files(pain001) / "templates" / message_version / f"{message_version}.xsd"
         schemas[message_version] = etree.XMLSchema(etree.fromstring(xsd.read_bytes()))
