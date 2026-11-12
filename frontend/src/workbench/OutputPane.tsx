@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { GeneratedSampleFile, Generation } from "@/workbench/generate/useGeneration";
-import { saveFile } from "@/workbench/generate/useGeneration";
+import { saveFile } from "@/lib/saveFile";
+import { type Generation, siblingFilename } from "@/workbench/generate/useGeneration";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { Tile } from "@/workbench/Tile";
 
-function Downloads({ generated, generation }: { generated: GeneratedSampleFile; generation: Generation }) {
+function Downloads({ generation }: { generation: Generation }) {
+  const generated = generation.data;
+  if (generated === undefined) {
+    return null;
+  }
   const { filename, xml } = generated.sample_file;
-  const answerKeyName = filename.replace(/\.xml$/, ".answer-key.json");
   return (
     // biome-ignore lint/a11y/useSemanticElements: a labelled row of buttons, not a form fieldset
     <div role="group" aria-label="Downloads" className="flex flex-wrap items-center gap-3">
@@ -23,7 +26,7 @@ function Downloads({ generated, generation }: { generated: GeneratedSampleFile; 
         onClick={() =>
           saveFile(
             new Blob([`${JSON.stringify(generated.answer_key, null, 2)}\n`], { type: "application/json" }),
-            answerKeyName,
+            siblingFilename(filename, ".answer-key.json"),
           )
         }
       >
@@ -33,11 +36,15 @@ function Downloads({ generated, generation }: { generated: GeneratedSampleFile; 
   );
 }
 
-function Result({ generated, generation }: { generated: GeneratedSampleFile; generation: Generation }) {
+function Result({ generation }: { generation: Generation }) {
+  const generated = generation.data;
+  if (generated === undefined) {
+    return null;
+  }
   const { warnings } = generated.answer_key;
   return (
     <>
-      <Downloads generated={generated} generation={generation} />
+      <Downloads generation={generation} />
       {generation.zipError === null ? null : <ProblemBlock error={generation.zipError} />}
       <Tabs defaultValue="xml">
         <TabsList>
@@ -87,7 +94,7 @@ export function OutputPane({ generation }: { generation: Generation }) {
       {generation.error !== null ? (
         <ProblemBlock error={generation.error} />
       ) : generated !== undefined ? (
-        <Result generated={generated} generation={generation} />
+        <Result generation={generation} />
       ) : (
         <div className="flex min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed text-center">
           <p className="font-medium text-lg">{generation.isPending ? "Generating…" : "No Sample File yet"}</p>

@@ -1,17 +1,13 @@
 import { api } from "@/api/client";
 import type { components } from "@/api/schema";
+import { saveFile } from "@/lib/saveFile";
 
 export type GenerationRequest = components["schemas"]["GenerationRequest"];
 export type GeneratedSampleFile = components["schemas"]["GeneratedSampleFile"];
 
-/** Hands the browser a file to save. */
-export function saveFile(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  link.click();
-  URL.revokeObjectURL(url);
+/** The zip or Answer Key name beside the Sample File's `<name>.xml`, as the API names them (spec 12.2). */
+export function siblingFilename(sampleFilename: string, suffix: ".zip" | ".answer-key.json") {
+  return sampleFilename.replace(/\.xml$/, suffix);
 }
 
 /**
@@ -34,8 +30,7 @@ export function useGeneration() {
       { params: { query: { format: "zip" } }, body: generated.answer_key.request, parseAs: "blob" },
       // openapi-fetch types the body by media type, not by `parseAs`; with "blob" it is a Blob.
       {
-        onSuccess: (blob) =>
-          saveFile(blob as unknown as Blob, generated.sample_file.filename.replace(/\.xml$/, ".zip")),
+        onSuccess: (blob) => saveFile(blob as unknown as Blob, siblingFilename(generated.sample_file.filename, ".zip")),
       },
     );
 
