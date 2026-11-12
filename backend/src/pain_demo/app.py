@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from pain_demo.api.v1 import catalogue as catalogue_api
 from pain_demo.api.v1 import meta
+from pain_demo.api.v1 import sample_files as sample_files_api
 from pain_demo.api.v1 import validation as validation_api
 from pain_demo.body_limit import BodyLimitMiddleware
 from pain_demo.catalogue import DEFAULT_ROOT, Catalogue, CatalogueError, load_catalogue
@@ -37,6 +38,7 @@ def create_app(
     app.state.clean_banks = clean_banks
     app.state.generator_version = generator_version(catalogue.snapshot_date, git_sha=settings.git_sha)
     install_problem_handlers(app)
+    app.include_router(sample_files_api.router, prefix=API_PREFIX)
     app.include_router(meta.router, prefix=API_PREFIX)
     app.include_router(catalogue_api.router, prefix=API_PREFIX)
     app.include_router(validation_api.router, prefix=API_PREFIX)

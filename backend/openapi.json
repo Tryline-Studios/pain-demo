@@ -5,6 +5,47 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/sample-files": {
+      "post": {
+        "tags": [
+          "sample-files"
+        ],
+        "summary": "Generate a Sample File and its Answer Key",
+        "operationId": "generate_sample_file",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedSampleFile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -279,6 +320,114 @@
         ],
         "title": "Address"
       },
+      "Amount-Input": {
+        "anyOf": [
+          {
+            "type": "number",
+            "exclusiveMinimum": 0.0
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "Amount-Output": {
+        "type": "string"
+      },
+      "AnswerKey": {
+        "properties": {
+          "answer_key_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Answer Key Version",
+            "default": 1
+          },
+          "seed": {
+            "type": "string",
+            "title": "Seed"
+          },
+          "message_version": {
+            "$ref": "#/components/schemas/MessageVersion"
+          },
+          "generator": {
+            "$ref": "#/components/schemas/GeneratorVersion"
+          },
+          "request": {
+            "$ref": "#/components/schemas/EffectiveRequest"
+          },
+          "file": {
+            "$ref": "#/components/schemas/FileFacts"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "hits": {
+            "items": {},
+            "type": "array",
+            "title": "Hits"
+          },
+          "exposures": {
+            "items": {},
+            "type": "array",
+            "title": "Exposures"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerKeyTransaction"
+            },
+            "type": "array",
+            "title": "Transactions"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seed",
+          "message_version",
+          "generator",
+          "request",
+          "file",
+          "summary",
+          "hits",
+          "exposures",
+          "transactions",
+          "warnings"
+        ],
+        "title": "AnswerKey",
+        "description": "Key order is the wire order (spec 11.2)."
+      },
+      "AnswerKeyTransaction": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "end_to_end_id": {
+            "type": "string",
+            "title": "End To End Id"
+          },
+          "hit_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hit Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "end_to_end_id",
+          "hit_ids"
+        ],
+        "title": "AnswerKeyTransaction"
+      },
       "BankDetail": {
         "properties": {
           "id": {
@@ -533,6 +682,97 @@
         "pattern": "^[A-Z]{2}$",
         "description": "ISO 3166-1 alpha-2"
       },
+      "CurrencyCode": {
+        "type": "string",
+        "pattern": "^[A-Z]{3}$"
+      },
+      "EffectiveRequest": {
+        "properties": {
+          "message_version": {
+            "$ref": "#/components/schemas/MessageVersion",
+            "default": "pain.001.001.03"
+          },
+          "seed": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Seed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "execution_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Execution Date"
+          },
+          "message_id": {
+            "type": "string",
+            "maxLength": 35,
+            "minLength": 1,
+            "title": "Message Id"
+          },
+          "transaction_count": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Transaction Count"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/SupportedCountry"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Countries",
+            "description": "The Debtor takes the first; creditors and their agents draw from all of them",
+            "default": [
+              "GB",
+              "DE",
+              "FR",
+              "NL",
+              "US"
+            ]
+          },
+          "currencies": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CurrencyCode"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currencies",
+            "description": "Each transaction draws one; absent means the creditor country's"
+          },
+          "amount_min": {
+            "$ref": "#/components/schemas/Amount-Output",
+            "default": "10.00"
+          },
+          "amount_max": {
+            "$ref": "#/components/schemas/Amount-Output",
+            "default": "50000.00"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seed",
+          "created_at",
+          "execution_date",
+          "message_id",
+          "transaction_count"
+        ],
+        "title": "EffectiveRequest",
+        "description": "The request with every default resolved, as embedded in the Answer Key."
+      },
       "EntityDetail": {
         "oneOf": [
           {
@@ -625,6 +865,182 @@
           "bank",
           "corporate"
         ]
+      },
+      "FileFacts": {
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "title": "Message Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "execution_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Execution Date"
+          },
+          "transaction_count": {
+            "type": "integer",
+            "title": "Transaction Count"
+          },
+          "hit_count": {
+            "type": "integer",
+            "title": "Hit Count"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message_id",
+          "created_at",
+          "execution_date",
+          "transaction_count",
+          "hit_count",
+          "sha256"
+        ],
+        "title": "FileFacts"
+      },
+      "GeneratedSampleFile": {
+        "properties": {
+          "sample_file": {
+            "$ref": "#/components/schemas/SampleFile"
+          },
+          "answer_key": {
+            "$ref": "#/components/schemas/AnswerKey"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sample_file",
+          "answer_key"
+        ],
+        "title": "GeneratedSampleFile"
+      },
+      "GenerationRequest": {
+        "properties": {
+          "message_version": {
+            "$ref": "#/components/schemas/MessageVersion",
+            "default": "pain.001.001.03"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed",
+            "description": "Any string; absent means 16 hex characters from the OS random source"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "`GrpHdr/CreDtTm`; absent means now"
+          },
+          "execution_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Date",
+            "description": "`ReqdExctnDt`; absent means today"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 35,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id",
+            "description": "`GrpHdr/MsgId`; absent means drawn from the Seed"
+          },
+          "transaction_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Count",
+            "description": "Absent means 10"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/SupportedCountry"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Countries",
+            "description": "The Debtor takes the first; creditors and their agents draw from all of them",
+            "default": [
+              "GB",
+              "DE",
+              "FR",
+              "NL",
+              "US"
+            ]
+          },
+          "currencies": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CurrencyCode"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currencies",
+            "description": "Each transaction draws one; absent means the creditor country's"
+          },
+          "amount_min": {
+            "$ref": "#/components/schemas/Amount-Input",
+            "default": "10.00"
+          },
+          "amount_max": {
+            "$ref": "#/components/schemas/Amount-Input",
+            "default": "50000.00"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "GenerationRequest",
+        "description": "What a caller asks for, every field optional. `EffectiveRequest` is the same with every default resolved."
       },
       "GeneratorVersion": {
         "properties": {
@@ -874,6 +1290,22 @@
         "title": "ListingRef",
         "description": "Points at one of the Entity's own Listings: the source of a name, address, identifier or BIC."
       },
+      "MessageVersion": {
+        "type": "string",
+        "enum": [
+          "pain.001.001.03",
+          "pain.001.001.04",
+          "pain.001.001.05",
+          "pain.001.001.06",
+          "pain.001.001.07",
+          "pain.001.001.08",
+          "pain.001.001.09",
+          "pain.001.001.10",
+          "pain.001.001.11",
+          "pain.001.001.12",
+          "pain.001.001.13"
+        ]
+      },
       "Name": {
         "properties": {
           "value": {
@@ -1001,6 +1433,30 @@
         ],
         "title": "RegistrationNumber"
       },
+      "SampleFile": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "content_type": {
+            "type": "string",
+            "const": "application/xml",
+            "title": "Content Type",
+            "default": "application/xml"
+          },
+          "xml": {
+            "type": "string",
+            "title": "Xml"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filename",
+          "xml"
+        ],
+        "title": "SampleFile"
+      },
       "SanctionsList": {
         "type": "string",
         "enum": [
@@ -1022,6 +1478,69 @@
         "enum": [
           "stated",
           "derived"
+        ]
+      },
+      "Summary": {
+        "properties": {
+          "by_placement": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Placement",
+            "default": {}
+          },
+          "by_name_variant": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Name Variant",
+            "default": {}
+          },
+          "by_entity_type": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Entity Type",
+            "default": {}
+          },
+          "by_list": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By List",
+            "default": {}
+          },
+          "by_exposure_country": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Exposure Country",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "title": "Summary"
+      },
+      "SupportedCountry": {
+        "type": "string",
+        "enum": [
+          "GB",
+          "IE",
+          "DE",
+          "FR",
+          "IT",
+          "ES",
+          "NL",
+          "BE",
+          "PL",
+          "AT",
+          "PT",
+          "US"
         ]
       },
       "UploadedFile": {

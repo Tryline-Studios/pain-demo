@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
-from pain_demo.request_context import REQUEST_ID_HEADER, request_id_of
+from pain_demo.request_context import REQUEST_ID_HEADER, add_log_fields, request_id_of
 
 PROBLEM_MEDIA_TYPE = "application/problem+json"
 ABOUT_BLANK = "about:blank"
@@ -35,13 +35,21 @@ class FieldError(BaseModel):
     code: str
 
 
-class ValidationProblem(Problem):
+class RequestValidationProblem(Problem):
     """`type` is `validation_error`; `field` is a dotted path into the request model, e.g. `hits[2].name_variant`."""
 
     type: str = "validation_error"
     title: str = "Validation error"
     status: int = HTTPStatus.UNPROCESSABLE_CONTENT
     errors: list[FieldError]
+
+
+class BuildFailed(Exception):
+    """The renderer's own output failed the XSD or dropped a Placement (spec 10.4); `detail` carries the reasons."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
 
 
 class ProblemResponse(JSONResponse):
@@ -82,10 +90,23 @@ async def handle_http_exception(request: Request, exc: Exception) -> ProblemResp
 async def handle_validation_error(request: Request, exc: Exception) -> ProblemResponse:
     assert isinstance(exc, RequestValidationError)  # noqa: S101
     errors = field_errors(list(exc.errors()))
-    problem = ValidationProblem(
+    add_log_fields(request, outcome="validation_error")
+    problem = RequestValidationProblem(
         detail=f"{len(errors)} field{'s' if len(errors) != 1 else ''} failed validation",
         instance=request_id_of(request),
         errors=errors,
+    )
+    return ProblemResponse(problem)
+
+
+async def handle_build_failed(request: Request, exc: Exception) -> ProblemResponse:
+    assert isinstance(exc, BuildFailed)  # noqa: S101
+    problem = Problem(
+        type="build_failed",
+        title="Build failed",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        detail=exc.detail,
+        instance=request_id_of(request),
     )
     return ProblemResponse(problem)
 
@@ -97,4 +118,5 @@ async def handle_unexpected_error(request: Request, exc: Exception) -> ProblemRe
 def install_problem_handlers(app: FastAPI) -> None:
     app.add_exception_handler(HTTPException, handle_http_exception)
     app.add_exception_handler(RequestValidationError, handle_validation_error)
+    app.add_exception_handler(BuildFailed, handle_build_failed)
     app.add_exception_handler(Exception, handle_unexpected_error)
