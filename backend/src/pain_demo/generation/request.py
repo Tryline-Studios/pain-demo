@@ -39,22 +39,6 @@ DEFAULT_COUNTRIES: tuple[SupportedCountry, ...] = ("GB", "DE", "FR", "NL", "US")
 DEFAULT_AMOUNT_MIN = Decimal("10.00")
 DEFAULT_AMOUNT_MAX = Decimal("50000.00")
 
-CURRENCY_BY_COUNTRY: dict[SupportedCountry, str] = {
-    "GB": "GBP",
-    "IE": "EUR",
-    "DE": "EUR",
-    "FR": "EUR",
-    "IT": "EUR",
-    "ES": "EUR",
-    "NL": "EUR",
-    "BE": "EUR",
-    "PL": "PLN",
-    "AT": "EUR",
-    "PT": "EUR",
-    "US": "USD",
-}
-"""A creditor's currency when the request names no `currencies` (spec 5.5)."""
-
 
 def _iso_4217(code: str) -> str:
     if pycountry.currencies.get(alpha_3=code) is None:

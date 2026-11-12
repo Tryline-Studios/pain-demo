@@ -8,6 +8,7 @@ every name it draws is screened against the Entity Catalogue and redrawn from th
 import random
 import string
 from collections.abc import Callable
+from dataclasses import dataclass
 from decimal import Decimal
 
 from faker import Faker
@@ -25,7 +26,7 @@ from pain_demo.generation.model import (
     SampleFileModel,
     Transaction,
 )
-from pain_demo.generation.request import CURRENCY_BY_COUNTRY, EffectiveRequest
+from pain_demo.generation.request import CurrencyCode, EffectiveRequest
 from pain_demo.generation.screening import NameScreen
 from pain_demo.generation.seeds import identifier, stream
 
@@ -38,36 +39,34 @@ STRUCTURED_REMITTANCE_RATE = 0.15
 MAX_TOWN_LENGTH = 35
 """`TwnNm` is Max35Text before .12; some Faker locales draw longer towns."""
 
-LOCALES: dict[SupportedCountry, str] = {
-    "GB": "en_GB",
-    "IE": "en_IE",
-    "US": "en_US",
-    "DE": "de_DE",
-    "FR": "fr_FR",
-    "IT": "it_IT",
-    "ES": "es_ES",
-    "NL": "nl_NL",
-    "BE": "nl_BE",
-    "PL": "pl_PL",
-    "AT": "de_AT",
-    "PT": "pt_PT",
-}
 
-ACCOUNT_CODE_LENGTHS: dict[str, int] = {
-    "GB": 8,
-    "IE": 8,
-    "FR": 11,
-    "IT": 12,
-    "ES": 10,
-    "NL": 10,
-    "BE": 7,
-    "PL": 16,
-    "AT": 11,
-    "PT": 11,
-}
-"""Our numeric account codes per IBAN country. DE has none: its check digit sits in the account code."""
+@dataclass(frozen=True)
+class CountryProfile:
+    locale: str
+    """The Faker locale that draws this country's names and addresses."""
+    currency: CurrencyCode
+    """A creditor's currency when the request names no `currencies` (spec 5.5)."""
+    account_digits: int | None
+    """Digits we draw for an account: the IBAN's account code, or the whole US account number. None for DE: its check
+    digit sits in the account code, so schwifty draws it."""
+    iban: bool = True
+    """False for US: `Othr/Id` with the account number, the routing number on the agent (spec 4.5)."""
 
-US_ACCOUNT_LENGTH = 10
+
+COUNTRIES: dict[SupportedCountry, CountryProfile] = {
+    "GB": CountryProfile("en_GB", "GBP", 8),
+    "IE": CountryProfile("en_IE", "EUR", 8),
+    "DE": CountryProfile("de_DE", "EUR", None),
+    "FR": CountryProfile("fr_FR", "EUR", 11),
+    "IT": CountryProfile("it_IT", "EUR", 12),
+    "ES": CountryProfile("es_ES", "EUR", 10),
+    "NL": CountryProfile("nl_NL", "EUR", 10),
+    "BE": CountryProfile("nl_BE", "EUR", 7),
+    "PL": CountryProfile("pl_PL", "PLN", 16),
+    "AT": CountryProfile("de_AT", "EUR", 11),
+    "PT": CountryProfile("pt_PT", "EUR", 11),
+    "US": CountryProfile("en_US", "USD", 10, iban=False),
+}
 MAX_REDRAWS = 1000
 
 REMITTANCE_TEMPLATES = ("Invoice {n}", "Order {n}", "Contract {n} instalment", "Services rendered, ref {n}")
@@ -107,7 +106,7 @@ class GeneratedData:
         creditor_stream = tx_stream("creditor")
         creditor_agent, creditor_account = self._bank_and_account(tx_stream("creditor_agent"), country)
         amount_stream = tx_stream("amount")
-        currency = amount_stream.choice(request.currencies) if request.currencies else CURRENCY_BY_COUNTRY[country]
+        currency = amount_stream.choice(request.currencies) if request.currencies else COUNTRIES[country].currency
         cents = amount_stream.randint(int(request.amount_min * 100), int(request.amount_max * 100))
         # Always four draws, in this order, so one role's odds never depend on another's.
         optional = tx_stream("optional")
@@ -148,7 +147,7 @@ class GeneratedData:
         return stream(self.request.seed, name)
 
     def _faker(self, rng: random.Random, country: SupportedCountry) -> Faker:
-        faker = self._fakers.get(country) or self._fakers.setdefault(country, Faker(LOCALES[country]))
+        faker = self._fakers.get(country) or self._fakers.setdefault(country, Faker(COUNTRIES[country].locale))
         faker.seed_instance(rng.getrandbits(64))
         return faker
 
@@ -177,9 +176,11 @@ class GeneratedData:
 
     def _bank_and_account(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, Account]:
         agent, bank = self._agent(rng, country)
-        if country == "US":
-            return agent, OtherAccount(_digits(rng, US_ACCOUNT_LENGTH))
-        account_code = {} if country == "DE" else {"account_code": _digits(rng, ACCOUNT_CODE_LENGTHS[country])}
+        profile = COUNTRIES[country]
+        digits = profile.account_digits
+        account_code = {} if digits is None else {"account_code": _digits(rng, digits)}
+        if not profile.iban:
+            return agent, OtherAccount(account_code["account_code"])
         iban = IBAN.random(country, random=rng, use_registry=False, bank_code=bank.bank_code, **account_code)
         return agent, Iban(str(iban))
 

@@ -9,8 +9,8 @@ from starlette.concurrency import run_in_threadpool
 
 from pain_demo.generation import sample_file
 from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES, SupportedCountry
+from pain_demo.generation.generated_data import COUNTRIES
 from pain_demo.generation.request import (
-    CURRENCY_BY_COUNTRY,
     DEFAULT_AMOUNT_MAX,
     DEFAULT_AMOUNT_MIN,
     DEFAULT_COUNTRIES,
@@ -103,7 +103,7 @@ def list_message_versions() -> list[MessageVersionOption]:
 @router.get("/options", operation_id="get_options", summary="What a generation request may ask for, and its defaults")
 def get_options() -> Options:
     return Options(
-        countries=[CountryOption(country=c, currency=CURRENCY_BY_COUNTRY[c]) for c in SUPPORTED_COUNTRIES],
+        countries=[CountryOption(country=c, currency=COUNTRIES[c].currency) for c in SUPPORTED_COUNTRIES],
         limits=Limits(max_transactions=MAX_TRANSACTIONS, max_seed_length=MAX_SEED_LENGTH),
         defaults=Defaults(
             message_version=DEFAULT_MESSAGE_VERSION,
