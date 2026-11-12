@@ -1,5 +1,6 @@
 """Upload Validation: check an Uploaded Message layer by layer and build its Validation Report (spec section 17)."""
 
+import functools
 import hashlib
 import itertools
 import re
@@ -22,6 +23,80 @@ _PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
 _ENUMERATION = re.compile(r"The value '(.*)' is not an element of the set \{(.*)\}")
 _DATATYPE = re.compile(r": '(.*)' is not a valid value of the atomic type '(?:\{[^}]*\})?([^']+)'")
 _LENGTH = re.compile(r"length of '(\d+)'; this \w+ the allowed \w+ length of '(\d+)'")
+_DIGITS = re.compile(r"The value '(.*)' has more (fractional )?digits than are allowed \('(\d+)'\)")
+_XS = "{http://www.w3.org/2001/XMLSchema}"
+_HINTS = [
+    (re.compile(r"ISODate"), "a valid date", "YYYY-MM-DD, like 2009-12-31"),
+    (re.compile(r"ISODateTime"), "a valid date and time", "YYYY-MM-DDThh:mm:ss, like 2009-12-31T09:30:00"),
+    (re.compile(r"ISOYear"), "a valid year", "YYYY, like 2009"),
+    (
+        re.compile(r"PhoneNumber"),
+        "an international phone number",
+        "+, a country code, a hyphen and the number, like +1-123-456-7890",
+    ),
+    (
+        re.compile(r"(Any)?BIC(FI)?(Dec2014)?Identifier"),
+        "a valid BIC",
+        "8 or 11 capital letters and digits, like DEUTDEFF or DEUTDEFF500",
+    ),
+    (
+        re.compile(r"IBAN2007Identifier"),
+        "a valid IBAN",
+        "a two-letter country code, two check digits and up to 30 letters or digits with no spaces, "
+        "like DE89370400440532013000",
+    ),
+    (re.compile(r"CountryCode"), "a country code", "two capital letters, like GB"),
+    (re.compile(r"Active(OrHistoric)?CurrencyCode"), "a currency code", "three capital letters, like EUR"),
+    (
+        re.compile(r"Active(OrHistoric)?CurrencyAndAmount_SimpleType"),
+        "a valid amount",
+        "a number with a dot for decimals, like 1234.50",
+    ),
+    (
+        re.compile(r"LEIIdentifier"),
+        "a valid LEI",
+        "20 capital letters or digits ending in two check digits, like 5493001KJTIIGC8Y1R12",
+    ),
+]
+"""XSD type families (names vary by Message Version), what a value of one is, and what a valid one looks like."""
+
+
+def _hint(type_name: str | None) -> tuple[str, str] | None:
+    return next(((what, like) for family, what, like in _HINTS if type_name and family.fullmatch(type_name)), None)
+
+
+@functools.cache
+def _schema_types(version: str) -> tuple[dict[str, dict[str, str]], dict[str, str]]:
+    """Each complex type's child element and `@attribute` types ("" for the global elements), and each pattern's type.
+
+    ISO 20022 XSDs declare every type at the top level, so one flat pass covers them.
+    """
+    xsd = renderer.xsd(version)
+    children = {"": {el.attrib["name"]: el.attrib["type"] for el in xsd.iterfind(f"{_XS}element")}}
+    for complex_type in xsd.iterfind(f"{_XS}complexType"):
+        children[complex_type.attrib["name"]] = {
+            ("@" if el.tag == f"{_XS}attribute" else "") + el.attrib["name"]: el.attrib["type"]
+            for el in complex_type.iter(f"{_XS}element", f"{_XS}attribute")
+        }
+    patterns = {
+        pattern.attrib["value"]: simple_type.attrib["name"]
+        for simple_type in xsd.iterfind(f"{_XS}simpleType")
+        for pattern in simple_type.iter(f"{_XS}pattern")
+    }
+    return children, patterns
+
+
+def _type_of(version: str, element: etree._Element | None, attribute: str | None) -> str | None:
+    """The XSD type of an element (or its attribute), followed down from Document; None where the walk breaks."""
+    if element is None:
+        return None
+    names = [etree.QName(el).localname for el in [*reversed(list(element.iterancestors())), element]]
+    children, _ = _schema_types(version)
+    type_name = ""
+    for name in [*names, f"@{attribute}"] if attribute else names:
+        if (type_name := children.get(type_name, {}).get(name)) is None:
+            return None
+    return type_name
 
 
 class ProblemCode(StrEnum):
@@ -146,11 +221,17 @@ def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
     return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
 
 
-def _path(find: etree.XPathDocumentEvaluator, lxml_path: str) -> str | None:
-    """lxml's path uses `*` for default-namespace steps; rebuild it from local names with 1-based positions."""
+def _element(find: etree.XPathDocumentEvaluator, lxml_path: str | None) -> etree._Element | None:
     try:
-        (element,) = find(lxml_path)
+        (element,) = find(lxml_path) if lxml_path else (None,)
     except (etree.XPathError, ValueError):
+        return None
+    return element
+
+
+def _path(element: etree._Element | None) -> str | None:
+    """lxml's path uses `*` for default-namespace steps; rebuild it from local names with 1-based positions."""
+    if element is None:
         return None
     steps = []
     for el in [*reversed(list(element.iterancestors())), element]:
@@ -162,7 +243,9 @@ def _path(find: etree.XPathDocumentEvaluator, lxml_path: str) -> str | None:
     return "/" + "/".join(steps)
 
 
-def _classify(tag: str, attribute: str | None, line: int, error: etree._LogEntry) -> tuple[ProblemCode, str]:
+def _classify(
+    tag: str, attribute: str | None, line: int, error: etree._LogEntry, version: str, element: etree._Element | None
+) -> tuple[ProblemCode, str]:
     cause = error.message
     subject = f"{tag} attribute {attribute}" if attribute else tag
     where = f"on line {line}"
@@ -175,34 +258,48 @@ def _classify(tag: str, attribute: str | None, line: int, error: etree._LogEntry
         return ProblemCode.UNEXPECTED_ELEMENT, f"{tag} {where} is not expected here"
     if error.type_name == "SCHEMAV_CVC_PATTERN_VALID" and (match := _PATTERN.search(cause)):
         value, pattern = match.groups()
+        if hint := _hint(_type_of(version, element, attribute) or _schema_types(version)[1].get(pattern)):
+            what, like = hint
+            message = f"{subject} '{value}' {where} is not {what}: expected {like} (pattern {pattern})"
+            return ProblemCode.PATTERN_MISMATCH, message
         return ProblemCode.PATTERN_MISMATCH, f"{subject} '{value}' {where} doesn't match the pattern {pattern}"
     if error.type_name == "SCHEMAV_CVC_ENUMERATION_VALID" and (match := _ENUMERATION.search(cause)):
         value, allowed = match.groups()
         return ProblemCode.INVALID_VALUE, f"{subject} '{value}' {where} is not one of {allowed.replace("'", '')}"
     if error.type_name == "SCHEMAV_CVC_DATATYPE_VALID_1_2_1" and (match := _DATATYPE.search(cause)):
         value, datatype = match.groups()
-        return ProblemCode.INVALID_VALUE, f"{subject} '{value}' {where} is not a valid {datatype}"
+        hint = _hint(datatype)
+        expected = f": expected {hint[1]}" if hint else ""
+        return ProblemCode.INVALID_VALUE, f"{subject} '{value}' {where} is not a valid {datatype}{expected}"
     if error.type_name == "SCHEMAV_CVC_MAXLENGTH_VALID" and (match := _LENGTH.search(cause)):
         length, limit = match.groups()
         return ProblemCode.TOO_LONG, f"{subject} {where} is {length} characters long; the maximum is {limit}"
     if error.type_name == "SCHEMAV_CVC_MINLENGTH_VALID" and (match := _LENGTH.search(cause)):
         length, limit = match.groups()
         return ProblemCode.TOO_SHORT, f"{subject} {where} is {length} characters long; the minimum is {limit}"
+    if error.type_name in {"SCHEMAV_CVC_FRACTIONDIGITS_VALID", "SCHEMAV_CVC_TOTALDIGITS_VALID"} and (
+        match := _DIGITS.search(cause)
+    ):
+        value, fractional, limit = match.groups()
+        digits = "decimals" if fractional else "digits"
+        message = f"{subject} '{value}' {where} has too many {digits}: expected at most {limit} {digits}, like 1234.50"
+        return ProblemCode.INVALID_VALUE, message
     return ProblemCode.SCHEMA_VIOLATION, cause
 
 
-def _schema_problem(find: etree.XPathDocumentEvaluator, error: etree._LogEntry) -> ValidationProblem:
-    element = _ELEMENT.match(error.message)
-    tag, attribute = element.groups() if element else (None, None)
+def _schema_problem(find: etree.XPathDocumentEvaluator, version: str, error: etree._LogEntry) -> ValidationProblem:
+    named = _ELEMENT.match(error.message)
+    tag, attribute = named.groups() if named else (None, None)
+    element = _element(find, error.path)
     if tag is None:
         code, message = ProblemCode.SCHEMA_VIOLATION, error.message
     else:
-        code, message = _classify(tag, attribute, error.line, error)
+        code, message = _classify(tag, attribute, error.line, error, version, element)
     return ValidationProblem(
         line=error.line or None,
         column=error.column or None,  # libxml2 reports no column for schema errors (0); null rather than a fake one
         tag=tag,
-        path=_path(find, error.path) if error.path else None,
+        path=_path(element),
         code=code,
         cause=error.message,
         message=message,
@@ -221,7 +318,7 @@ def validate_message(content: bytes, name: str | None) -> ValidationReport:
         namespaces = {prefix: uri for el in tree.iter() for prefix, uri in el.nsmap.items() if prefix}
         find = etree.XPathDocumentEvaluator(tree, namespaces=namespaces)
         errors = _xsd_errors(root, version)
-        problems = [_schema_problem(find, error) for error in errors]
+        problems = [_schema_problem(find, version, error) for error in errors]
         transaction_count = len(root.findall(f".//{{{etree.QName(root).namespace}}}CdtTrfTxInf"))
     return ValidationReport(
         valid=not problems,

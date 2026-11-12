@@ -888,12 +888,13 @@ The XSDs are pain001's bundled schemas for .03 to .13, the same ones the rendere
   "path": "/Document/CstmrCdtTrfInitn/PmtInf[1]/CdtTrfTxInf[3]/CdtrAgt/FinInstnId/BIC",
   "code": "pattern_mismatch",
   "cause": "<lxml's raw message>",
-  "message": "BIC 'ABCD12' on line 42 doesn't match the pattern [A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3}){0,1}" }
+  "message": "BIC 'ABCD12' on line 42 is not a valid BIC: expected 8 or 11 capital letters and digits, like DEUTDEFF or DEUTDEFF500 (pattern [A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3}){0,1})" }
 ```
 
 - `path` is an XPath of local names with 1-based positions, no namespace prefixes; null for `malformed_xml`.
 - `tag` is the element's local name; null where there is no element.
 - `cause` is the parser's text, kept for experts; `message` is our own sentence built from `code` and the values the parser gives (element, value, pattern, expected elements, length limit).
+- Hints (#87): when a value fails its type, `message` leads with what a valid value looks like and an example, chosen from the element's XSD type in that Message Version (followed down from `Document`) or, where that walk breaks, the type whose pattern failed: dates, date-times, years, phone numbers, BICs, IBANs, country and currency codes, LEIs and amounts (`fractionDigits` and `totalDigits` failures are `invalid_value`). Pattern failures keep the raw pattern at the end, e.g. "PhneNb '123-456-7890' on line 40 is not an international phone number: expected +, a country code, a hyphen and the number, like +1-123-456-7890 (pattern …)". Other types keep the plain message.
 - `code` is a closed enum in OpenAPI: `malformed_xml`, `dtd_not_allowed`, `unsupported_message`, `too_many_elements`, `missing_element`, `unexpected_element`, `pattern_mismatch`, `invalid_value`, `too_long`, `too_short`, and the catch-all `schema_violation` (message falls back to `cause`). Adding a code is an additive change.
 
 ### 17.6 Ordering and cap

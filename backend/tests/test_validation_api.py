@@ -330,14 +330,16 @@ def test_a_valid_message_of_every_version_passes_the_xsd_and_counts_its_transact
             b"<FinInstnId/>",
             b"<FinInstnId><BIC>ABCD12</BIC></FinInstnId>",
             (7, "BIC", "/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BIC", "pattern_mismatch"),
-            "BIC 'ABCD12' on line 7 doesn't match the pattern [A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}",
+            "BIC 'ABCD12' on line 7 is not a valid BIC: expected 8 or 11 capital letters and digits, like DEUTDEFF "
+            "or DEUTDEFF500 (pattern [A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1})",
             id="pattern_mismatch",
         ),
         pytest.param(
             b'Ccy="EUR"',
             b'Ccy="eur"',
             (9, "InstdAmt", f"{TX}/Amt/InstdAmt", "pattern_mismatch"),
-            "InstdAmt attribute Ccy 'eur' on line 9 doesn't match the pattern [A-Z]{3,3}",
+            "InstdAmt attribute Ccy 'eur' on line 9 is not a currency code: expected three capital letters, like EUR "
+            "(pattern [A-Z]{3,3})",
             id="pattern_mismatch on an attribute",
         ),
         pytest.param(
@@ -351,7 +353,7 @@ def test_a_valid_message_of_every_version_passes_the_xsd_and_counts_its_transact
             b"<ReqdExctnDt>2026-01-02</ReqdExctnDt>",
             b"<ReqdExctnDt>tomorrow</ReqdExctnDt>",
             (6, "ReqdExctnDt", "/Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt", "invalid_value"),
-            "ReqdExctnDt 'tomorrow' on line 6 is not a valid ISODate",
+            "ReqdExctnDt 'tomorrow' on line 6 is not a valid ISODate: expected YYYY-MM-DD, like 2009-12-31",
             id="invalid_value from a datatype",
         ),
         pytest.param(
@@ -494,3 +496,168 @@ def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(
 
     # Behind a shared schema lock the quick upload could only finish after the slow one's validation.
     assert (quick.json()["valid"], slow.result().json()["valid"], saw_quick_finish) == (True, True, [True])
+
+
+def with_creditor(version: str, inside: bytes) -> bytes:
+    """pain001() with `inside` placed in the Creditor."""
+    return pain001(version).replace(b"<Cdtr/>", b"<Cdtr>" + inside + b"</Cdtr>")
+
+
+def with_tax_year(version: str, year: bytes) -> bytes:
+    return pain001(version).replace(b"<Cdtr/>", b"<Cdtr/><Tax><Rcrd><Prd><Yr>" + year + b"</Yr></Prd></Rcrd></Tax>")
+
+
+@pytest.mark.parametrize(
+    ("version", "year", "message"),
+    [
+        pytest.param(
+            "03", b"2009", "Yr '2009' on line 9 is not a valid ISODate: expected YYYY-MM-DD, like 2009-12-31", id="03"
+        ),
+        pytest.param(
+            "11", b"2009-12-31", "Yr '2009-12-31' on line 9 is not a valid ISOYear: expected YYYY, like 2009", id="11"
+        ),
+    ],
+)
+def test_a_tax_year_of_the_wrong_type_says_what_the_version_expects(
+    client: TestClient, version: str, year: bytes, message: str
+) -> None:
+    (problem,) = problems_of(client, with_tax_year(version, year))
+
+    assert (problem["code"], problem["message"]) == ("invalid_value", message)
+    assert "is not a valid value of the atomic type" in problem["cause"]
+
+
+PHONE_PATTERN = r"\+[0-9]{1,3}-[0-9()+\-]{1,30}"
+
+
+VERSIONS = [f"{n:02d}" for n in range(3, 14)]
+
+
+@pytest.mark.parametrize("version", VERSIONS)
+@pytest.mark.parametrize("tag", ["PhneNb", "MobNb", "FaxNb"])
+def test_a_phone_number_without_its_country_code_says_how_to_write_one(
+    client: TestClient, tag: str, version: str
+) -> None:
+    number = f"<CtctDtls><{tag}>123-456-7890</{tag}></CtctDtls>".encode()
+
+    (problem,) = problems_of(client, with_creditor(version, number))
+
+    assert (problem["code"], problem["message"]) == (
+        "pattern_mismatch",
+        f"{tag} '123-456-7890' on line 9 is not an international phone number: expected +, a country code, a hyphen "
+        f"and the number, like +1-123-456-7890 (pattern {PHONE_PATTERN})",
+    )
+    assert PHONE_PATTERN in problem["cause"]
+
+
+BIC_HINT = "is not a valid BIC: expected 8 or 11 capital letters and digits, like DEUTDEFF or DEUTDEFF500"
+BIC_2014 = "[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}"
+LEI_HINT = (
+    "is not a valid LEI: expected 20 capital letters or digits ending in two check digits, like 5493001KJTIIGC8Y1R12"
+)
+
+
+@pytest.mark.parametrize(
+    ("version", "old", "new", "message"),
+    [
+        pytest.param(
+            "09",
+            b"<FinInstnId/>",
+            b"<FinInstnId><BICFI>ABCD12</BICFI></FinInstnId>",
+            f"BICFI 'ABCD12' on line 7 {BIC_HINT} (pattern {BIC_2014})",
+            id="BICFIDec2014Identifier",
+        ),
+        pytest.param(
+            "09",
+            b"<Cdtr/>",
+            b"<Cdtr><Id><OrgId><AnyBIC>DEUT</AnyBIC></OrgId></Id></Cdtr>",
+            f"AnyBIC 'DEUT' on line 9 {BIC_HINT} (pattern {BIC_2014})",
+            id="AnyBICDec2014Identifier",
+        ),
+        pytest.param(
+            "03",
+            b"<IBAN>DE89370400440532013000</IBAN>",
+            b"<IBAN>DE89 3704 0044 0532 0130 00</IBAN>",
+            "IBAN 'DE89 3704 0044 0532 0130 00' on line 7 is not a valid IBAN: expected a two-letter country code, "
+            "two check digits and up to 30 letters or digits with no spaces, like DE89370400440532013000 "
+            "(pattern [A-Z]{2,2}[0-9]{2,2}[a-zA-Z0-9]{1,30})",
+            id="IBAN2007Identifier",
+        ),
+        pytest.param(
+            "03",
+            b"<Cdtr/>",
+            b"<Cdtr><PstlAdr><Ctry>gb</Ctry></PstlAdr></Cdtr>",
+            "Ctry 'gb' on line 9 is not a country code: expected two capital letters, like GB (pattern [A-Z]{2,2})",
+            id="CountryCode",
+        ),
+        pytest.param(
+            "13",
+            b"<Cdtr/>",
+            b"<Cdtr><Id><OrgId><LEI>LEI123</LEI></OrgId></Id></Cdtr>",
+            f"LEI 'LEI123' on line 9 {LEI_HINT} (pattern [A-Z0-9]{{18,18}}[0-9]{{2,2}})",
+            id="LEIIdentifier",
+        ),
+        pytest.param(
+            "03",
+            b"<CreDtTm>2026-01-01T09:00:00</CreDtTm>",
+            b"<CreDtTm>2026-01-01 09:00</CreDtTm>",
+            "CreDtTm '2026-01-01 09:00' on line 4 is not a valid ISODateTime: expected YYYY-MM-DDThh:mm:ss, "
+            "like 2009-12-31T09:30:00",
+            id="ISODateTime",
+        ),
+    ],
+)
+def test_a_value_of_a_known_type_says_what_a_valid_one_looks_like(
+    client: TestClient, version: str, old: bytes, new: bytes, message: str
+) -> None:
+    (problem,) = problems_of(client, pain001(version).replace(old, new))
+
+    assert problem["message"] == message
+
+
+@pytest.mark.parametrize(
+    ("amount", "message"),
+    [
+        pytest.param(
+            b"1.123456",
+            "InstdAmt '1.123456' on line 9 has too many decimals: expected at most 5 decimals, like 1234.50",
+            id="fractionDigits",
+        ),
+        pytest.param(
+            b"1234567890123456789",
+            "InstdAmt '1234567890123456789' on line 9 has too many digits: expected at most 18 digits, like 1234.50",
+            id="totalDigits",
+        ),
+        pytest.param(
+            b"1,50",
+            "InstdAmt '1,50' on line 9 is not a valid ActiveOrHistoricCurrencyAndAmount_SimpleType: expected a "
+            "number with a dot for decimals, like 1234.50",
+            id="not a number",
+        ),
+    ],
+)
+def test_an_amount_that_breaks_its_type_says_what_a_valid_one_looks_like(
+    client: TestClient, amount: bytes, message: str
+) -> None:
+    (problem,) = problems_of(client, pain001().replace(b">1.00<", b">" + amount + b"<"))
+
+    assert (problem["code"], problem["message"]) == ("invalid_value", message)
+
+
+def test_a_pattern_of_a_type_without_a_hint_keeps_the_plain_message(client: TestClient) -> None:
+    (problem,) = problems_of(client, pain001().replace(b"<NbOfTxs>1</NbOfTxs>", b"<NbOfTxs>one</NbOfTxs>"))
+
+    assert problem["message"] == "NbOfTxs 'one' on line 4 doesn't match the pattern [0-9]{1,15}"
+
+
+def test_a_type_the_schema_walk_cannot_reach_is_recognised_from_its_pattern(client: TestClient) -> None:
+    """Supplementary data is lax: a nested Document is still validated, but its path runs through a wildcard."""
+    nested = with_creditor("09", b"<CtctDtls><PhneNb>123</PhneNb></CtctDtls>").split(b"?>\n", 1)[1]
+    content = pain001("09").replace(b"<Cdtr/>", b"<Cdtr/><SplmtryData><Envlp>" + nested + b"</Envlp></SplmtryData>")
+
+    (problem,) = problems_of(client, content)
+
+    assert (
+        problem["path"] == f"{TX}/SplmtryData/Envlp/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/CtctDtls/PhneNb"
+    )
+    assert problem["message"].startswith("PhneNb '123' on line 16 is not an international phone number: expected +")

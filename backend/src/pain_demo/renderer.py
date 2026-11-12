@@ -67,9 +67,14 @@ def schema(message_version: str) -> etree.XMLSchema:
     """
     schemas: dict[str, etree.XMLSchema] = _THREAD_SCHEMAS.__dict__.setdefault("by_version", {})
     if message_version not in schemas:
-        xsd = importlib.resources.files(pain001) / "templates" / message_version / f"{message_version}.xsd"
-        schemas[message_version] = etree.XMLSchema(etree.fromstring(xsd.read_bytes()))
+        schemas[message_version] = etree.XMLSchema(xsd(message_version))
     return schemas[message_version]
+
+
+def xsd(message_version: str) -> etree._Element:
+    """pain001's bundled XSD document for a Message Version, freshly parsed."""
+    path = importlib.resources.files(pain001) / "templates" / message_version / f"{message_version}.xsd"
+    return etree.fromstring(path.read_bytes())
 
 
 def placement_drops(dropped: list[str]) -> list[str]:
