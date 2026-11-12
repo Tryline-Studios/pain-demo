@@ -3,15 +3,14 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { renderWithQueries } from "@/test/render";
+import { renderGenerateMode } from "@/test/render";
 import { generated, server } from "@/test/server";
-import { Workbench } from "@/workbench/Workbench";
 
 const HEADER = "payment.debtor.name,creditor.name,intermediary_agents.0.bic,amount";
 
 async function chooseUploadCsv() {
   const user = userEvent.setup();
-  renderWithQueries(<Workbench />);
+  renderGenerateMode();
   await user.click(screen.getByRole("button", { name: "Data" }));
   await user.click(screen.getByRole("radio", { name: /Upload CSV/ }));
   return user;

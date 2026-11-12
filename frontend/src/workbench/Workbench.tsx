@@ -11,15 +11,15 @@ import { useValidation } from "@/workbench/validate/useValidation";
 import { ValidateInput } from "@/workbench/validate/ValidateInput";
 import { ValidationReportPane } from "@/workbench/validate/ValidationReportPane";
 
-const MODES = ["Generate", "Validate"] as const;
+const MODES = ["Validate", "Generate"] as const;
 
 /**
  * One screen, no router: settings on the left, output on the right, a drag handle between them (spec 13.1).
- * The Generate | Validate toggle swaps what the two panes hold (spec 17.9).
+ * The Validate | Generate toggle (Validate by default) swaps what the two panes hold (spec 17.9).
  */
 export function Workbench() {
   const { width, dragging, startResize, resizeByKey } = useSettingsPaneWidth();
-  const [mode, setMode] = useState<(typeof MODES)[number]>("Generate");
+  const [mode, setMode] = useState<(typeof MODES)[number]>("Validate");
   const validation = useValidation();
   const generation = useGeneration();
   const panes = {

@@ -2,13 +2,12 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderWithQueries } from "@/test/render";
+import { renderGenerateMode } from "@/test/render";
 import { generated, generatedWithHits, sampleXml, server } from "@/test/server";
-import { Workbench } from "@/workbench/Workbench";
 
 async function openFileSection() {
   const user = userEvent.setup();
-  renderWithQueries(<Workbench />);
+  renderGenerateMode();
   await user.click(screen.getByRole("button", { name: "File" }));
   await screen.findByRole("option", { name: "pain.001.001.13" });
   return user;

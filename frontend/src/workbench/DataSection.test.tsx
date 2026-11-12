@@ -2,9 +2,8 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { renderWithQueries } from "@/test/render";
+import { renderGenerateMode } from "@/test/render";
 import { generated, server } from "@/test/server";
-import { Workbench } from "@/workbench/Workbench";
 
 function settings() {
   return screen.getByRole("complementary", { name: "Settings" });
@@ -12,7 +11,7 @@ function settings() {
 
 async function openDataSection() {
   const user = userEvent.setup();
-  renderWithQueries(<Workbench />);
+  renderGenerateMode();
   await user.click(screen.getByRole("button", { name: "Data" }));
   return user;
 }

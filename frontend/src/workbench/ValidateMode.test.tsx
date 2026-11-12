@@ -4,7 +4,7 @@ import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import type { components } from "@/api/schema";
 import "@/test/multipart";
-import { renderWithQueries } from "@/test/render";
+import { renderGenerateMode, renderWithQueries } from "@/test/render";
 import { generated, sampleXml, server } from "@/test/server";
 import { Workbench } from "@/workbench/Workbench";
 
@@ -439,7 +439,7 @@ describe("Validate mode", () => {
   describe("from a generated Sample File", () => {
     it("is offered only once a Sample File exists", async () => {
       const user = userEvent.setup();
-      renderWithQueries(<Workbench />);
+      renderGenerateMode();
       const output = screen.getByRole("region", { name: "Output" });
       expect(within(output).queryByRole("button", { name: "Validate this Sample File" })).not.toBeInTheDocument();
 
@@ -454,7 +454,7 @@ describe("Validate mode", () => {
       const { filename } = generated.sample_file;
       const seen = answerWith({ ...validReport, file: { name: filename, size_bytes: 11, sha256: SHA256 } });
       const user = userEvent.setup();
-      renderWithQueries(<Workbench />);
+      renderGenerateMode();
       await user.click(
         within(screen.getByRole("complementary", { name: "Settings" })).getByRole("button", { name: "Generate" }),
       );

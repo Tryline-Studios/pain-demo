@@ -13,8 +13,12 @@ test("the Workbench loads through Caddy and the header shows the app version fro
   });
   await page.goto("/");
 
-  await expect(page.getByRole("complementary", { name: "Settings" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Output" })).toContainText("No Sample File yet");
+  // The Workbench opens in Validate mode.
+  await expect(page.getByRole("group", { name: "Mode" }).getByRole("button", { name: "Validate" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("region", { name: "Validation Report" })).toContainText("No message validated yet");
   await expect(page.getByRole("banner").getByText(/^\d+\.\d+\.\d+$/)).toBeVisible();
   // Fonts are self-hosted: nothing leaves for a font CDN.
   expect(elsewhere).toEqual([]);
@@ -35,6 +39,7 @@ test("the Dark theme applies and is remembered across a reload", async ({ page }
 
 test("Generate mode generates a clean Sample File through Caddy, downloads it and validates it", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("group", { name: "Mode" }).getByRole("button", { name: "Generate" }).click();
   const settings = page.getByRole("complementary", { name: "Settings" });
   await settings.getByRole("button", { name: "File" }).click();
   await settings.getByRole("combobox", { name: "Message Version" }).selectOption("pain.001.001.09");
@@ -69,6 +74,7 @@ test("Generate mode generates a clean Sample File through Caddy, downloads it an
 
 test("Generate mode draws Hits and lists them in the Answer Key table and the XML", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("group", { name: "Mode" }).getByRole("button", { name: "Generate" }).click();
   const settings = page.getByRole("complementary", { name: "Settings" });
   await settings.getByRole("button", { name: "Hits" }).click();
   await settings.getByRole("spinbutton", { name: "Hit Count" }).fill("2");
@@ -100,7 +106,6 @@ const SMALL_MESSAGE = `<?xml version="1.0" encoding="UTF-8"?>
 
 test("Validate mode sends a file through Caddy and shows its verdict", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Validate" }).click();
 
   await page.getByLabel(/Drop a pain.001 file/).setInputFiles({
     name: "small.xml",

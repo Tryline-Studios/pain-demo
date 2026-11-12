@@ -2,13 +2,12 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { renderWithQueries } from "@/test/render";
+import { renderGenerateMode } from "@/test/render";
 import { generated, server } from "@/test/server";
-import { Workbench } from "@/workbench/Workbench";
 
 async function openHitsSection() {
   const user = userEvent.setup();
-  renderWithQueries(<Workbench />);
+  renderGenerateMode();
   await user.click(screen.getByRole("button", { name: "Hits" }));
   await screen.findByRole("button", { name: "Add named Hit" });
   return user;
