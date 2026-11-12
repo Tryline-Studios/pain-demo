@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
+from pain_demo.renderer import RenderFailed
 from pain_demo.request_context import REQUEST_ID_HEADER, add_log_fields, request_id_of
 
 PROBLEM_MEDIA_TYPE = "application/problem+json"
@@ -42,14 +43,6 @@ class RequestValidationProblem(Problem):
     title: str = "Validation error"
     status: int = HTTPStatus.UNPROCESSABLE_CONTENT
     errors: list[FieldError]
-
-
-class BuildFailed(Exception):
-    """The renderer's own output failed the XSD or dropped a Placement (spec 10.4); `detail` carries the reasons."""
-
-    def __init__(self, detail: str) -> None:
-        super().__init__(detail)
-        self.detail = detail
 
 
 class ProblemResponse(JSONResponse):
@@ -99,13 +92,14 @@ async def handle_validation_error(request: Request, exc: Exception) -> ProblemRe
     return ProblemResponse(problem)
 
 
-async def handle_build_failed(request: Request, exc: Exception) -> ProblemResponse:
-    assert isinstance(exc, BuildFailed)  # noqa: S101
+async def handle_render_failed(request: Request, exc: Exception) -> ProblemResponse:
+    """The renderer's own output failed the XSD or dropped a Placement (spec 10.4); `detail` carries the reasons."""
+    assert isinstance(exc, RenderFailed)  # noqa: S101
     problem = Problem(
         type="build_failed",
         title="Build failed",
         status=HTTPStatus.INTERNAL_SERVER_ERROR,
-        detail=exc.detail,
+        detail=str(exc),
         instance=request_id_of(request),
     )
     return ProblemResponse(problem)
@@ -118,7 +112,7 @@ async def handle_unexpected_error(request: Request, exc: Exception) -> ProblemRe
 def install_problem_handlers(app: FastAPI) -> None:
     app.add_exception_handler(HTTPException, handle_http_exception)
     app.add_exception_handler(RequestValidationError, handle_validation_error)
-    app.add_exception_handler(BuildFailed, handle_build_failed)
+    app.add_exception_handler(RenderFailed, handle_render_failed)
     app.add_exception_handler(Exception, handle_unexpected_error)
 
 
