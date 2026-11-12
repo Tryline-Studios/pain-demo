@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { api } from "@/api/client";
+import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DataSection, type DataSettings, defaultDataSettings, suppliedData } from "@/workbench/generate/DataSection";
@@ -12,6 +13,7 @@ import {
   generationRequest,
   INPUT,
 } from "@/workbench/generate/FileSection";
+import { type HitSettings, hitsRequest, NamedHits } from "@/workbench/generate/NamedHits";
 import type { Generation } from "@/workbench/generate/useGeneration";
 import { PRIMARY_BUTTON } from "@/workbench/OutputPane";
 
@@ -37,6 +39,11 @@ function Section({ title, hint, children }: { title: string; hint: string; child
 export function SettingsPane({ generation }: { generation: Generation }) {
   const options = api.useQuery("get", "/api/v1/options");
   const messageVersions = api.useQuery("get", "/api/v1/message-versions");
+  const entities = api.useQuery("get", "/api/v1/entities");
+  const [hits, setHits] = useState<HitSettings>({ rows: [], placements: [], name_variants: [] });
+  // A 422's field errors, so the named Hit rows and supplied fields can show theirs (spec 13.3).
+  const fieldErrors =
+    (generation.error as Partial<components["schemas"]["RequestValidationProblem"]> | null)?.errors ?? [];
   // Only what the user changed; everything else follows the API's defaults once they load.
   const [changed, setChanged] = useState<Partial<FileSettings>>({});
   const settings = options.data === undefined ? undefined : { ...defaultFileSettings(options.data), ...changed };
@@ -47,9 +54,6 @@ export function SettingsPane({ generation }: { generation: Generation }) {
   const hitCountTooHigh = hitCount !== undefined && Number(hitCount) > hitLimit;
   const [data, setData] = useState<DataSettings>(defaultDataSettings);
   const supplied = suppliedData(data);
-  // A 422's dotted paths, for the fields they name (spec 13.3).
-  const problem = generation.error as { errors?: { field: string; message: string }[] } | null;
-  const fieldErrors = new Map((problem?.errors ?? []).map((e) => [e.field, e.message]));
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -57,6 +61,7 @@ export function SettingsPane({ generation }: { generation: Generation }) {
       generation.generate({
         ...generationRequest(changed),
         ...(hitCount === undefined ? {} : { hit_count: Number(hitCount) }),
+        ...hitsRequest(hits),
         ...supplied,
         // The count shown, not the API's default of one per supplied row: rows past the supplied ones are generated.
         ...("transactions" in supplied ? { transaction_count: Number(settings.transaction_count) } : {}),
@@ -81,7 +86,7 @@ export function SettingsPane({ generation }: { generation: Generation }) {
         )}
       </Section>
       <Section title="Data" hint="Generated or supplied">
-        <DataSection value={data} errors={fieldErrors} onChange={setData} />
+        <DataSection value={data} errors={new Map(fieldErrors.map((e) => [e.field, e.message]))} onChange={setData} />
       </Section>
       <Section title="Hits" hint="Hit Count and named Hits">
         <Field label="Hit Count">
@@ -100,6 +105,16 @@ export function SettingsPane({ generation }: { generation: Generation }) {
             At most {hitLimit} Hits for {settings?.transaction_count} transactions.
           </p>
         ) : null}
+        {options.data === undefined || settings === undefined ? null : (
+          <NamedHits
+            options={options.data}
+            entities={entities.data ?? []}
+            transactionCount={settings.transaction_count}
+            value={hits}
+            onChange={setHits}
+            errors={fieldErrors}
+          />
+        )}
       </Section>
       <div className="sticky bottom-6">
         <Button

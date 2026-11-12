@@ -176,7 +176,7 @@ def _other_id(identifier: str, scheme: str | None) -> dict[str, str]:
 
 
 def _agent(agent: Agent) -> dict[str, Any]:
-    scenario: dict[str, Any] = _present({"name": agent.name})
+    scenario: dict[str, Any] = {"name": agent.name} if agent.name else {}  # None is `bic_only` (spec 6.6)
     if agent.bic:
         scenario["bic"] = agent.bic
     if agent.routing_number:

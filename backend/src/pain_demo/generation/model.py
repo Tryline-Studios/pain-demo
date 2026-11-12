@@ -58,7 +58,7 @@ class Agent:
     bic: str | None
     """None renders the agent by name and address only (`name_only`)."""
     name: str | None
-    """None only where Supplied Data leaves it out."""
+    """None renders the BIC alone (`bic_only`), or leaves out a name Supplied Data nulls."""
     routing_number: str | None = None
     """The ABA routing number of a US agent, rendered as its clearing system member id."""
     lei: str | None = None

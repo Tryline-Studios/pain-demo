@@ -30,6 +30,9 @@
     "currencies": null,
     "amount_min": "10.00",
     "amount_max": "50000.00",
+    "hits": [],
+    "placements": null,
+    "name_variants": null,
     "exposure_countries": [
       "RU",
       "BY",

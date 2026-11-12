@@ -1182,6 +1182,47 @@
             "title": "Amount Max",
             "default": "50000.00"
           },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/NamedHit"
+            },
+            "type": "array",
+            "title": "Hits",
+            "description": "Named Hits; they count toward `hit_count`",
+            "default": []
+          },
+          "placements": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Placement"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placements",
+            "description": "Allowlist for the drawn Hits; absent means every Placement"
+          },
+          "name_variants": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NameVariant"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Variants",
+            "description": "Allowlist for the drawn Hits; absent means every Name Variant"
+          },
           "exposure_countries": {
             "items": {
               "$ref": "#/components/schemas/ExposureCountry"
@@ -1323,6 +1364,47 @@
             "title": "Amount Max",
             "default": "50000.00"
           },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/NamedHit"
+            },
+            "type": "array",
+            "title": "Hits",
+            "description": "Named Hits; they count toward `hit_count`",
+            "default": []
+          },
+          "placements": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Placement"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placements",
+            "description": "Allowlist for the drawn Hits; absent means every Placement"
+          },
+          "name_variants": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NameVariant"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Variants",
+            "description": "Allowlist for the drawn Hits; absent means every Name Variant"
+          },
           "exposure_countries": {
             "items": {
               "$ref": "#/components/schemas/ExposureCountry"
@@ -1450,6 +1532,11 @@
           "has_bic": {
             "type": "boolean",
             "title": "Has Bic"
+          },
+          "has_controller": {
+            "type": "boolean",
+            "title": "Has Controller",
+            "description": "A Control Relationship names it as controlled: it may take `with_controller`"
           }
         },
         "type": "object",
@@ -1461,7 +1548,8 @@
           "countries",
           "name_variants",
           "placements",
-          "has_bic"
+          "has_bic",
+          "has_controller"
         ],
         "title": "EntitySummary"
       },
@@ -1779,6 +1867,47 @@
             "title": "Amount Max",
             "default": "50000.00"
           },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/NamedHit"
+            },
+            "type": "array",
+            "title": "Hits",
+            "description": "Named Hits; they count toward `hit_count`",
+            "default": []
+          },
+          "placements": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Placement"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placements",
+            "description": "Allowlist for the drawn Hits; absent means every Placement"
+          },
+          "name_variants": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NameVariant"
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Variants",
+            "description": "Allowlist for the drawn Hits; absent means every Name Variant"
+          },
           "exposure_countries": {
             "items": {
               "$ref": "#/components/schemas/ExposureCountry"
@@ -1955,18 +2084,12 @@
           "rendering_mode": {
             "anyOf": [
               {
-                "type": "string",
-                "enum": [
-                  "name_and_bic",
-                  "bic_only",
-                  "name_only"
-                ]
+                "$ref": "#/components/schemas/RenderingMode"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Rendering Mode",
             "description": "Agents only"
           },
           "name": {
@@ -2481,6 +2604,72 @@
           "fuzzed"
         ]
       },
+      "NamedHit": {
+        "properties": {
+          "entity": {
+            "type": "string",
+            "title": "Entity",
+            "description": "Catalogue id"
+          },
+          "placement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Placement"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name_variant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NameVariant"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "transaction": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction",
+            "description": "1-based; must be absent for file-level Placements"
+          },
+          "rendering_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RenderingMode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agents only"
+          },
+          "with_controller": {
+            "type": "boolean",
+            "title": "With Controller",
+            "description": "Controlled Legal Entities only: its controller becomes the matching Ultimate party; two Hits",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entity"
+        ],
+        "title": "NamedHit",
+        "description": "One Hit the caller pins (spec 6.4); anything left out is drawn. Checked against the catalogue at generation."
+      },
       "NonEmpty": {
         "type": "string",
         "minLength": 1
@@ -2493,6 +2682,27 @@
             },
             "type": "array",
             "title": "Countries"
+          },
+          "placements": {
+            "items": {
+              "$ref": "#/components/schemas/PlacementOption"
+            },
+            "type": "array",
+            "title": "Placements"
+          },
+          "name_variants": {
+            "items": {
+              "$ref": "#/components/schemas/NameVariant"
+            },
+            "type": "array",
+            "title": "Name Variants"
+          },
+          "rendering_modes": {
+            "items": {
+              "$ref": "#/components/schemas/RenderingMode"
+            },
+            "type": "array",
+            "title": "Rendering Modes"
           },
           "exposure_countries": {
             "items": {
@@ -2511,6 +2721,9 @@
         "type": "object",
         "required": [
           "countries",
+          "placements",
+          "name_variants",
+          "rendering_modes",
           "exposure_countries",
           "limits",
           "defaults"
@@ -2531,6 +2744,30 @@
           "intermediary_agent_3",
           "remittance"
         ]
+      },
+      "PlacementOption": {
+        "properties": {
+          "placement": {
+            "$ref": "#/components/schemas/Placement"
+          },
+          "file_level": {
+            "type": "boolean",
+            "title": "File Level",
+            "description": "Debtor and Debtor Agent: one per file, and a named Hit takes no transaction"
+          },
+          "agent": {
+            "type": "boolean",
+            "title": "Agent",
+            "description": "Takes a rendering mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "placement",
+          "file_level",
+          "agent"
+        ],
+        "title": "PlacementOption"
       },
       "Problem": {
         "properties": {
@@ -2623,6 +2860,14 @@
           "addtl_rmt_inf",
           "invcr",
           "invcee"
+        ]
+      },
+      "RenderingMode": {
+        "type": "string",
+        "enum": [
+          "name_and_bic",
+          "bic_only",
+          "name_only"
         ]
       },
       "RequestValidationProblem": {

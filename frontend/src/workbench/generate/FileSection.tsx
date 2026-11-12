@@ -52,7 +52,7 @@ export function generationRequest(changed: Partial<FileSettings>): Partial<Gener
   };
 }
 
-function toggle<T>(list: T[], item: T) {
+export function toggle<T>(list: T[], item: T) {
   return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 }
 
@@ -66,7 +66,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
-function Chips<T extends string>({
+export function Chips<T extends string>({
   label,
   all,
   chosen,

@@ -458,6 +458,8 @@ describe("Generate mode: Hits", () => {
         "LEI",
         "Triggers",
         "Lists",
+        "Origin",
+        "Paired with",
       ],
       [
         "h1",
@@ -477,6 +479,8 @@ describe("Generate mode: Hits", () => {
         "",
         "name",
         "ofac_sdn, uk",
+        "drawn",
+        "",
       ],
       [
         "h2",
@@ -496,6 +500,8 @@ describe("Generate mode: Hits", () => {
         "",
         "name, bic",
         "ofac_sdn",
+        "drawn",
+        "",
       ],
       [
         "h3",
@@ -515,6 +521,8 @@ describe("Generate mode: Hits", () => {
         "",
         "name",
         "ofac_sdn",
+        "drawn",
+        "",
       ],
     ]);
     // As on the canvas: ids and the Entity in mono, the Placement as a tag.

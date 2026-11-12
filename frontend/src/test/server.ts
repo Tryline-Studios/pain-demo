@@ -27,6 +27,20 @@ export const options: components["schemas"]["Options"] = {
     { country: "PL", currency: "PLN" },
     { country: "US", currency: "USD" },
   ],
+  placements: [
+    { placement: "debtor", file_level: true, agent: false },
+    { placement: "debtor_agent", file_level: true, agent: true },
+    { placement: "creditor", file_level: false, agent: false },
+    { placement: "creditor_agent", file_level: false, agent: true },
+    { placement: "ultimate_debtor", file_level: false, agent: false },
+    { placement: "ultimate_creditor", file_level: false, agent: false },
+    { placement: "intermediary_agent_1", file_level: false, agent: true },
+    { placement: "intermediary_agent_2", file_level: false, agent: true },
+    { placement: "intermediary_agent_3", file_level: false, agent: true },
+    { placement: "remittance", file_level: false, agent: false },
+  ],
+  name_variants: ["exact", "alias", "native_script", "transliteration", "fuzzed"],
+  rendering_modes: ["name_and_bic", "bic_only", "name_only"],
   exposure_countries: [
     { country: "RU", currency: "RUB" },
     { country: "BY", currency: "BYN" },
@@ -45,6 +59,51 @@ export const options: components["schemas"]["Options"] = {
     exposure_countries: ["RU", "BY", "IR", "KP", "SY", "VE"],
   },
 };
+
+const PARTY_PLACEMENTS: components["schemas"]["Placement"][] = [
+  "debtor",
+  "creditor",
+  "ultimate_debtor",
+  "ultimate_creditor",
+  "remittance",
+];
+
+/** A controlled Bank with a BIC, a Bank without one, and an Individual with only two Name Variants. */
+export const entities: components["schemas"]["EntitySummary"][] = [
+  {
+    id: "plain-bank",
+    entity_type: "bank",
+    display_name: "PLAIN BANK",
+    lists: ["ofac_sdn"],
+    countries: ["RU"],
+    name_variants: ["exact", "fuzzed"],
+    placements: options.placements.map((p) => p.placement),
+    has_bic: false,
+    has_controller: false,
+  },
+  {
+    id: "sberbank",
+    entity_type: "bank",
+    display_name: "PJSC SBERBANK",
+    lists: ["ofac_sdn", "uk"],
+    countries: ["RU"],
+    name_variants: ["exact", "alias", "native_script", "transliteration", "fuzzed"],
+    placements: options.placements.map((p) => p.placement),
+    has_bic: true,
+    has_controller: true,
+  },
+  {
+    id: "simon-zerpa",
+    entity_type: "individual",
+    display_name: "Simon Alejandro ZERPA DELGADO",
+    lists: ["ofac_sdn"],
+    countries: ["VE"],
+    name_variants: ["exact", "fuzzed"],
+    placements: PARTY_PLACEMENTS,
+    has_bic: false,
+    has_controller: false,
+  },
+];
 
 export const sampleXml = `<?xml version='1.0' encoding='UTF-8'?>
 <!-- pain-demo 1.2.3 seed="echoed-seed" -->
@@ -74,6 +133,7 @@ export const generated: components["schemas"]["GeneratedSampleFile"] = {
       currencies: null,
       amount_min: "10.00",
       amount_max: "50000.00",
+      hits: [],
       exposure_countries: ["RU", "BY", "IR", "KP", "SY", "VE"],
       exposure_count: 0,
     },
@@ -253,5 +313,6 @@ export const server = setupServer(
   http.get("/api/v1/version", () => HttpResponse.json(generatorVersion)),
   http.get("/api/v1/message-versions", () => HttpResponse.json(messageVersions)),
   http.get("/api/v1/options", () => HttpResponse.json(options)),
+  http.get("/api/v1/entities", () => HttpResponse.json(entities)),
   http.post("/api/v1/sample-files", () => HttpResponse.json(generated)),
 );

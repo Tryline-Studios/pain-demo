@@ -261,6 +261,15 @@ def test_supplied_data_cannot_name_a_catalogue_entity(client: TestClient, row: d
     assert [error["field"] for error in problems(client, transactions=[row])] == [field]
 
 
+def test_a_named_hit_pinned_to_a_supplied_row_displaces_it(client: TestClient) -> None:
+    named = [{"entity": "rosneft", "placement": "creditor", "transaction": 2}]
+    rows = [{}, {"creditor": {"name": "Supplied Creditor"}}]
+    key = post(client, seed="pinned", transactions=rows, hit_count=1, hits=named)["answer_key"]
+
+    (hit,) = key["hits"]
+    assert hit["displaced"] == {"field": "transactions[1].creditor", "value": {"name": "Supplied Creditor"}}
+
+
 @pytest.mark.parametrize("seed", [f"exposed-{n}" for n in range(4)])
 def test_exposures_prefer_transactions_whose_creditor_side_was_not_supplied(client: TestClient, seed: str) -> None:
     rows = [{"creditor": {"name": "Supplied Creditor"}}] * 5
