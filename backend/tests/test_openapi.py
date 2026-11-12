@@ -16,6 +16,36 @@ def test_meta_operations_are_named_and_tagged() -> None:
     assert paths["/api/v1/version"]["get"]["tags"] == ["meta"]
 
 
+def test_validate_message_takes_multipart_or_xml_and_returns_a_validation_report() -> None:
+    document = create_app().openapi()
+    operation = document["paths"]["/api/v1/validations"]["post"]
+
+    assert (operation["operationId"], operation["tags"]) == ("validate_message", ["validation"])
+    assert set(operation["requestBody"]["content"]) == {"multipart/form-data", "application/xml"}
+    schemas = document["components"]["schemas"]
+    assert set(schemas["ValidationReport"]["required"]) == {
+        "valid",
+        "message_version",
+        "encoding",
+        "transaction_count",
+        "file",
+        "problems",
+        "truncated",
+    }
+    assert schemas["ProblemCode"]["enum"] == [
+        "malformed_xml",
+        "dtd_not_allowed",
+        "unsupported_message",
+        "missing_element",
+        "unexpected_element",
+        "pattern_mismatch",
+        "invalid_value",
+        "too_long",
+        "too_short",
+        "schema_violation",
+    ]
+
+
 def test_info_version_is_the_app_semver() -> None:
     assert create_app().openapi()["info"]["version"] == app_version()
 
