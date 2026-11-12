@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueries } from "@/test/render";
-import { generated, sampleXml, server } from "@/test/server";
+import { generated, generatedWithHits, sampleXml, server } from "@/test/server";
 import { Workbench } from "@/workbench/Workbench";
 
 async function openFileSection() {
@@ -93,7 +93,7 @@ describe("Generate mode: generating", () => {
 
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(bodies).toEqual([{}]);
   });
 
@@ -105,7 +105,7 @@ describe("Generate mode: generating", () => {
     await user.type(screen.getByRole("spinbutton", { name: "Transactions" }), "3");
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(bodies).toEqual([{ transaction_count: 3 }]);
   });
 
@@ -119,7 +119,7 @@ describe("Generate mode: generating", () => {
     await user.click(chip("Currencies", "EUR"));
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(bodies).toEqual([{}]);
   });
 
@@ -131,7 +131,7 @@ describe("Generate mode: generating", () => {
     await user.click(screen.getByRole("button", { name: "Make US Debtor" }));
     await user.click(generateButton());
 
-    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    await within(output()).findByRole("tab", { name: "Answer Key" });
     expect(screen.getByText("Debtor country: US")).toBeInTheDocument();
     for (const code of ["GB", "DE", "US"]) {
       expect(chip("Countries", code)).toHaveAttribute("aria-pressed", "true");
@@ -190,6 +190,7 @@ describe("Generate mode: generating", () => {
     expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("0");
     expect(within(output()).getByRole("group", { name: "Version" })).toHaveTextContent("pain.001.001.09");
     expect(within(output()).queryByText("No Sample File yet")).not.toBeInTheDocument();
+    await user.click(within(output()).getByRole("tab", { name: "XML" }));
     expect(within(output()).getByRole("tabpanel")).toHaveTextContent('seed="echoed-seed"');
 
     await user.click(within(output()).getByRole("tab", { name: "Warnings (1)" }));
@@ -339,5 +340,90 @@ describe("Generate mode: downloads", () => {
     expect(new Uint8Array(await (saved[0]?.blob.arrayBuffer() ?? Promise.resolve(new ArrayBuffer(0))))).toEqual(
       new Uint8Array([80, 75, 3, 4]),
     );
+  });
+});
+
+describe("Generate mode: Hits", () => {
+  async function generateWithHits() {
+    server.use(http.post("/api/v1/sample-files", () => HttpResponse.json(generatedWithHits)));
+    const user = await openFileSection();
+    await user.click(generateButton());
+    await within(output()).findByRole("group", { name: "Seed" });
+    return user;
+  }
+
+  it("opens on the Answer Key table, one row per Hit", async () => {
+    await generateWithHits();
+
+    expect(within(output()).getByRole("tab", { name: "Answer Key", selected: true })).toBeInTheDocument();
+    const rows = within(within(output()).getByRole("tabpanel")).getAllByRole("row");
+    expect(rows.map((row) => [...row.children].map((cell) => cell.textContent))).toEqual([
+      [
+        "Hit",
+        "Scope",
+        "Transaction",
+        "End-to-end id",
+        "Placement",
+        "Entity",
+        "Name Variant",
+        "Rendered name",
+        "BIC",
+        "Triggers",
+        "Lists",
+      ],
+      [
+        "h1",
+        "file",
+        "",
+        "",
+        "debtor",
+        "daedong-credit-bank",
+        "exact",
+        "DAEDONG CREDIT BANK",
+        "",
+        "name",
+        "ofac_sdn, uk",
+      ],
+      [
+        "h2",
+        "transaction",
+        "1",
+        "E2E-1",
+        "creditor_agent",
+        "t-bank",
+        "exact",
+        "T-BANK",
+        "TICSRUMM",
+        "name, bic",
+        "ofac_sdn",
+      ],
+      [
+        "h3",
+        "transaction",
+        "2",
+        "E2E-2",
+        "creditor_agent",
+        "t-bank",
+        "exact",
+        "T-BANK",
+        "TICSRUMM",
+        "name, bic",
+        "ofac_sdn",
+      ],
+    ]);
+  });
+
+  it("says so when the Sample File has no Hits", async () => {
+    const user = await openFileSection();
+    await user.click(generateButton());
+
+    await within(output()).findByRole("tab", { name: "Answer Key", selected: true });
+    expect(within(output()).getByRole("tabpanel")).toHaveTextContent("No Hits");
+  });
+
+  it("shows the Hit Count in the Hits tile", async () => {
+    await generateWithHits();
+
+    expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("3");
   });
 });
