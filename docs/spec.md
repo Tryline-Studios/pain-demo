@@ -416,6 +416,7 @@ Only on request: a named Hit with `with_controller: true` places the controlled 
 - A sanctioned party's address comes from its Listing. Its account is clean and in that country.
 - A sanctioned Bank as agent: the account it services is in the Bank's country, using the Bank's own bank code when schwifty's registry has it. The counterparty's name and address are drawn from the request's countries like any generated party (a German company with an account at Sberbank Moscow), so no Faker locale is needed for catalogue countries.
 - The account element follows the country: IBAN where the IBAN registry has the country (Belarus, Iran, and all twelve default countries except the US); otherwise `Othr/Id` in a country-appropriate synthetic format (Russian 20-digit account numbers; US ABA routing plus account; plain numeric for North Korea, Syria, Venezuela).
+- A sanctioned Debtor or Creditor whose account country is one of the six Exposure countries banks with a synthetic agent there (section 8.3: generated name, test BIC, the IBAN's bank code from that BIC for Belarus), because the Clean Bank List has no bank in those countries. A Debtor Agent Hit still replaces that agent (open point 9). Elsewhere outside the twelve the agent stays a clean bank from the request's countries (open point 10).
 - Everything not tied to a Hit comes from the Clean Bank List (section 4).
 
 ---
@@ -485,9 +486,9 @@ A clean transaction whose creditor side is deliberately placed in a sanctioned o
 
 ### 8.2 Request
 
-- `exposure_countries[]`: from RU, BY, IR, KP, SY, VE (the catalogue's programmes). Currencies: RUB, BYN, IRR, KPW, SYP, VES. Published with their currencies by `GET /options`.
+- `exposure_countries[]`: from RU, BY, IR, KP, SY, VE (the catalogue's programmes). Currencies: RUB, BYN, IRR, KPW, SYP, VES. Published with their currencies by `GET /options`. Default: all six.
 - `exposure_count`: the number of clean transactions with an exposed creditor side; explicit, like Hit Count.
-- By default Exposures and Hits land on distinct transactions.
+- By default Exposures and Hits land on distinct transactions. Hits beyond the two file-level ones take a transaction each, so `exposure_count` may be at most `transaction_count - max(0, hit_count - 2)`; more is a validation error on `exposure_count`. A file-level Hit (Debtor, Debtor Agent) still touches an exposed transaction.
 
 ### 8.3 What an exposed transaction gets, on the creditor side
 
@@ -833,7 +834,7 @@ Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Stu
 | `PAIN_DEMO_LOG_LEVEL` | `INFO` | `DEBUG` adds the corpus.build scenario and build report per request |
 | `PAIN_DEMO_GIT_SHA` | the checkout's `HEAD`, else `unknown` | the commit reported in the Generator Version; the image build sets it because the container has no `.git` (added by the walking-skeleton ticket, [#23](https://github.com/Tryline-Studios/pain-demo/issues/23)) |
 
-Not configurable (code constants): the 100-transaction cap; the default countries, amount range and currencies; Placement, Name Variant, intermediary slot and remittance element weights; the background rates for optional roles; the fuzz budget and the 0.85 similarity threshold; the transliteration scheme set; the legal-form dictionary; the Exposure city lists; the 1 MB body limit; the 10 MB Upload Validation limit, the 500,000-element limit and the 100-problem cap.
+Not configurable (code constants): the 100-transaction cap; the default countries, amount range and currencies; Placement, Name Variant, intermediary slot and remittance element weights; the background rates for optional roles; the fuzz budget and the 0.85 similarity threshold; the transliteration scheme set; the legal-form dictionary; the Exposure city lists; the 1 MB body limit; the 10 MB Upload Validation limit, the 500,000-element limit, the 100-problem cap, the 10-second XSD time budget and the four Upload Validation workers ([#80](https://github.com/Tryline-Studios/pain-demo/issues/80)).
 
 ---
 
@@ -875,14 +876,14 @@ Each layer runs only if the previous one passed, so a malformed file reports one
 1. **Well-formed XML.** Parsed with lxml hardened for untrusted input: no entity resolution, no network, no DTD loading, no huge-tree mode. Any encoding the XML declaration names and lxml supports is accepted; with no declaration, UTF-8 (a BOM is fine). Undecodable bytes are `malformed_xml`.
 2. **No DTD.** Any `<!DOCTYPE>` is `dtd_not_allowed`. Real pain.001 never carries one.
 3. **Supported message.** The root `Document` namespace must be `urn:iso:std:iso:20022:tech:xsd:pain.001.001.NN` for one of the eleven Message Versions (.03 to .13), which sets `message_version`. Anything else is `unsupported_message`, naming the namespace found.
-4. **At most 500,000 elements.** More is `too_many_elements`, naming the count and the limit ([#70](https://github.com/Tryline-Studios/pain-demo/issues/70)). The richest realistic 10 MB pain.001 (every optional element, minimum-length values, no indentation) has about 400,000; a flood of empty elements reaches 1.3 million. The XSD cost grows with errors times each error's position among its siblings, so a hostile file under the limit can still run for minutes or longer. Measured with empty `Ustrd` siblings under one parent: 40,000 took 1.5 s and 120,000 took 12.6 s on an idle Apple M3 Pro (close to the square of the count); under CPU load, 40,000 took 21 s and 240,000 about 240 s. A file at the limit is not measured and may take far more than minutes. It holds its own worker thread, and while it runs it slows every other thread (section 17.4); the follow-up ticket adds a time budget.
-5. **XSD-valid** against that Message Version's schema. All errors are collected in one pass.
+4. **At most 500,000 elements.** More is `too_many_elements`, naming the count and the limit ([#70](https://github.com/Tryline-Studios/pain-demo/issues/70)). The richest realistic 10 MB pain.001 (every optional element, minimum-length values, no indentation) has about 400,000; a flood of empty elements reaches 1.3 million. The XSD cost grows with errors times each error's position among its siblings, so a hostile file under the limit can still run for minutes or longer. Measured with empty `Ustrd` siblings under one parent: 40,000 took 1.5 s and 120,000 took 12.6 s on an idle Apple M3 Pro (close to the square of the count); under CPU load, 40,000 took 21 s and 240,000 about 240 s. A file at the limit is not measured and may take far more than minutes, so the next layer has a time budget.
+5. **XSD-valid** against that Message Version's schema, within 10 seconds ([#80](https://github.com/Tryline-Studios/pain-demo/issues/80)). All errors are collected in one pass, in a worker process (section 17.4). Past the budget the process is stopped and the report has one `validation_timed_out` problem naming the budget; `message_version` and `encoding` are still reported and `transaction_count` is null.
 
 Rules beyond the XSD (MDR or CBPR+ usage rules, IBAN checksums, `NbOfTxs` and `CtrlSum` consistency) are not checked yet; see section 17.9.
 
 ### 17.4 Schemas
 
-The XSDs are pain001's bundled schemas for .03 to .13, the same ones the renderer validates against (section 10.4), so what we validate cannot drift from what we generate. The renderer module stays the only pain001 import and also exposes the compiled schema per Message Version; schemas are compiled once per worker thread and reused, so concurrent validations never wait for each other on a shared schema (an lxml schema's error log belongs to the schema, not the call). They still share the GIL: lxml takes it once per XSD error, so while one upload is producing tens of thousands of errors every other request slows down without stopping (beside 50,000 errors, a one-transaction upload took 0.5 to 1.7 s instead of milliseconds, whether or not its thread had already compiled the schema). `docs/xsd/` is not committed (the example `.03` file supplied for this feature is identical to the bundled one apart from whitespace).
+The XSDs are pain001's bundled schemas for .03 to .13, the same ones the renderer validates against (section 10.4), so what we validate cannot drift from what we generate. The renderer module stays the only pain001 import and also exposes the compiled schema per Message Version. The XSD layer runs in a pool of at most four worker processes, each reused between uploads and compiling each schema once; a fifth concurrent upload waits for a free worker. A worker past the 10-second budget is killed (libxml2 cannot be interrupted) and replaced, and the replacement serves the next upload. Separate processes also stop an XSD error flood from slowing other requests: in one process lxml takes the GIL once per XSD error, so beside 50,000 errors a one-transaction upload took 0.5 to 1.7 s instead of milliseconds ([#70](https://github.com/Tryline-Studios/pain-demo/issues/70)). Validations wait on their own threads, never the pool generation uses. `docs/xsd/` is not committed (the example `.03` file supplied for this feature is identical to the bundled one apart from whitespace).
 
 ### 17.5 Validation Problem
 
@@ -899,7 +900,7 @@ The XSDs are pain001's bundled schemas for .03 to .13, the same ones the rendere
 - `tag` is the element's local name; null where there is no element.
 - `cause` is the parser's text, kept for experts; `message` is our own sentence built from `code` and the values the parser gives (element, value, pattern, expected elements, length limit).
 - Hints (#87): when a value fails its type, `message` leads with what a valid value looks like and an example, chosen from the element's XSD type in that Message Version (followed down from `Document`) or, where that walk breaks, the type whose pattern failed: dates, date-times, years, phone numbers, BICs, IBANs, country and currency codes, LEIs and amounts (`fractionDigits` and `totalDigits` failures are `invalid_value`). Pattern failures keep the raw pattern at the end, e.g. "PhneNb '123-456-7890' on line 40 is not an international phone number: expected +, a country code, a hyphen and the number, like +1-123-456-7890 (pattern …)". Other types keep the plain message.
-- `code` is a closed enum in OpenAPI: `malformed_xml`, `dtd_not_allowed`, `unsupported_message`, `too_many_elements`, `missing_element`, `unexpected_element`, `pattern_mismatch`, `invalid_value`, `too_long`, `too_short`, and the catch-all `schema_violation` (message falls back to `cause`). Adding a code is an additive change.
+- `code` is a closed enum in OpenAPI: `malformed_xml`, `dtd_not_allowed`, `unsupported_message`, `too_many_elements`, `validation_timed_out`, `missing_element`, `unexpected_element`, `pattern_mismatch`, `invalid_value`, `too_long`, `too_short`, and the catch-all `schema_violation` (message falls back to `cause`). Adding a code is an additive change.
 
 ### 17.6 Ordering and cap
 
@@ -911,7 +912,7 @@ The one INFO event per request (section 14.3) adds `message_version`, `valid`, p
 
 ### 17.8 Testing
 
-- pytest through the HTTP seam: one fixture per layer and per code, at least one per Message Version, the raw and multipart paths, 413, 415, the 100-problem cap, just over and at the element limit, and two validations of the same Message Version running concurrently.
+- pytest through the HTTP seam: one fixture per layer and per code, at least one per Message Version, the raw and multipart paths, 413, 415, the 100-problem cap, just over and at the element limit, a hostile file stopped at a small time budget and the replacement worker serving the next upload, and two validations of the same Message Version running concurrently.
 - Round trip: every golden Sample File (section 15.3) is uploaded and must come back valid.
 - An XXE and an entity-expansion fixture prove the parser hardening.
 
@@ -988,4 +989,4 @@ All eight were reviewed and accepted as written on 2026-09-17 (see the resolutio
 Added while building [Drawn Hits on party and agent Placements](https://github.com/Tryline-Studios/pain-demo/issues/30):
 
 9. **Sanctioned Debtor beside a sanctioned Debtor Agent.** Both own the one `DbtrAcct` (section 6.9). The Debtor Agent's Entity is then a Bank in the Debtor's Listing country, drawn from the placement stream; if no such Bank is free, the Debtor's rule wins (its account is clean and in its own country) and the agent still renders its name and BIC.
-10. **Sanctioned Creditor outside the request's countries.** Its account is in its Listing country (section 6.9), but its Creditor Agent is a clean bank from the request's countries, so e.g. Alrosa holds a Russian `Othr/Id` at a US bank. Known limit: synthetic agents for sanctioned countries arrive with Exposures ([#37](https://github.com/Tryline-Studios/pain-demo/issues/37)).
+10. **Sanctioned Creditor outside the request's countries.** Its account is in its Listing country (section 6.9), but its Creditor Agent is a clean bank from the request's countries, so e.g. Alrosa holds a Russian `Othr/Id` at a US bank. **Resolved in [Exposures](https://github.com/Tryline-Studios/pain-demo/issues/37)** for RU, BY, IR, KP, SY and VE: a sanctioned Creditor or Debtor in one of those countries banks with a synthetic Exposure agent in that country, so its account and agent agree (section 6.9). Still a known limit for the other Listing countries outside the twelve (AE, CN, IN, IQ and a few more): their Creditor Agent stays a clean bank from the request's countries.

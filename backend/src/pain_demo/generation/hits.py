@@ -42,6 +42,7 @@ from pain_demo.catalogue.schema import (
     Script,
 )
 from pain_demo.catalogue.transliteration import TransliterationScheme
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES
 from pain_demo.generation.fuzz import FuzzOperation, fuzz
 from pain_demo.generation.generated_data import GeneratedData, digits
 from pain_demo.generation.model import (
@@ -243,7 +244,8 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
     queue: list[Entity] = []
     taken: set[Placement] = {p.placement for p in named if p.transaction is None}
     used = {p.transaction for p in named if p.transaction is not None}
-    free_transactions = request.transaction_count - len(used)
+    # Exposures take the transactions no Hit touches (spec 8.2).
+    free_transactions = request.transaction_count - request.exposure_count - len(used)
     count = request.hit_count - len(named)
     planned: list[_Planned] = []
     for drawn in range(count):
@@ -268,8 +270,9 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
         else:
             free_transactions -= 1
         planned.append(_Planned(entity, placement, stream=f"hits/{drawn + 1}"))
+    transaction_level = sum(not PLACEMENTS[plan.placement].file_level for plan in planned)
     free = [n for n in range(1, request.transaction_count + 1) if n not in used]
-    numbers = iter(rng.sample(free, len(free) - free_transactions))
+    numbers = iter(rng.sample(free, transaction_level))
     planned = [p if PLACEMENTS[p.placement].file_level else replace(p, transaction=next(numbers)) for p in planned]
     return _debtor_agent_at_home([*named, *planned], list(catalogue.entities.values()), rng, request)
 
@@ -424,6 +427,7 @@ class _Placer:
             listed = _listed(address) if address else None
             lei = self._lei(plan.entity) if agent_hit and not bic_only else None
             rendering_mode: RenderingMode | None = None
+            local_agent: Agent | None = None  # a sanctioned party's synthetic agent in an Exposure country
             if agent_hit:
                 rendering_mode = plan.rendering_mode or ("name_and_bic" if bic else "name_only")
                 country = bic_country(bic.value) if bic else _home_country(plan.entity, address, self.request)
@@ -440,15 +444,25 @@ class _Placer:
                 assert name is not None  # noqa: S101 - only an agent can be bic_only
                 party_or_agent = Party(name=name.rendered, address=listed)
                 country = _home_country(plan.entity, address, self.request)
-                account = self.data.account(rng, country, None)
+                if country in EXPOSURE_COUNTRIES and plan.placement in {"creditor", "debtor"}:
+                    # No clean bank exists there, so a synthetic local one services the account (spec 6.9, 8.3).
+                    agent_stream = stream(self.request.seed, f"{plan.stream}/agent")
+                    local_agent, account = self.data.exposed_agent_and_account(agent_stream, country)
+                else:
+                    local_agent, account = None, self.data.account(rng, country, None)
                 if plan.placement == "debtor":
                     debtor_country = country
             if plan.transaction is None:
                 model = _place_file(model, plan.placement, party_or_agent, account)
+                if local_agent:  # a Debtor Agent Hit, placed later, replaces it
+                    model = replace(model, debtor_agent=local_agent)
                 end_to_end_id = None
             else:
                 tx = transactions[plan.transaction - 1]
-                transactions[plan.transaction - 1] = self._place_tx(tx, rng, plan.placement, party_or_agent, account)
+                placed = self._place_tx(tx, rng, plan.placement, party_or_agent, account)
+                transactions[plan.transaction - 1] = (
+                    replace(placed, creditor_agent=local_agent) if local_agent else placed
+                )
                 end_to_end_id = tx.end_to_end_id
             hits.append(
                 self._hit(

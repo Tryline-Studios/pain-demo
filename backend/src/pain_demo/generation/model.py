@@ -13,11 +13,12 @@ from pain_demo.generation.request import CurrencyCode, MessageVersion
 
 @dataclass(frozen=True)
 class Address:
-    street: str
-    building_number: str
-    post_code: str
     town: str
     country: str
+    street: str | None = None
+    """None, with the building number and post code, for an Exposure: a curated city and the country (spec 8.3)."""
+    building_number: str | None = None
+    post_code: str | None = None
 
 
 @dataclass(frozen=True)

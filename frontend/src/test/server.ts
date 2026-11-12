@@ -41,6 +41,14 @@ export const options: components["schemas"]["Options"] = {
   ],
   name_variants: ["exact", "alias", "native_script", "transliteration", "fuzzed"],
   rendering_modes: ["name_and_bic", "bic_only", "name_only"],
+  exposure_countries: [
+    { country: "RU", currency: "RUB" },
+    { country: "BY", currency: "BYN" },
+    { country: "IR", currency: "IRR" },
+    { country: "KP", currency: "KPW" },
+    { country: "SY", currency: "SYP" },
+    { country: "VE", currency: "VES" },
+  ],
   limits: { max_transactions: 100, max_seed_length: 64 },
   defaults: {
     message_version: "pain.001.001.03",
@@ -48,6 +56,7 @@ export const options: components["schemas"]["Options"] = {
     countries: ["GB", "DE"],
     amount_min: "10.00",
     amount_max: "50000.00",
+    exposure_countries: ["RU", "BY", "IR", "KP", "SY", "VE"],
   },
 };
 
@@ -125,6 +134,8 @@ export const generated: components["schemas"]["GeneratedSampleFile"] = {
       amount_min: "10.00",
       amount_max: "50000.00",
       hits: [],
+      exposure_countries: ["RU", "BY", "IR", "KP", "SY", "VE"],
+      exposure_count: 0,
     },
     file: {
       message_id: "MSG-0123456789AB",

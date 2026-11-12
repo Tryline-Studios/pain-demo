@@ -32,7 +32,16 @@
     "amount_max": "50000.00",
     "hits": [],
     "placements": null,
-    "name_variants": null
+    "name_variants": null,
+    "exposure_countries": [
+      "RU",
+      "BY",
+      "IR",
+      "KP",
+      "SY",
+      "VE"
+    ],
+    "exposure_count": 0
   },
   "file": {
     "message_id": "MSG-B06C0CB80A48",
