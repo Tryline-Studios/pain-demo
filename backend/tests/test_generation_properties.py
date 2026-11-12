@@ -1,4 +1,5 @@
-"""Property (spec 15.1): any valid request in any Message Version yields XSD-valid XML whose Answer Key matches."""
+"""Property (spec 15.1): any valid request in any Message Version yields XSD-valid XML whose Answer Key matches,
+every Hit's XPath resolving to its rendered name."""
 
 import hashlib
 import json
@@ -8,7 +9,7 @@ from fastapi.testclient import TestClient
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from lxml import etree
-from sample_files import assert_valid_sample_file
+from sample_files import assert_valid_sample_file, resolve
 
 from pain_demo.app import create_app
 from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES
@@ -34,10 +35,11 @@ requests = st.fixed_dictionaries(
 
 
 @settings(max_examples=25, deadline=None)
-@given(requests)
-def test_any_valid_request_yields_a_valid_file_its_answer_key_describes(request: dict) -> None:
+@given(requests, st.data())
+def test_any_valid_request_yields_a_valid_file_its_answer_key_describes(request: dict, data: st.DataObject) -> None:
     amount_min, amount_max = request.pop("amounts")
-    body: dict = {**request, "amount_min": str(amount_min), "amount_max": str(amount_max)}
+    hit_count = data.draw(st.integers(min_value=0, max_value=request["transaction_count"] + 2), label="hit_count")
+    body: dict = {**request, "amount_min": str(amount_min), "amount_max": str(amount_max), "hit_count": hit_count}
 
     response = CLIENT.post("/api/v1/sample-files", json=body)
 
@@ -57,4 +59,11 @@ def test_any_valid_request_yields_a_valid_file_its_answer_key_describes(request:
     assert json.loads(str(comment.text).split("seed=", 1)[1]) == key["seed"]
     if "seed" in body:
         assert key["seed"] == body["seed"]
-    assert key["hits"] == []
+    assert len(key["hits"]) == key["file"]["hit_count"] == hit_count
+    bic_element = "BIC" if body["message_version"] == "pain.001.001.03" else "BICFI"
+    for hit in key["hits"]:
+        (element,) = resolve(document, hit["xpath"])
+        assert element.text == hit["name"]["rendered"]
+        if "rendering_mode" in hit:
+            bics = [e.text for e in resolve(document, hit["xpath"].removesuffix("Nm") + bic_element)]
+            assert bics == ([hit["bic"]["value"]] if hit["rendering_mode"] == "name_and_bic" else [])
