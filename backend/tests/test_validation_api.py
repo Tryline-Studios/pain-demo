@@ -523,3 +523,26 @@ def test_a_tax_year_of_the_wrong_type_says_what_the_version_expects(
 
     assert (problem["code"], problem["message"]) == ("invalid_value", message)
     assert "is not a valid value of the atomic type" in problem["cause"]
+
+
+PHONE_PATTERN = r"\+[0-9]{1,3}-[0-9()+\-]{1,30}"
+
+
+VERSIONS = [f"{n:02d}" for n in range(3, 14)]
+
+
+@pytest.mark.parametrize("version", VERSIONS)
+@pytest.mark.parametrize("tag", ["PhneNb", "MobNb", "FaxNb"])
+def test_a_phone_number_without_its_country_code_says_how_to_write_one(
+    client: TestClient, tag: str, version: str
+) -> None:
+    number = f"<CtctDtls><{tag}>123-456-7890</{tag}></CtctDtls>".encode()
+
+    (problem,) = problems_of(client, with_creditor(version, number))
+
+    assert (problem["code"], problem["message"]) == (
+        "pattern_mismatch",
+        f"{tag} '123-456-7890' on line 9 is not an international phone number: expected +, a country code, a hyphen "
+        f"and the number, like +1-123-456-7890 (pattern {PHONE_PATTERN})",
+    )
+    assert PHONE_PATTERN in problem["cause"]
