@@ -55,7 +55,7 @@ _HINTS = [
     (
         re.compile(r"LEIIdentifier"),
         "a valid LEI",
-        "20 capital letters or digits, the last two digits, like 5493001KJTIIGC8Y1R12",
+        "20 capital letters or digits ending in two check digits, like 5493001KJTIIGC8Y1R12",
     ),
 ]
 """XSD type families (names vary by Message Version), what a value of one is, and what a valid one looks like."""

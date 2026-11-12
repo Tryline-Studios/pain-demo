@@ -552,7 +552,9 @@ def test_a_phone_number_without_its_country_code_says_how_to_write_one(
 
 BIC_HINT = "is not a valid BIC: expected 8 or 11 capital letters and digits, like DEUTDEFF or DEUTDEFF500"
 BIC_2014 = "[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}"
-LEI_HINT = "is not a valid LEI: expected 20 capital letters or digits, the last two digits, like 5493001KJTIIGC8Y1R12"
+LEI_HINT = (
+    "is not a valid LEI: expected 20 capital letters or digits ending in two check digits, like 5493001KJTIIGC8Y1R12"
+)
 
 
 @pytest.mark.parametrize(
