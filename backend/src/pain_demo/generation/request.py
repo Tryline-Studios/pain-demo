@@ -65,6 +65,10 @@ def _iso_4217(code: str) -> str:
 
 type CurrencyCode = Annotated[str, Field(pattern=r"^[A-Z]{3}$"), AfterValidator(_iso_4217)]
 type Amount = Annotated[Decimal, Field(gt=0, max_digits=17, decimal_places=2)]
+# Plain aliases, not `type`, so the OpenAPI document inlines them rather than naming a schema for each.
+Seed = Annotated[str, Field(min_length=1, max_length=MAX_SEED_LENGTH)]
+MessageId = Annotated[str, Field(min_length=1, max_length=35)]
+TransactionCount = Annotated[int, Field(ge=1, le=MAX_TRANSACTIONS)]
 
 
 class GenerationRequest(BaseModel):
@@ -73,19 +77,14 @@ class GenerationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     message_version: MessageVersion = DEFAULT_MESSAGE_VERSION
-    seed: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=MAX_SEED_LENGTH,
-        description="Any string; absent means 16 hex characters from the OS random source",
+    seed: Seed | None = Field(
+        default=None, description="Any string; absent means 16 hex characters from the OS random source"
     )
     created_at: datetime | None = Field(default=None, description="`GrpHdr/CreDtTm`; absent means now")
     execution_date: date | None = Field(default=None, description="`ReqdExctnDt`; absent means today")
-    message_id: str | None = Field(
-        default=None, min_length=1, max_length=35, description="`GrpHdr/MsgId`; absent means drawn from the Seed"
-    )
-    transaction_count: int | None = Field(
-        default=None, ge=1, le=MAX_TRANSACTIONS, description=f"Absent means {DEFAULT_TRANSACTION_COUNT}"
+    message_id: MessageId | None = Field(default=None, description="`GrpHdr/MsgId`; absent means drawn from the Seed")
+    transaction_count: TransactionCount | None = Field(
+        default=None, description=f"Absent means {DEFAULT_TRANSACTION_COUNT}"
     )
     countries: list[SupportedCountry] = Field(
         default=list(DEFAULT_COUNTRIES),
@@ -126,8 +125,8 @@ class GenerationRequest(BaseModel):
 class EffectiveRequest(GenerationRequest):
     """The request with every default resolved, as embedded in the Answer Key."""
 
-    seed: str = Field(min_length=1, max_length=MAX_SEED_LENGTH)
+    seed: Seed
     created_at: datetime
     execution_date: date
-    message_id: str = Field(min_length=1, max_length=35)
-    transaction_count: int = Field(ge=1, le=MAX_TRANSACTIONS)
+    message_id: MessageId
+    transaction_count: TransactionCount
