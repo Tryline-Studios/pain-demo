@@ -322,6 +322,24 @@ describe("Generate mode: downloads", () => {
     expect(JSON.parse(await (saved[0]?.blob.text() ?? Promise.resolve("")))).toEqual(generated.answer_key);
   });
 
+  it("saves the Answer Key CSV the API projects from the Answer Key", async () => {
+    const csv = "hit_id,scope\r\nh1,file\r\n";
+    const csvRequests: unknown[] = [];
+    server.use(
+      http.post("/api/v1/answer-keys/csv", async ({ request }) => {
+        csvRequests.push(await request.json());
+        return new HttpResponse(csv, { headers: { "Content-Type": "text/csv; charset=utf-8" } });
+      }),
+    );
+    const user = await generateOnce();
+
+    await user.click(within(output()).getByRole("button", { name: "Answer Key CSV" }));
+
+    await vi.waitFor(() => expect(saved.map((s) => s.name)).toEqual(["pain.001.001.09-echoed-seed.answer-key.csv"]));
+    expect(csvRequests).toEqual([generated.answer_key]);
+    expect(await saved[0]?.blob.text()).toBe(csv);
+  });
+
   it("fetches the zip by replaying the Effective Request, so it holds the same file", async () => {
     const zipRequests: { format: string | null; body: unknown }[] = [];
     server.use(
