@@ -197,3 +197,36 @@ def test_a_sanctioned_debtor_in_an_exposure_country_banks_with_a_local_test_bic(
         else:
             assert bic in CLEAN_BICS
     assert local > 0
+
+
+@pytest.mark.parametrize(
+    ("hits", "room"),
+    [
+        ([{"entity": "sberbank", "placement": "creditor_agent"}, {"entity": "rosneft", "placement": "creditor"}], 1),
+        # The controller's Ultimate Debtor takes a transaction beside the file-level Debtor.
+        ([{"entity": "evraz-plc", "placement": "debtor", "with_controller": True}], 2),
+    ],
+)
+def test_exposures_count_the_transactions_named_hits_take(client: TestClient, hits: list[dict], room: int) -> None:
+    settings = {"transaction_count": 3, "hit_count": 2, "hits": hits}
+    response = client.post("/api/v1/sample-files", json={**settings, "exposure_count": room + 1})
+
+    assert response.status_code == 422, response.text
+    assert [e["field"] for e in response.json()["errors"]] == ["exposure_count"]
+
+    key = generate(client, **settings, exposure_count=room)["answer_key"]
+    hit_numbers = {hit.get("transaction_number") for hit in key["hits"]}
+    assert len(key["exposures"]) == room
+    assert not hit_numbers & {e["transaction_number"] for e in key["exposures"]}
+
+
+def test_a_422_for_drawn_hits_says_when_exposures_took_their_room(client: TestClient) -> None:
+    settings = {"transaction_count": 3, "hit_count": 3, "placements": ["creditor"]}
+    generate(client, **settings)
+
+    response = client.post("/api/v1/sample-files", json={**settings, "exposure_count": 1})
+
+    assert response.status_code == 422, response.text
+    (error,) = response.json()["errors"]
+    assert error["field"] == "hit_count"
+    assert "exposure_count" in error["message"]

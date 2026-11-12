@@ -235,3 +235,19 @@ def test_bic_only_on_a_bank_without_a_catalogue_bic_is_a_422(tmp_path: Path) -> 
 
     assert [error["field"] for error in errors] == ["hits[0].rendering_mode"]
     assert "plain-bank" in errors[0]["message"]
+
+
+@pytest.mark.parametrize("seed", [f"distinct-{n}" for n in range(4)])
+def test_drawn_hits_do_not_reuse_an_entity_a_named_hit_uses(client: TestClient, seed: str) -> None:
+    hits = hits_of(
+        client,
+        seed=seed,
+        transaction_count=40,
+        hit_count=40,
+        hits=[{"entity": "evraz-plc", "placement": "creditor", "with_controller": True}],
+    )
+
+    named = {hit["entity"]["id"] for hit in hits if hit["origin"] == "named"}
+    drawn = [hit["entity"]["id"] for hit in hits if hit["origin"] == "drawn"]
+    assert not named & set(drawn)
+    assert len(set(drawn)) == len(drawn)

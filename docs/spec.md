@@ -488,7 +488,8 @@ A clean transaction whose creditor side is deliberately placed in a sanctioned o
 
 - `exposure_countries[]`: from RU, BY, IR, KP, SY, VE (the catalogue's programmes). Currencies: RUB, BYN, IRR, KPW, SYP, VES. Published with their currencies by `GET /options`. Default: all six.
 - `exposure_count`: the number of clean transactions with an exposed creditor side; explicit, like Hit Count.
-- By default Exposures and Hits land on distinct transactions. Hits beyond the two file-level ones take a transaction each, so `exposure_count` may be at most `transaction_count - max(0, hit_count - 2)`; more is a validation error on `exposure_count`. A file-level Hit (Debtor, Debtor Agent) still touches an exposed transaction.
+- By default Exposures and Hits land on distinct transactions. `exposure_count` may be at most the transactions the Hits leave free: every transaction-level Hit takes one, and so does the Ultimate Debtor a named Debtor brings `with_controller`. Drawn Hits beyond the two file-level ones take a transaction each, so `transaction_count - max(0, hit_count - 2)` is checked with the request; the transactions named Hits actually take are counted at generation. More is a validation error on `exposure_count`; when the drawn Hits are what no longer fit beside the Exposures, the error is on `hit_count` and names `exposure_count`. A file-level Hit (Debtor, Debtor Agent) still touches an exposed transaction.
+- An Exposure never replaces Supplied Data: a transaction whose row supplies any of creditor, creditor agent, creditor account or currency is not available to Exposures (open point 15).
 
 ### 8.3 What an exposed transaction gets, on the creditor side
 
@@ -1000,3 +1001,7 @@ Added while building [Supplied Data as JSON](https://github.com/Tryline-Studios/
 Added while building [Supplied Data as CSV](https://github.com/Tryline-Studios/pain-demo/issues/35):
 
 14. **CSV errors, nulls and the header template.** A 422 from `POST /sample-files/csv` names `supplied_data[<row>].<column>`, the row numbered from 1 like the transaction it becomes (a `payment.*` error is row 1) and the column as it appears in the header; an unknown or duplicate column is `supplied_data.<column>`, and a setting in the `request` part is named as in `POST /sample-files`. Supplied Data in the `request` part is a 422: it belongs in the CSV. An empty cell is absent, so a CSV cannot leave an optional element out (no `null`); the JSON endpoint and the form can. List positions run from 0 without gaps. `GET /options` publishes the header template as `supplied_data_columns`, every list at position 0, and the Workbench offers it as a download. Requests log `data_source` `csv`.
+
+Added while reviewing the frontier integration branch:
+
+15. **Exposures versus Supplied Data.** Section 5.3 lets a Hit win over Supplied Data and record what it displaced, but an Exposure has no `displaced` entry, so replacing a supplied creditor side would drop it silently. Exposures therefore only take transactions whose row supplies none of creditor, creditor agent, creditor account or currency, and no Hit; drawn Hits leave `exposure_count` such transactions free, falling back to supplied rows first. Too few of them is a 422 on `exposure_count` that says how many the named Hits take and how many carry a supplied creditor side.

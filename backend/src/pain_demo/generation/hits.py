@@ -56,7 +56,7 @@ from pain_demo.generation.model import (
 from pain_demo.generation.named_hits import HitsInvalid, check, controllers, error, placement_options
 from pain_demo.generation.request import EffectiveRequest, NamedHit, RenderingMode
 from pain_demo.generation.seeds import stream
-from pain_demo.generation.supplied import SuppliedRemittance, SuppliedStructuredRemittance
+from pain_demo.generation.supplied import SuppliedRemittance, SuppliedStructuredRemittance, creditor_side_supplied
 from pain_demo.identifiers import bic_country
 
 
@@ -251,14 +251,26 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
     allowed = set(request.name_variants or NAME_VARIANT_WEIGHTS)
     entities = [e for e in catalogue.entities.values() if allowed & set(supported_name_variants(e))]
     queue: list[Entity] = []
+    # Each Hit draws a distinct Entity until the catalogue is exhausted, the named Hits' included (spec 6.3).
+    unused = {p.entity.id for p in named}
     taken: set[Placement] = {p.placement for p in named if p.transaction is None}
     used = {p.transaction for p in named if p.transaction is not None}
-    # Exposures take the transactions no Hit touches (spec 8.2).
+    # Exposures take transactions no Hit touches and no row supplies a creditor side for (spec 5.3, 8.2).
+    exposable = set(range(1, request.transaction_count + 1)) - used - creditor_side_supplied(request.transactions)
+    if request.exposure_count > len(exposable):
+        held = len(creditor_side_supplied(request.transactions) - used)
+        msg = (
+            f"exposure_count must not exceed the {len(exposable)} transactions left free: named Hits take {len(used)}"
+            f" and {held} carry a supplied creditor side, which an Exposure never replaces"
+        )
+        raise HitsInvalid([error("exposure_count", msg=msg)])
     free_transactions = request.transaction_count - request.exposure_count - len(used)
     count = request.hit_count - len(named)
     planned: list[_Planned] = []
     for drawn in range(count):
         forced = count - drawn > free_transactions
+        # Without the Exposures this Hit would have had a transaction: say so if it ends up nowhere.
+        crowded = forced and count - drawn <= free_transactions + request.exposure_count
 
         def weights(entity: Entity, *, forced: bool = forced) -> dict[Placement, float]:
             # Leaving taken file-level Placements out is the spec's "redrawn", without the loop.
@@ -271,7 +283,13 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
                 and (request.placements is None or p in request.placements)
             }
 
-        entity = _next_entity(queue, entities, rng, lambda entity: bool(weights(entity)))
+        try:
+            entity = _next_entity(queue, entities, unused, rng, lambda entity: bool(weights(entity)))
+        except HitsInvalid:
+            if not crowded:
+                raise
+            msg = "the drawn Hits cannot all be placed: the exposure_count Exposures take the transactions they need"
+            raise HitsInvalid([error("hit_count", msg=msg)]) from None
         options = weights(entity)
         (placement,) = rng.choices(list(options), weights=list(options.values()))
         if PLACEMENTS[placement].file_level:
@@ -283,7 +301,7 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
     free = [n for n in range(1, request.transaction_count + 1) if n not in used]
     if request.transactions:
         numbers = _prefer_generated(
-            request, [p.placement for p in planned if not PLACEMENTS[p.placement].file_level], free, rng
+            request, [p.placement for p in planned if not PLACEMENTS[p.placement].file_level], free, exposable, rng
         )
     else:
         numbers = iter(rng.sample(free, transaction_level))
@@ -349,13 +367,17 @@ def _plan_named(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planne
 
 
 def _prefer_generated(
-    request: EffectiveRequest, placements: list[Placement], free: list[int], rng: random.Random
+    request: EffectiveRequest, placements: list[Placement], free: list[int], exposable: set[int], rng: random.Random
 ) -> Iterator[int]:
-    """A `free` transaction per Placement, where the Placement's role was not supplied while there is one (spec 5.3)."""
+    """A `free` transaction per Placement, where the Placement's role was not supplied while there is one (spec 5.3),
+    leaving `exposure_count` of the `exposable` ones to the Exposures."""
+    spare = len(exposable) - request.exposure_count
     for placement in placements:
-        preferred = [n for n in free if _supplied(request, placement, n, None) is None]
-        number = rng.choice(preferred or free)
+        room = [n for n in free if spare > 0 or n not in exposable]
+        preferred = [n for n in room if _supplied(request, placement, n, None) is None]
+        number = rng.choice(preferred or room)
         free.remove(number)
+        spare -= number in exposable
         yield number
 
 
@@ -442,16 +464,21 @@ def _wire_order(plan: _Planned) -> tuple[bool, int, str]:
 
 
 def _next_entity(
-    queue: list[Entity], entities: list[Entity], rng: random.Random, fits: Callable[[Entity], bool]
+    queue: list[Entity], entities: list[Entity], unused: set[str], rng: random.Random, fits: Callable[[Entity], bool]
 ) -> Entity:
-    """The next Entity in a shuffled queue that `fits`, refilled when it runs out: distinct until exhausted."""
+    """The next Entity in a shuffled queue that `fits`, refilled when it runs out: distinct until exhausted.
+
+    The first fill leaves out the `unused` ids (the named Hits' Entities) and empties the set, so later fills
+    hold the whole catalogue.
+    """
     for _ in range(2):
         for index, entity in enumerate(queue):
             if fits(entity):
                 return queue.pop(index)
         refill = entities.copy()
         rng.shuffle(refill)
-        queue.extend(refill)
+        queue.extend(entity for entity in refill if entity.id not in unused)
+        unused.clear()
     msg = "the drawn Hits cannot all be placed: the allowlists or named Hits leave one nowhere to go"
     raise HitsInvalid([error("hit_count", msg=msg)])
 

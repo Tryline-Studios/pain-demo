@@ -210,6 +210,15 @@ class SuppliedTransaction(BaseModel):
     remittance: SuppliedRemittance | MISSING = MISSING
 
 
+CREDITOR_SIDE = frozenset({"creditor", "creditor_agent", "creditor_account", "currency"})
+"""What an Exposure replaces (spec 8.3): a row supplying any of them is never exposed (spec 5.3)."""
+
+
+def creditor_side_supplied(transactions: list[SuppliedTransaction]) -> set[int]:
+    """The 1-based transaction numbers whose rows supply part of the creditor side."""
+    return {n for n, row in enumerate(transactions, start=1) if row.model_fields_set & CREDITOR_SIDE}
+
+
 type Location = tuple[str | int, ...]
 
 

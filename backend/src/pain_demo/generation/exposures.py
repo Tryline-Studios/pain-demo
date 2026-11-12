@@ -16,6 +16,7 @@ from pain_demo.generation.hits import Hit
 from pain_demo.generation.model import SampleFileModel
 from pain_demo.generation.request import EffectiveRequest
 from pain_demo.generation.seeds import stream
+from pain_demo.generation.supplied import creditor_side_supplied
 
 type ExposedElement = Literal["creditor_address", "agent_bic", "account"]
 EXPOSED_ELEMENTS: list[ExposedElement] = ["creditor_address", "agent_bic", "account"]
@@ -32,24 +33,16 @@ class Exposure(BaseModel):
     elements: list[ExposedElement]
 
 
-_CREDITOR_SIDE = frozenset({"creditor", "creditor_agent", "creditor_account", "currency"})
-"""What an Exposure replaces (spec 8.3)."""
-
-
 def place_exposures(
     model: SampleFileModel, request: EffectiveRequest, hits: list[Hit], data: GeneratedData
 ) -> tuple[SampleFileModel, list[Exposure]]:
-    """Overlay `request.exposure_count` Exposures; the request's validation leaves room for them beside the Hits."""
-    taken = {hit.transaction_number for hit in hits}
+    """Overlay `request.exposure_count` Exposures. Drawing the Hits leaves room for them on transactions no Hit
+    touches and no row supplies a creditor side for, which an Exposure never replaces (spec 5.3)."""
+    taken = {hit.transaction_number for hit in hits} | creditor_side_supplied(request.transactions)
     free = [number for number in range(1, len(model.transactions) + 1) if number not in taken]
     transactions = list(model.transactions)
     exposures: list[Exposure] = []
-    # Supplied creditor sides are kept while there is room elsewhere (spec 5.3); without Supplied Data, one draw.
-    supplied = {n for n, row in enumerate(request.transactions, start=1) if row.model_fields_set & _CREDITOR_SIDE}
-    rng = stream(request.seed, "exposures")
-    preferred = [n for n in free if n not in supplied]
-    chosen = rng.sample(preferred, min(request.exposure_count, len(preferred)))
-    chosen += rng.sample([n for n in free if n in supplied], request.exposure_count - len(chosen))
+    chosen = stream(request.seed, "exposures").sample(free, request.exposure_count)
     for number in sorted(chosen):
         rng = stream(request.seed, f"tx/{number}/exposure")
         country = rng.choice(request.exposure_countries)

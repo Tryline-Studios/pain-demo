@@ -277,3 +277,23 @@ def test_exposures_prefer_transactions_whose_creditor_side_was_not_supplied(clie
 
     assert sorted(e["transaction_number"] for e in envelope["answer_key"]["exposures"]) == [6, 7, 8, 9, 10]
     assert text(tree(envelope), f"{PMT_INF}/CdtTrfTxInf/Cdtr/Nm")[:5] == ["Supplied Creditor"] * 5
+
+
+def test_exposures_never_replace_a_supplied_creditor_side(client: TestClient) -> None:
+    rows = [{"creditor": {"name": "Supplied Creditor"}}, {"currency": "EUR"}, {"creditor_agent": {"bic": "DEUTDEFF"}}]
+    response = client.post(
+        "/api/v1/sample-files", json={**FIXED, "transactions": rows, "transaction_count": 5, "exposure_count": 3}
+    )
+
+    assert response.status_code == 422, response.text
+    (error,) = response.json()["errors"]
+    assert error["field"] == "exposure_count"
+    assert "supplied" in error["message"]
+
+
+@pytest.mark.parametrize("seed", [f"crowded-{n}" for n in range(6)])
+def test_drawn_hits_leave_room_for_exposures_beside_supplied_creditors(client: TestClient, seed: str) -> None:
+    rows = [{"creditor": {"name": "Supplied Creditor"}}] * 5
+    key = post(client, seed=seed, transactions=rows, transaction_count=10, hit_count=7, exposure_count=5)["answer_key"]
+
+    assert sorted(e["transaction_number"] for e in key["exposures"]) == [6, 7, 8, 9, 10]
