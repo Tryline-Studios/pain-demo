@@ -426,4 +426,24 @@ describe("Generate mode: Hits", () => {
 
     expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("3");
   });
+
+  it("highlights each Hit's name where its XPath points, not every copy of the text", async () => {
+    const user = await generateWithHits();
+
+    await user.click(within(output()).getByRole("tab", { name: "XML" }));
+
+    // The XML as shown, each highlight written as [id: text].
+    const shown = within(output()).getByRole("tabpanel").cloneNode(true) as HTMLElement;
+    for (const mark of shown.querySelectorAll("mark")) {
+      mark.replaceWith(`[${mark.title}: ${mark.textContent}]`);
+    }
+    const [header, first, second] = (shown.textContent ?? "").split("<CdtTrfTxInf>");
+    expect(header).toContain("<InitgPty>\n        <Nm>DAEDONG CREDIT BANK</Nm>");
+    expect(header).toContain("<Dbtr>\n        <Nm>[h1: DAEDONG CREDIT BANK]</Nm>");
+    expect(first).toContain("<Nm>[h2: T-BANK]</Nm>");
+    expect(first).toContain("<Nm>Jane Smith</Nm>");
+    expect(second).toContain("<Nm>[h3: T-BANK]</Nm>");
+    expect(shown.querySelectorAll("mark")).toHaveLength(0);
+    expect(shown.textContent?.match(/\[h\d/g)).toHaveLength(3);
+  });
 });

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { saveFile } from "@/lib/saveFile";
 import { AnswerKeyTable } from "@/workbench/generate/AnswerKeyTable";
+import { HighlightedXml } from "@/workbench/generate/HighlightedXml";
 import { type Generation, siblingFilename } from "@/workbench/generate/useGeneration";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { Tile } from "@/workbench/Tile";
@@ -70,9 +71,7 @@ function Result({ generation, onValidate }: { generation: Generation; onValidate
           <AnswerKeyTable hits={generated.answer_key.hits} />
         </TabsContent>
         <TabsContent value="xml">
-          <pre className="max-h-[70vh] overflow-auto rounded-xl border bg-card p-4 font-mono text-xs">
-            {generated.sample_file.xml}
-          </pre>
+          <HighlightedXml xml={generated.sample_file.xml} hits={generated.answer_key.hits} />
         </TabsContent>
         <TabsContent value="warnings">
           {warnings.length === 0 ? (
