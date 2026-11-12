@@ -1546,7 +1546,9 @@
           "lei",
           "address_from_listing",
           "triggers",
-          "origin"
+          "origin",
+          "paired_with",
+          "displaced"
         ],
         "title": "Hit",
         "description": "One Placement of a Sanctioned Entity (spec 11.3), in wire order. `element` (remittance) arrives later."

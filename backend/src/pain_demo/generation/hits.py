@@ -155,8 +155,10 @@ class Hit(BaseModel):
     """The `entry_id` of the Listing whose address the Placement carries."""
     triggers: list[Trigger]
     origin: Literal["named", "drawn"]
-    paired_with: str | None = None
-    displaced: None = None
+    paired_with: str | None
+    """Always null until named Hits with `with_controller` pair them."""
+    displaced: None
+    """Always null until Supplied Data can be displaced by a Hit."""
 
 
 @dataclass(frozen=True)
@@ -277,6 +279,8 @@ class _Placer:
                     address_from_listing=address.listing.entry_id if address else None,
                     triggers=_triggers(plan.entity, name.rendered, bic, lei),
                     origin="drawn",
+                    paired_with=None,
+                    displaced=None,
                 )
             )
         model = replace(model, transactions=tuple(transactions))

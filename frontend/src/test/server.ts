@@ -60,6 +60,7 @@ export const generated: components["schemas"]["GeneratedSampleFile"] = {
       execution_date: "2026-11-13",
       message_id: "MSG-0123456789AB",
       transaction_count: 3,
+      hit_count: 0,
       countries: ["DE", "US"],
       currencies: null,
       amount_min: "10.00",
