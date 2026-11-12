@@ -123,7 +123,7 @@ class GeneratedData:
         intermediary_stream = tx_stream("intermediary_agent")
         return Transaction(
             end_to_end_id=f"E2E-{tx_stream('identifiers').getrandbits(48):012X}",
-            amount=Decimal(cents) / 100,
+            amount=Decimal(cents).scaleb(-2),
             currency=currency,
             creditor=self._party(creditor_stream, country, company=creditor_stream.random() < 0.5),
             creditor_agent=creditor_agent,

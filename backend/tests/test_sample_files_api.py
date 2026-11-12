@@ -31,7 +31,9 @@ CLEAN_BANKS = load_clean_banks(CATALOGUE)
 def generate(client: TestClient, **settings: object) -> dict:
     response = client.post("/api/v1/sample-files", json=settings)
     assert response.status_code == 200, response.text
-    return response.json()
+    envelope = response.json()
+    assert_valid_sample_file(xml_of(envelope), envelope["answer_key"]["message_version"])
+    return envelope
 
 
 def xml_of(envelope: dict) -> bytes:
@@ -221,7 +223,8 @@ def test_amounts_are_two_decimal_values_in_range(client: TestClient) -> None:
     envelope = generate(client, seed="amounts", transaction_count=100, amount_min="5.50", amount_max="7.25")
 
     amounts = [Decimal(a) for a in texts(envelope, "PmtInf/CdtTrfTxInf/Amt/InstdAmt")]
-    assert all(Decimal("5.50") <= a <= Decimal("7.25") and a == a.quantize(Decimal("0.01")) for a in amounts)
+    assert all(Decimal("5.50") <= a <= Decimal("7.25") for a in amounts)
+    assert all(re.fullmatch(r"[0-9]+\.[0-9]{2}", a) for a in texts(envelope, "PmtInf/CdtTrfTxInf/Amt/InstdAmt"))
 
 
 def test_us_creditors_get_an_other_account_and_an_aba_routed_agent(client: TestClient) -> None:

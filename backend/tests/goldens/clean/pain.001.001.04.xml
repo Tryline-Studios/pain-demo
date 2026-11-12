@@ -331,7 +331,7 @@
           <EndToEndId>E2E-B54DD9EBEDF4</EndToEndId>
         </PmtId>
         <Amt>
-          <InstdAmt Ccy="USD">18294.1</InstdAmt>
+          <InstdAmt Ccy="USD">18294.10</InstdAmt>
         </Amt>
         <UltmtDbtr>
           <Nm>Aaron John</Nm>
