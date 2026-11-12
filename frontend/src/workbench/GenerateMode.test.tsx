@@ -514,4 +514,23 @@ describe("Generate mode: Hits", () => {
     expect(shown.querySelectorAll("mark")).toHaveLength(0);
     expect(shown.textContent?.match(/\[h\d/g)).toHaveLength(3);
   });
+
+  it("colours the XML's syntax around a highlighted Hit", async () => {
+    const user = await generateWithHits();
+
+    await user.click(within(output()).getByRole("tab", { name: "XML" }));
+
+    const panel = within(output()).getByRole("tabpanel");
+    const mark = within(panel).getByTitle("h1");
+    const line = mark.parentElement as HTMLElement;
+    expect(line).toHaveTextContent(/^\s*<Nm>DAEDONG CREDIT BANK<\/Nm>$/);
+    expect(
+      within(line)
+        .getAllByText("Nm")
+        .map((name) => name.className),
+    ).toEqual(["text-tk-tag", "text-tk-tag"]);
+    expect(within(line).getAllByText("<")[0]).toHaveClass("text-tk-punct");
+    expect(mark).toHaveClass("bg-hit");
+    expect(within(panel).getAllByText("xml")[0]).toHaveClass("text-tk-decl");
+  });
 });

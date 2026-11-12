@@ -300,6 +300,21 @@ describe("Validate mode", () => {
       expect(sourceLine(12)).toHaveTextContent(/^12<L12\/>$/);
     });
 
+    it("colours the source's syntax, carrying a comment across lines, under the problem-line highlight", async () => {
+      const commented = source.replace("<L8/>", "<L8/><!-- from here").replace("<L10/>", "<L10 -->");
+      answerWith(twoOnLineNine);
+      const user = await openValidate();
+
+      await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([commented], "batch.xml"));
+
+      await within(report()).findByRole("list", { name: "Source" });
+      expect(within(sourceLine(8)).getByText("L8")).toHaveClass("text-tk-tag");
+      expect(within(sourceLine(9)).getByText("<L9/>")).toHaveClass("text-tk-punct", "italic");
+      expect(sourceLine(9)).toHaveClass("bg-destructive-soft");
+      expect(within(sourceLine(10)).getByText("-->")).toHaveClass("italic");
+      expect(within(sourceLine(11)).getByText("L11")).toHaveClass("text-tk-tag");
+    });
+
     it("shows the pasted text", async () => {
       answerWith(invalidReport);
       const user = await openValidate();
@@ -381,7 +396,7 @@ describe("Validate mode", () => {
       expect(sourceLine(lineCount)).toHaveAttribute("aria-current", "location");
       expect(sourceLine(lineCount)).toHaveTextContent("The last line is wrong");
       expect(within(sourceView()).getAllByRole("listitem").length).toBeLessThan(200);
-      expect(within(sourceView()).queryByText(/^<Ln1\/>$/)).not.toBeInTheDocument();
+      expect(() => sourceLine(1)).toThrow("line 1 is not rendered");
     });
   });
 
@@ -399,7 +414,7 @@ describe("Validate mode", () => {
     it("decodes a picked file with the encoding the report names", async () => {
       const source = await sourceOf(latin1, "ISO-8859-1");
 
-      expect(within(source).getByText("<Nm>Société</Nm>")).toBeInTheDocument();
+      expect(within(source).getAllByRole("listitem")[1]).toHaveTextContent(/^2<Nm>Société<\/Nm>$/);
     });
 
     it("decodes a UTF-16 file, keeping its line numbers", async () => {
@@ -409,7 +424,7 @@ describe("Validate mode", () => {
       const source = await sourceOf(utf16, "UTF-16");
 
       expect(within(source).getAllByRole("listitem")).toHaveLength(3);
-      expect(within(source).getByText("<Nm>Société</Nm>")).toBeInTheDocument();
+      expect(within(source).getAllByRole("listitem")[1]).toHaveTextContent(/^2<Nm>Société<\/Nm>$/);
     });
 
     it("falls back to UTF-8 when the report names no encoding the browser knows", async () => {
@@ -417,7 +432,7 @@ describe("Validate mode", () => {
 
       const source = await sourceOf(utf8, "X-NOT-AN-ENCODING");
 
-      expect(within(source).getByText("<Nm>Société</Nm>")).toBeInTheDocument();
+      expect(within(source).getAllByRole("listitem")[1]).toHaveTextContent(/^2<Nm>Société<\/Nm>$/);
     });
   });
 
