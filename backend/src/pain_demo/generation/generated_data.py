@@ -163,17 +163,6 @@ class GeneratedData:
             rng = tx_stream("intermediary_agent" if slot == 1 else f"intermediary_agent_{slot}")
             return self.clean_agent(rng, rng.choice(request.countries))[0]
 
-        # A supplied optional role is drawn whatever the background rate, so its gaps can be filled.
-        ultimate_debtor_party = (
-            self._party(tx_stream("ultimate_debtor"), debtor_country, with_address=False)
-            if ultimate_debtor or isinstance(supplied.ultimate_debtor, SuppliedParty)
-            else None
-        )
-        ultimate_creditor_party = (
-            self._party(tx_stream("ultimate_creditor"), country, with_address=False)
-            if ultimate_creditor or isinstance(supplied.ultimate_creditor, SuppliedParty)
-            else None
-        )
         generated_intermediaries = (intermediary_agent(1),) if intermediary else ()
         supplied_intermediaries = supplied.intermediary_agents
         return Transaction(
@@ -188,8 +177,16 @@ class GeneratedData:
             remittance=merge_remittance(
                 _remittance(tx_stream("remittance"), structured=structured), supplied.remittance
             ),
-            ultimate_debtor=_optional_party(ultimate_debtor_party, supplied.ultimate_debtor),
-            ultimate_creditor=_optional_party(ultimate_creditor_party, supplied.ultimate_creditor),
+            ultimate_debtor=_optional_party(
+                lambda: self._party(tx_stream("ultimate_debtor"), debtor_country, with_address=False),
+                ultimate_debtor,
+                supplied.ultimate_debtor,
+            ),
+            ultimate_creditor=_optional_party(
+                lambda: self._party(tx_stream("ultimate_creditor"), country, with_address=False),
+                ultimate_creditor,
+                supplied.ultimate_creditor,
+            ),
             intermediary_agents=(
                 generated_intermediaries
                 if supplied_intermediaries is MISSING
@@ -321,11 +318,14 @@ def _debtor_country(payment: SuppliedPayment) -> SupportedCountry | None:
     return country if country in COUNTRIES else None
 
 
-def _optional_party(generated: Party | None, supplied: SuppliedParty | MISSING | None) -> Party | None:
+def _optional_party(
+    draw: Callable[[], Party], background: bool, supplied: SuppliedParty | MISSING | None
+) -> Party | None:
+    """A supplied party is drawn whatever the `background` rate decided, so its gaps can be filled; the role's own
+    stream keeps the draw from moving anything else."""
     if isinstance(supplied, SuppliedParty):
-        assert generated is not None  # noqa: S101 - drawn whenever a party is supplied
-        return merge_party(generated, supplied)
-    return pick(supplied, generated)
+        return merge_party(draw(), supplied)
+    return draw() if background and supplied is MISSING else None  # a supplied null leaves the role out
 
 
 def pick[T](value: T | MISSING, generated: T) -> T:

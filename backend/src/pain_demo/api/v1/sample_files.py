@@ -39,7 +39,7 @@ from pain_demo.generation.request import (
 )
 from pain_demo.generation.sample_file import AnswerKey, GeneratedSampleFile, answer_key_csv, zip_bytes
 from pain_demo.generation.screening import NameScreen
-from pain_demo.generation.supplied import Location, SuppliedAgent, roles
+from pain_demo.generation.supplied import Location, catalogue_errors
 from pain_demo.problems import BODY_TOO_LARGE, BUILD_FAILED, VALIDATION_ERROR
 from pain_demo.renderer import RenderFailed
 from pain_demo.request_context import add_log_fields
@@ -119,7 +119,8 @@ async def generate_sample_file_from_csv(
             ]
         )
     try:
-        body = GenerationRequest.model_validate({**raw, **supplied_csv.parse(await supplied_data.read())})
+        rows = await run_in_threadpool(supplied_csv.parse, await supplied_data.read())
+        body = GenerationRequest.model_validate({**raw, **rows})
     except supplied_csv.CsvInvalid as invalid:
         raise RequestValidationError(invalid.errors) from invalid
     except ValidationError as invalid:
@@ -141,7 +142,7 @@ async def _generate(
     """Generate for either endpoint; `locate` puts an error's location in the caller's terms."""
     state = request.app.state
     screen = NameScreen(state.catalogue)
-    if errors := catalogue_errors(body, screen):
+    if errors := await run_in_threadpool(catalogue_errors, body.payment, body.transactions, screen):
         raise RequestValidationError(_relocated(errors, locate))
     effective = body.resolve()
     add_log_fields(
@@ -176,24 +177,6 @@ async def _generate(
             headers={"Content-Disposition": f'attachment; filename="{generated.sample_file.zip_filename}"'},
         )
     return generated
-
-
-def catalogue_errors(body: GenerationRequest, screen: NameScreen) -> list[dict[str, Any]]:
-    """Supplied Data rows cannot name a catalogue Entity (spec 5.3); a named Hit is the way to place one."""
-    errors = []
-    for location, role in roles(body.payment, body.transactions):
-        if isinstance(role.name, str) and screen.names_entity(role.name):
-            errors.append((*location, "name"))
-        if isinstance(role, SuppliedAgent) and isinstance(role.bic, str) and screen.listed_bic(role.bic):
-            errors.append((*location, "bic"))
-    return [
-        {
-            "loc": ("body", *loc),
-            "msg": "names a catalogue Entity; place it with a Hit instead",
-            "type": "catalogue_entity",
-        }
-        for loc in errors
-    ]
 
 
 @router.post(

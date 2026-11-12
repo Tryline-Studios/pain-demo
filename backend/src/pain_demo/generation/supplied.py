@@ -8,13 +8,15 @@ there fails validation like any other wrong type.
 import re
 from collections.abc import Iterator
 from decimal import Decimal
-from typing import Annotated, Self
+from typing import Annotated, Any, Self
 
 import pycountry
 from pydantic import MISSING, AfterValidator, BaseModel, ConfigDict, Field, model_validator
 from pydantic_core import InitErrorDetails, PydanticCustomError
 from schwifty import IBAN
 from schwifty.exceptions import SchwiftyException
+
+from pain_demo.generation.screening import NameScreen
 
 DEC2014_BIC = r"^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$"
 """`BICFIDec2014Identifier`, from .09; the field's own pattern, the looser of the two."""
@@ -293,3 +295,23 @@ def version_errors(
                         f"{part} is over {limit} characters, the limit in {message_version}",
                     )
     return errors
+
+
+def catalogue_errors(
+    payment: SuppliedPayment | None, transactions: list[SuppliedTransaction], screen: NameScreen
+) -> list[dict[str, Any]]:
+    """Supplied Data rows cannot name a catalogue Entity (spec 5.3); a named Hit is the way to place one."""
+    errors = []
+    for location, role in roles(payment, transactions):
+        if isinstance(role.name, str) and screen.names_entity(role.name):
+            errors.append((*location, "name"))
+        if isinstance(role, SuppliedAgent) and isinstance(role.bic, str) and screen.listed_bic(role.bic):
+            errors.append((*location, "bic"))
+    return [
+        {
+            "loc": ("body", *loc),
+            "msg": "names a catalogue Entity; place it with a Hit instead",
+            "type": "catalogue_entity",
+        }
+        for loc in errors
+    ]

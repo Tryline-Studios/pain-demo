@@ -513,19 +513,20 @@ class _Placer:
                 transactions[plan.transaction - 1] = replace(tx, remittance=remittance)
                 hits.append(self._hit(ids[k], plan, tx.end_to_end_id, name, paired_with, element=element))
                 continue
-            agent_hit = PLACEMENTS[plan.placement].agent
-            bic_only = plan.rendering_mode == "bic_only"
-            name = None if bic_only else _name(rng, plan.entity, plan.name_variant, allowed)
-            home = debtor_country if plan.placement == "debtor_agent" else None
-            bic = None
-            if agent_hit and isinstance(plan.entity, Bank) and plan.entity.bics:
-                bic = rng.choice([b for b in plan.entity.bics if bic_country(b.value) == home] or plan.entity.bics)
-            address = None if bic_only else _address(rng, plan.entity, bic_country(bic.value) if bic else home)
-            listed = _listed(address) if address else None
-            lei = self._lei(plan.entity) if agent_hit and not bic_only else None
             rendering_mode: RenderingMode | None = None
             local_agent: Agent | None = None  # a sanctioned party's synthetic agent in an Exposure country
-            if agent_hit:
+            bic: Bic | None = None
+            lei: str | None = None
+            if PLACEMENTS[plan.placement].agent:
+                bic_only = plan.rendering_mode == "bic_only"
+                name = None if bic_only else _name(rng, plan.entity, plan.name_variant, allowed)
+                home = debtor_country if plan.placement == "debtor_agent" else None
+                if isinstance(plan.entity, Bank) and plan.entity.bics:
+                    bics = plan.entity.bics
+                    bic = rng.choice([b for b in bics if bic_country(b.value) == home] or bics)
+                address = None if bic_only else _address(rng, plan.entity, bic_country(bic.value) if bic else home)
+                listed = _listed(address) if address else None
+                lei = None if bic_only else self._lei(plan.entity)
                 rendering_mode = plan.rendering_mode or ("name_and_bic" if bic else "name_only")
                 country = bic_country(bic.value) if bic else _home_country(plan.entity, address, self.request)
                 if home is None or country == home:
@@ -538,8 +539,9 @@ class _Placer:
                     bic=bic.value if bic else None, name=name.rendered if name else None, lei=lei, address=listed
                 )
             else:
-                assert name is not None  # noqa: S101 - only an agent can be bic_only
-                party_or_agent = Party(name=name.rendered, address=listed)
+                name = party_name = _name(rng, plan.entity, plan.name_variant, allowed)  # a party is never bic_only
+                address = _address(rng, plan.entity, None)
+                party_or_agent = Party(name=party_name.rendered, address=_listed(address) if address else None)
                 country = _home_country(plan.entity, address, self.request)
                 if country in EXPOSURE_COUNTRIES and plan.placement in {"creditor", "debtor"}:
                     # No clean bank exists there, so a synthetic local one services the account (spec 6.9, 8.3).
