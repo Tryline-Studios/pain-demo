@@ -1,12 +1,9 @@
 import { useMemo, useState } from "react";
-import type { components } from "@/api/schema";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { Tile } from "@/workbench/Tile";
 import { ProblemRail } from "@/workbench/validate/ProblemRail";
 import { SourceView, splitLines } from "@/workbench/validate/SourceView";
-import type { Validation } from "@/workbench/validate/useValidation";
-
-type ValidationProblem = components["schemas"]["ValidationProblem"];
+import type { Validation, ValidationProblem } from "@/workbench/validate/useValidation";
 
 /** The right pane in Validate mode: summary tiles, the file line and the problems (spec 17.9). */
 export function ValidationReportPane({ validation }: { validation: Validation }) {
@@ -15,10 +12,10 @@ export function ValidationReportPane({ validation }: { validation: Validation })
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <Tile label="Verdict">{validation.isPending ? "…" : report ? (report.valid ? "Valid" : "Invalid") : "–"}</Tile>
+        <Tile label="Verdict">{verdict(validation)}</Tile>
         <Tile label="Message Version">{report?.message_version ?? "–"}</Tile>
         <Tile label="Transactions">{report?.transaction_count ?? "–"}</Tile>
-        <Tile label="Problems">{report ? (report.truncated ? "100+" : report.problems.length) : "–"}</Tile>
+        <Tile label="Problems">{problemCount(validation.data)}</Tile>
         <Tile label="Encoding">{report?.encoding ?? "–"}</Tile>
       </div>
       {validation.isError ? <ProblemBlock error={validation.error} /> : null}
@@ -53,6 +50,24 @@ export function ValidationReportPane({ validation }: { validation: Validation })
       )}
     </div>
   );
+}
+
+function verdict({ isPending, data }: Validation) {
+  if (isPending) {
+    return "…";
+  }
+  if (data === undefined) {
+    return "–";
+  }
+  return data.valid ? "Valid" : "Invalid";
+}
+
+/** The report caps its problems at 100 and says so with `truncated`. */
+function problemCount(report: Validation["data"]) {
+  if (report === undefined) {
+    return "–";
+  }
+  return report.truncated ? "100+" : report.problems.length;
 }
 
 /** The source view with the problem rail on its right; clicking a problem scrolls the source to its line. */
