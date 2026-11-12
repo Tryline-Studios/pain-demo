@@ -6,12 +6,13 @@ import json
 import re
 import zipfile
 from datetime import date, datetime
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel
 
 from pain_demo.catalogue import Catalogue
 from pain_demo.generation.clean_banks import CleanBankList
+from pain_demo.generation.exposures import Exposure, by_exposure_country, place_exposures
 from pain_demo.generation.generated_data import GeneratedData
 from pain_demo.generation.hits import Hit, place_hits, summary_counts
 from pain_demo.generation.request import EffectiveRequest, MessageVersion
@@ -75,7 +76,7 @@ class AnswerKey(BaseModel):
     file: FileFacts
     summary: Summary
     hits: list[Hit]
-    exposures: list[Any]
+    exposures: list[Exposure]
     transactions: list[AnswerKeyTransaction]
     warnings: list[str]
     """Elements of Generated Data the Message Version could not carry and the build dropped."""
@@ -127,6 +128,7 @@ def generate(
     """Blocking: run it in a worker thread."""
     data = GeneratedData(request, clean_banks, screen)
     model, hits = place_hits(data.sample_file_model(), request, catalogue, data)
+    model, exposures = place_exposures(model, request, hits, data)
     file_hit_ids = [hit.id for hit in hits if hit.scope == "file"]
     rendered = render(model)
     declaration, _, body = rendered.xml.decode("utf-8").partition("\n")
@@ -144,9 +146,9 @@ def generate(
             hit_count=len(hits),
             sha256=hashlib.sha256(xml.encode("utf-8")).hexdigest(),
         ),
-        summary=Summary(**summary_counts(hits, catalogue)),
+        summary=Summary(**summary_counts(hits, catalogue), by_exposure_country=by_exposure_country(exposures)),
         hits=hits,
-        exposures=[],
+        exposures=exposures,
         transactions=[
             AnswerKeyTransaction(
                 number=number,

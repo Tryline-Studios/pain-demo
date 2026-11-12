@@ -10,6 +10,7 @@ from starlette.concurrency import run_in_threadpool
 
 from pain_demo.generation import sample_file
 from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES, SupportedCountry
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES, ExposureCountry
 from pain_demo.generation.generated_data import COUNTRIES
 from pain_demo.generation.request import (
     DEFAULT_AMOUNT_MAX,
@@ -96,6 +97,11 @@ class CountryOption(BaseModel):
     currency: str = Field(description="What a creditor in this country is paid in when `currencies` is absent")
 
 
+class ExposureCountryOption(BaseModel):
+    country: ExposureCountry
+    currency: str = Field(description="What an exposed transaction is paid in, whatever `currencies` says")
+
+
 class Limits(BaseModel):
     max_transactions: int
     max_seed_length: int
@@ -107,10 +113,12 @@ class Defaults(BaseModel):
     countries: list[SupportedCountry]
     amount_min: Decimal
     amount_max: Decimal
+    exposure_countries: list[ExposureCountry]
 
 
 class Options(BaseModel):
     countries: list[CountryOption]
+    exposure_countries: list[ExposureCountryOption]
     limits: Limits
     defaults: Defaults
 
@@ -127,6 +135,9 @@ def list_message_versions() -> list[MessageVersionOption]:
 def get_options() -> Options:
     return Options(
         countries=[CountryOption(country=c, currency=COUNTRIES[c].currency) for c in SUPPORTED_COUNTRIES],
+        exposure_countries=[
+            ExposureCountryOption(country=c, currency=p.currency) for c, p in EXPOSURE_COUNTRIES.items()
+        ],
         limits=Limits(max_transactions=MAX_TRANSACTIONS, max_seed_length=MAX_SEED_LENGTH),
         defaults=Defaults(
             message_version=DEFAULT_MESSAGE_VERSION,
@@ -134,5 +145,6 @@ def get_options() -> Options:
             countries=list(DEFAULT_COUNTRIES),
             amount_min=DEFAULT_AMOUNT_MIN,
             amount_max=DEFAULT_AMOUNT_MAX,
+            exposure_countries=list(EXPOSURE_COUNTRIES),
         ),
     )

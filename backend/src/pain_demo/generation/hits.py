@@ -40,6 +40,7 @@ from pain_demo.catalogue.schema import (
     Script,
 )
 from pain_demo.catalogue.transliteration import TransliterationScheme
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES
 from pain_demo.generation.fuzz import FuzzOperation, fuzz
 from pain_demo.generation.generated_data import GeneratedData, digits
 from pain_demo.generation.model import (
@@ -228,7 +229,7 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
     entities = list(catalogue.entities.values())
     queue: list[Entity] = []
     taken: set[Placement] = set()
-    free_transactions = request.transaction_count
+    free_transactions = request.transaction_count - request.exposure_count  # Exposures take the rest (spec 8.2)
     planned: list[_Planned] = []
     for drawn in range(request.hit_count):
         forced = request.hit_count - drawn > free_transactions
@@ -246,7 +247,8 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
         else:
             free_transactions -= 1
         planned.append(_Planned(entity, placement))
-    numbers = iter(rng.sample(range(1, request.transaction_count + 1), request.transaction_count - free_transactions))
+    transaction_level = sum(not PLACEMENTS[plan.placement].file_level for plan in planned)
+    numbers = iter(rng.sample(range(1, request.transaction_count + 1), transaction_level))
     planned = [p if PLACEMENTS[p.placement].file_level else replace(p, transaction=next(numbers)) for p in planned]
     return _debtor_agent_at_home(planned, entities, rng, request)
 
@@ -339,6 +341,7 @@ class _Placer:
             address = _address(rng, plan.entity, bic_country(bic.value) if bic else home)
             listed = _listed(address) if address else None
             lei = self._lei(plan.entity) if agent_hit else None
+            local_agent: Agent | None = None  # a sanctioned party's synthetic agent in an Exposure country
             if agent_hit:
                 party_or_agent: Party | Agent = Agent(
                     bic=bic.value if bic else None, name=name.rendered, lei=lei, address=listed
@@ -351,15 +354,25 @@ class _Placer:
             else:
                 party_or_agent = Party(name=name.rendered, address=listed)
                 country = _home_country(plan.entity, address, self.request)
-                account = self.data.account(rng, country, None)
+                if country in EXPOSURE_COUNTRIES and plan.placement in {"creditor", "debtor"}:
+                    # No clean bank exists there, so a synthetic local one services the account (spec 6.9, 8.3).
+                    agent_stream = stream(self.request.seed, f"hits/{k + 1}/agent")
+                    local_agent, account = self.data.exposed_agent_and_account(agent_stream, country)
+                else:
+                    local_agent, account = None, self.data.account(rng, country, None)
                 if plan.placement == "debtor":
                     debtor_country = country
             if plan.transaction is None:
                 model = _place_file(model, plan.placement, party_or_agent, account)
+                if local_agent:  # a Debtor Agent Hit, placed later, replaces it
+                    model = replace(model, debtor_agent=local_agent)
                 end_to_end_id = None
             else:
                 tx = transactions[plan.transaction - 1]
-                transactions[plan.transaction - 1] = self._place_tx(tx, rng, plan.placement, party_or_agent, account)
+                placed = self._place_tx(tx, rng, plan.placement, party_or_agent, account)
+                transactions[plan.transaction - 1] = (
+                    replace(placed, creditor_agent=local_agent) if local_agent else placed
+                )
                 end_to_end_id = tx.end_to_end_id
             hits.append(
                 self._hit(

@@ -15,7 +15,9 @@ from typing import cast
 from faker import Faker
 from schwifty import IBAN
 
+from pain_demo.catalogue.transliteration import transliterate
 from pain_demo.generation.clean_banks import IBAN_COUNTRIES, CleanBank, CleanBankList, SupportedCountry
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES, ExposureCountry
 from pain_demo.generation.model import (
     Account,
     Address,
@@ -72,6 +74,17 @@ MAX_REDRAWS = 1000
 ACCOUNT_IBAN_COUNTRIES = frozenset({"BY", "IR", *IBAN_COUNTRIES})
 """Where an account is an IBAN (spec 6.9); everywhere else it is `Othr/Id`."""
 
+EXPOSURE_BANK_NAMES = (
+    "{city} Commercial Bank",
+    "{city} Savings Bank",
+    "{city} Trade and Credit Bank",
+    "First {city} Bank",
+    "{city} Cooperative Bank",
+)
+"""A synthetic Exposure agent's name around one of its country's cities (spec 8.3)."""
+ROMANISED_COUNTRIES = frozenset({"RU", "BY"})
+"""Exposure countries whose names are Faker `ru_RU` romanised under BGN/PCGN; the rest take the request's locales."""
+
 REMITTANCE_TEMPLATES = ("Invoice {n}", "Order {n}", "Contract {n} instalment", "Services rendered, ref {n}")
 
 
@@ -82,7 +95,7 @@ class GeneratedData:
         self.request = request
         self.clean_banks = clean_banks
         self.screen = screen
-        self._fakers: dict[SupportedCountry, Faker] = {}
+        self._fakers: dict[str, Faker] = {}
 
     def sample_file_model(self) -> SampleFileModel:
         request = self.request
@@ -149,15 +162,15 @@ class GeneratedData:
     def _stream(self, name: str) -> random.Random:
         return stream(self.request.seed, name)
 
-    def _faker(self, rng: random.Random, country: SupportedCountry) -> Faker:
-        faker = self._fakers.get(country) or self._fakers.setdefault(country, Faker(COUNTRIES[country].locale))
+    def _faker(self, rng: random.Random, locale: str) -> Faker:
+        faker = self._fakers.get(locale) or self._fakers.setdefault(locale, Faker(locale))
         faker.seed_instance(rng.getrandbits(64))
         return faker
 
     def _party(
         self, rng: random.Random, country: SupportedCountry, *, company: bool = False, with_address: bool = True
     ) -> Party:
-        faker = self._faker(rng, country)
+        faker = self._faker(rng, COUNTRIES[country].locale)
         draw = faker.company if company else faker.name
         name = _redraw(draw, self.screen.matches)
         if not with_address:
@@ -172,6 +185,30 @@ class GeneratedData:
                 country=country,
             ),
         )
+
+    def exposed_party(self, rng: random.Random, country: ExposureCountry) -> Party:
+        """A Latin-script name, screened like every generated name, at a curated city (spec 8.3, 8.4)."""
+        company = rng.random() < 0.5
+        if country in ROMANISED_COUNTRIES:
+            faker = self._faker(rng, "ru_RU")
+            draw = faker.company if company else faker.name
+
+            def romanised() -> str:
+                return transliterate(draw().replace("«", "").replace("»", ""), "bgn_pcgn")
+
+            name = _redraw(romanised, self.screen.matches)
+        else:  # a foreign party at a local address: Faker has no usable Latin names for these countries
+            faker = self._faker(rng, COUNTRIES[rng.choice(self.request.countries)].locale)
+            name = _redraw(faker.company if company else faker.name, self.screen.matches)
+        return Party(name=name, address=Address(town=rng.choice(EXPOSURE_COUNTRIES[country].cities), country=country))
+
+    def exposed_agent_and_account(self, rng: random.Random, country: ExposureCountry) -> tuple[Agent, Account]:
+        """A synthetic agent with an ISO test BIC (`0` eighth) and the account it services (spec 8.3, 6.9)."""
+        cities = EXPOSURE_COUNTRIES[country].cities
+        name = _redraw(lambda: rng.choice(EXPOSURE_BANK_NAMES).format(city=rng.choice(cities)), self.screen.matches)
+        bank = "".join(rng.choices(string.ascii_uppercase, k=4))
+        bic = f"{bank}{country}{rng.choice(string.ascii_uppercase)}0"
+        return Agent(bic=bic, name=name), self.account(rng, country, bank if country == "BY" else None)
 
     def clean_agent(self, rng: random.Random, country: SupportedCountry) -> tuple[Agent, CleanBank]:
         bank = rng.choice(self.clean_banks.for_country(country))

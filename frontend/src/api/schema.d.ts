@@ -177,7 +177,7 @@ export interface components {
             /** Hits */
             hits: components["schemas"]["Hit"][];
             /** Exposures */
-            exposures: unknown[];
+            exposures: components["schemas"]["Exposure"][];
             /** Transactions */
             transactions: components["schemas"]["AnswerKeyTransaction"][];
             /** Warnings */
@@ -308,6 +308,8 @@ export interface components {
             amount_min: string;
             /** Amount Max */
             amount_max: string;
+            /** Exposure Countries */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
         };
         /**
          * EffectiveRequest
@@ -359,6 +361,25 @@ export interface components {
             amount_min: components["schemas"]["Amount-Output"];
             /** @default 50000.00 */
             amount_max: components["schemas"]["Amount-Output"];
+            /**
+             * Exposure Countries
+             * @description Each Exposure draws its country from them
+             * @default [
+             *       "RU",
+             *       "BY",
+             *       "IR",
+             *       "KP",
+             *       "SY",
+             *       "VE"
+             *     ]
+             */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
+            /**
+             * Exposure Count
+             * @description Clean transactions with the creditor side in an exposure country, none of them carrying a Hit
+             * @default 0
+             */
+            exposure_count: number;
         };
         EntityDetail: components["schemas"]["BankDetail"] | components["schemas"]["CorporateDetail"] | components["schemas"]["IndividualDetail"];
         EntityId: string;
@@ -385,6 +406,34 @@ export interface components {
         };
         /** @enum {string} */
         EntityType: "individual" | "bank" | "corporate";
+        /** @enum {string} */
+        ExposedElement: "creditor_address" | "agent_bic" | "account";
+        /**
+         * Exposure
+         * @description One exposed transaction (spec 11.2), in wire order.
+         */
+        Exposure: {
+            /** Transaction Number */
+            transaction_number: number;
+            /** End To End Id */
+            end_to_end_id: string;
+            country: components["schemas"]["ExposureCountry"];
+            /** Currency */
+            currency: string;
+            /** Elements */
+            elements: components["schemas"]["ExposedElement"][];
+        };
+        /** @enum {string} */
+        ExposureCountry: "RU" | "BY" | "IR" | "KP" | "SY" | "VE";
+        /** ExposureCountryOption */
+        ExposureCountryOption: {
+            country: components["schemas"]["ExposureCountry"];
+            /**
+             * Currency
+             * @description What an exposed transaction is paid in, whatever `currencies` says
+             */
+            currency: string;
+        };
         /** FieldError */
         FieldError: {
             /** Field */
@@ -481,6 +530,25 @@ export interface components {
             amount_min: components["schemas"]["Amount-Input"];
             /** @default 50000.00 */
             amount_max: components["schemas"]["Amount-Input"];
+            /**
+             * Exposure Countries
+             * @description Each Exposure draws its country from them
+             * @default [
+             *       "RU",
+             *       "BY",
+             *       "IR",
+             *       "KP",
+             *       "SY",
+             *       "VE"
+             *     ]
+             */
+            exposure_countries: components["schemas"]["ExposureCountry"][];
+            /**
+             * Exposure Count
+             * @description Clean transactions with the creditor side in an exposure country, none of them carrying a Hit
+             * @default 0
+             */
+            exposure_count: number;
         };
         /**
          * GeneratorVersion
@@ -705,6 +773,8 @@ export interface components {
         Options: {
             /** Countries */
             countries: components["schemas"]["CountryOption"][];
+            /** Exposure Countries */
+            exposure_countries: components["schemas"]["ExposureCountryOption"][];
             limits: components["schemas"]["Limits"];
             defaults: components["schemas"]["Defaults"];
         };

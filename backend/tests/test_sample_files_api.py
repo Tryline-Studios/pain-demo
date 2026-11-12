@@ -482,4 +482,5 @@ def test_options_publish_countries_limits_and_defaults(client: TestClient) -> No
         "countries": ["GB", "DE", "FR", "NL", "US"],
         "amount_min": "10.00",
         "amount_max": "50000.00",
+        "exposure_countries": ["RU", "BY", "IR", "KP", "SY", "VE"],
     }

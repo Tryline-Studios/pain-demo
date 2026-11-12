@@ -1,6 +1,6 @@
 """The generation request (spec 5.1, 5.5, 12.4) and its Effective Request (spec 5.7).
 
-Only the generation settings and the Hit Count exist so far; named Hits, Supplied Data and Exposures arrive with
+Only the generation settings, the Hit Count and Exposures exist so far; named Hits and Supplied Data arrive with
 their own tickets.
 """
 
@@ -13,6 +13,7 @@ import pycountry
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from pain_demo.generation.clean_banks import SupportedCountry
+from pain_demo.generation.exposure_countries import EXPOSURE_COUNTRIES, ExposureCountry
 from pain_demo.generation.seeds import identifier, stream
 
 type MessageVersion = Literal[
@@ -84,6 +85,14 @@ class GenerationRequest(BaseModel):
     )
     amount_min: Amount = DEFAULT_AMOUNT_MIN
     amount_max: Amount = DEFAULT_AMOUNT_MAX
+    exposure_countries: list[ExposureCountry] = Field(
+        default=list(EXPOSURE_COUNTRIES), min_length=1, description="Each Exposure draws its country from them"
+    )
+    exposure_count: int = Field(
+        default=0,
+        ge=0,
+        description="Clean transactions with the creditor side in an exposure country, none of them carrying a Hit",
+    )
 
     @field_validator("amount_max")
     @classmethod
@@ -105,6 +114,19 @@ class GenerationRequest(BaseModel):
             msg = f"hit_count must not exceed the transaction count plus two ({cap})"
             raise ValueError(msg)
         return hit_count
+
+    @field_validator("exposure_count")
+    @classmethod
+    def _exposure_cap(cls, exposure_count: int, info: ValidationInfo) -> int:
+        """Exposures take transactions no Hit touches; Hits beyond the two file-level ones take one each (spec 8.2)."""
+        if "transaction_count" not in info.data or "hit_count" not in info.data:
+            return exposure_count  # validated on their own
+        transaction_count = info.data["transaction_count"] or DEFAULT_TRANSACTION_COUNT
+        cap = transaction_count - max(0, info.data["hit_count"] - 2)
+        if exposure_count > cap:
+            msg = f"exposure_count must not exceed the transactions left free of Hits ({cap})"
+            raise ValueError(msg)
+        return exposure_count
 
     def resolve(self) -> "EffectiveRequest":
         """Resolve every default (spec 5.7). Replaying the result reproduces the Sample File byte for byte."""

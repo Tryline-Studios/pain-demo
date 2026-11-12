@@ -147,14 +147,14 @@ def _party(party: Party) -> dict[str, Any]:
 def _address(address: Address | ListedAddress) -> dict[str, Any]:
     if isinstance(address, ListedAddress):
         return {"form": "unstructured", "lines": list(address.lines), "country": address.country}
-    return {
-        "form": "structured",
+    parts = {
         "street": address.street,
         "building_number": address.building_number,
         "post_code": address.post_code,
         "town": address.town,
         "country": address.country,
     }
+    return {"form": "structured"} | {key: value for key, value in parts.items() if value is not None}
 
 
 def _agent(agent: Agent) -> dict[str, Any]:

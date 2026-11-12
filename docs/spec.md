@@ -416,6 +416,7 @@ Only on request: a named Hit with `with_controller: true` places the controlled 
 - A sanctioned party's address comes from its Listing. Its account is clean and in that country.
 - A sanctioned Bank as agent: the account it services is in the Bank's country, using the Bank's own bank code when schwifty's registry has it. The counterparty's name and address are drawn from the request's countries like any generated party (a German company with an account at Sberbank Moscow), so no Faker locale is needed for catalogue countries.
 - The account element follows the country: IBAN where the IBAN registry has the country (Belarus, Iran, and all twelve default countries except the US); otherwise `Othr/Id` in a country-appropriate synthetic format (Russian 20-digit account numbers; US ABA routing plus account; plain numeric for North Korea, Syria, Venezuela).
+- A sanctioned Debtor or Creditor whose account country is one of the six Exposure countries banks with a synthetic agent there (section 8.3: generated name, test BIC, the IBAN's bank code from that BIC for Belarus), because the Clean Bank List has no bank in those countries. A Debtor Agent Hit still replaces that agent (open point 9). Elsewhere outside the twelve the agent stays a clean bank from the request's countries (open point 10).
 - Everything not tied to a Hit comes from the Clean Bank List (section 4).
 
 ---
@@ -485,9 +486,9 @@ A clean transaction whose creditor side is deliberately placed in a sanctioned o
 
 ### 8.2 Request
 
-- `exposure_countries[]`: from RU, BY, IR, KP, SY, VE (the catalogue's programmes). Currencies: RUB, BYN, IRR, KPW, SYP, VES. Published with their currencies by `GET /options`.
+- `exposure_countries[]`: from RU, BY, IR, KP, SY, VE (the catalogue's programmes). Currencies: RUB, BYN, IRR, KPW, SYP, VES. Published with their currencies by `GET /options`. Default: all six.
 - `exposure_count`: the number of clean transactions with an exposed creditor side; explicit, like Hit Count.
-- By default Exposures and Hits land on distinct transactions.
+- By default Exposures and Hits land on distinct transactions. Hits beyond the two file-level ones take a transaction each, so `exposure_count` may be at most `transaction_count - max(0, hit_count - 2)`; more is a validation error on `exposure_count`. A file-level Hit (Debtor, Debtor Agent) still touches an exposed transaction.
 
 ### 8.3 What an exposed transaction gets, on the creditor side
 
@@ -988,4 +989,4 @@ All eight were reviewed and accepted as written on 2026-09-17 (see the resolutio
 Added while building [Drawn Hits on party and agent Placements](https://github.com/Tryline-Studios/pain-demo/issues/30):
 
 9. **Sanctioned Debtor beside a sanctioned Debtor Agent.** Both own the one `DbtrAcct` (section 6.9). The Debtor Agent's Entity is then a Bank in the Debtor's Listing country, drawn from the placement stream; if no such Bank is free, the Debtor's rule wins (its account is clean and in its own country) and the agent still renders its name and BIC.
-10. **Sanctioned Creditor outside the request's countries.** Its account is in its Listing country (section 6.9), but its Creditor Agent is a clean bank from the request's countries, so e.g. Alrosa holds a Russian `Othr/Id` at a US bank. Known limit: synthetic agents for sanctioned countries arrive with Exposures ([#37](https://github.com/Tryline-Studios/pain-demo/issues/37)).
+10. **Sanctioned Creditor outside the request's countries.** Its account is in its Listing country (section 6.9), but its Creditor Agent is a clean bank from the request's countries, so e.g. Alrosa holds a Russian `Othr/Id` at a US bank. **Resolved in [Exposures](https://github.com/Tryline-Studios/pain-demo/issues/37)** for RU, BY, IR, KP, SY and VE: a sanctioned Creditor or Debtor in one of those countries banks with a synthetic Exposure agent in that country, so its account and agent agree (section 6.9). Still a known limit for the other Listing countries outside the twelve (AE, CN, IN, IQ and a few more): their Creditor Agent stays a clean bank from the request's countries.
