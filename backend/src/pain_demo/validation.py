@@ -15,6 +15,8 @@ from pain_demo.generation.request import MESSAGE_VERSIONS
 _NAMESPACE_PREFIX = "urn:iso:std:iso:20022:tech:xsd:"
 _PARSER_POSITION = re.compile(r", line \d+, column \d+$")
 MAX_PROBLEMS = 100
+MAX_ELEMENTS = 500_000
+"""Above the richest realistic 10 MB pain.001 (about 400,000 elements) and well below a flood (about 1.3 million)."""
 _SCHEMA_LOCKS: dict[str, threading.Lock] = {version: threading.Lock() for version in MESSAGE_VERSIONS}
 _ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
 _EXPECTED = re.compile(r"Expected is (?:one of )?\( (.*) \)")
@@ -28,6 +30,7 @@ class ProblemCode(StrEnum):
     MALFORMED_XML = "malformed_xml"
     DTD_NOT_ALLOWED = "dtd_not_allowed"
     UNSUPPORTED_MESSAGE = "unsupported_message"
+    TOO_MANY_ELEMENTS = "too_many_elements"
     MISSING_ELEMENT = "missing_element"
     UNEXPECTED_ELEMENT = "unexpected_element"
     PATTERN_MISMATCH = "pattern_mismatch"
@@ -84,13 +87,14 @@ def _doctype_line(content: bytes, encoding: str) -> int | None:
 class _Rejected(Exception):
     """An Uploaded Message stopped before the XSD layer, with its one problem."""
 
-    def __init__(self, problem: ValidationProblem, encoding: str | None = None) -> None:
+    def __init__(self, problem: ValidationProblem, encoding: str | None = None, version: str | None = None) -> None:
         self.problem = problem
         self.encoding = encoding
+        self.version = version
 
 
 def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
-    """The first three layers: returns the encoding, the Message Version and the root, or raises `_Rejected`."""
+    """The first four layers: returns the encoding, the Message Version and the root, or raises `_Rejected`."""
     try:
         root = etree.fromstring(content, _parser())
     except etree.XMLSyntaxError as error:
@@ -125,6 +129,10 @@ def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
             message=message,
         )
         raise _Rejected(problem, encoding)
+    elements = sum(1 for _ in root.iter(etree.Element))
+    if elements > MAX_ELEMENTS:
+        message = f"The file has {elements:,} elements; the limit is {MAX_ELEMENTS:,}"
+        raise _Rejected(ValidationProblem(code=ProblemCode.TOO_MANY_ELEMENTS, message=message), encoding, version)
     return encoding, version, root
 
 
@@ -206,7 +214,7 @@ def validate_message(content: bytes, name: str | None) -> ValidationReport:
     try:
         encoding, version, root = _parse_message(content)
     except _Rejected as rejected:
-        encoding, version, problems, transaction_count = rejected.encoding, None, [rejected.problem], None
+        encoding, version, problems, transaction_count = rejected.encoding, rejected.version, [rejected.problem], None
     else:
         tree = root.getroottree()
         # lxml's error paths use the document's own prefixes, so the XPath needs them all.

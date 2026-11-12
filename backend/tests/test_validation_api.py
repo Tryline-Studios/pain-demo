@@ -412,3 +412,40 @@ def test_exactly_one_hundred_problems_are_not_truncated(client: TestClient) -> N
     report = client.post(URL, content=with_transactions(pain001(), *[BAD_CURRENCY] * 100), headers=XML).json()
 
     assert (len(report["problems"]), report["truncated"]) == (100, False)
+
+
+ELEMENT_LIMIT = 500_000
+"""Spec section 16; pain001() with an RmtInf holds 24 elements before its Ustrd lines."""
+
+
+def with_ustrd(lines: int, ustrd: bytes) -> bytes:
+    return pain001().replace(b"<Cdtr/>", b"<Cdtr/><RmtInf>" + ustrd * lines + b"</RmtInf>")
+
+
+def test_a_message_over_the_element_limit_is_refused_before_the_xsd(client: TestClient) -> None:
+    content = with_ustrd(ELEMENT_LIMIT - 24 + 1, b"<Ustrd/>")  # each Ustrd empty, so an XSD error if it ran
+
+    report = client.post(URL, content=content, headers=XML).json()
+
+    assert (report["valid"], report["message_version"], report["transaction_count"]) == (
+        False,
+        "pain.001.001.03",
+        None,
+    )
+    assert report["problems"] == [
+        {
+            "line": None,
+            "column": None,
+            "tag": None,
+            "path": None,
+            "code": "too_many_elements",
+            "cause": None,
+            "message": "The file has 500,001 elements; the limit is 500,000",
+        }
+    ]
+
+
+def test_a_message_at_the_element_limit_is_validated(client: TestClient) -> None:
+    report = client.post(URL, content=with_ustrd(ELEMENT_LIMIT - 24, b"<Ustrd>x</Ustrd>"), headers=XML).json()
+
+    assert (report["valid"], report["problems"], report["transaction_count"]) == (True, [], 1)

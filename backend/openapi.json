@@ -1745,6 +1745,7 @@
           "malformed_xml",
           "dtd_not_allowed",
           "unsupported_message",
+          "too_many_elements",
           "missing_element",
           "unexpected_element",
           "pattern_mismatch",
