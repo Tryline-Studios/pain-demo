@@ -315,6 +315,13 @@ def test_a_valid_message_of_every_version_passes_the_xsd_and_counts_its_transact
             id="unexpected_element",
         ),
         pytest.param(
+            b"<InitgPty/>",
+            b"<InitgPty/><FwdgAgt><FinInstnId/></FwdgAgt><Foo/>",
+            (4, "Foo", "/Document/CstmrCdtTrfInitn/GrpHdr/Foo", "unexpected_element"),
+            "Foo on line 4 is not expected here",
+            id="unexpected_element after the last allowed child",
+        ),
+        pytest.param(
             b"<FinInstnId/>",
             b"<FinInstnId><BIC>ABCD12</BIC></FinInstnId>",
             (7, "BIC", "/Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BIC", "pattern_mismatch"),

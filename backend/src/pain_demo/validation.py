@@ -168,6 +168,8 @@ def _classify(tag: str, attribute: str | None, line: int, error: etree._LogEntry
         if "Missing child element" in cause:
             return ProblemCode.MISSING_ELEMENT, f"{tag} {where} is missing a child element; expected {names}"
         return ProblemCode.UNEXPECTED_ELEMENT, f"{tag} {where} is not expected here; expected {names}"
+    if error.type_name == "SCHEMAV_ELEMENT_CONTENT" and cause.endswith("This element is not expected."):
+        return ProblemCode.UNEXPECTED_ELEMENT, f"{tag} {where} is not expected here"
     if error.type_name == "SCHEMAV_CVC_PATTERN_VALID" and (match := _PATTERN.search(cause)):
         value, pattern = match.groups()
         return ProblemCode.PATTERN_MISMATCH, f"{subject} '{value}' {where} doesn't match the pattern {pattern}"
