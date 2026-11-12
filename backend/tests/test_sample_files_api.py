@@ -1,8 +1,10 @@
 """`POST /api/v1/sample-files` with generation settings only: a clean Sample File and Answer Key (spec 5, 9, 11, 12)."""
 
 import hashlib
+import io
 import json
 import re
+import zipfile
 from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
@@ -22,6 +24,7 @@ from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES as COUNTRIES
 from pain_demo.generation.clean_banks import load_clean_banks
 from pain_demo.generation.generated_data import GeneratedData
 from pain_demo.generation.model import SampleFileModel
+from pain_demo.generation.sample_file import AnswerKey, answer_key_json
 from pain_demo.renderer import RenderFailed
 from pain_demo.settings import Settings
 from pain_demo.validation import MESSAGE_VERSIONS
@@ -395,6 +398,59 @@ def test_a_generated_name_matching_the_catalogue_is_redrawn(tmp_path: Path) -> N
 
     assert redrawn != drawn
     assert JaroWinkler.normalized_similarity(redrawn.upper(), drawn.upper()) < 0.85
+
+
+ZIP_SETTINGS = {"seed": "zip-run", "created_at": "2026-11-12T09:30:00Z", "execution_date": "2026-11-13"}
+
+
+def test_format_zip_returns_the_sample_file_and_answer_key_in_one_zip(client: TestClient) -> None:
+    envelope = generate(client, **ZIP_SETTINGS)
+
+    response = client.post("/api/v1/sample-files", params={"format": "zip"}, json=ZIP_SETTINGS)
+
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "application/zip"
+    assert response.headers["content-disposition"] == 'attachment; filename="pain.001.001.03-zip-run.zip"'
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        assert archive.namelist() == ["pain.001.001.03-zip-run.xml", "pain.001.001.03-zip-run.answer-key.json"]
+        xml = archive.read("pain.001.001.03-zip-run.xml").decode("utf-8")
+        answer_key = archive.read("pain.001.001.03-zip-run.answer-key.json").decode("utf-8")
+    assert xml == envelope["sample_file"]["xml"]
+    assert json.loads(answer_key) == envelope["answer_key"]
+    assert answer_key.startswith('{\n  "answer_key_version": 1,\n')
+    assert answer_key.endswith("}\n")
+
+
+def test_replaying_the_effective_request_as_a_zip_gives_the_same_files(client: TestClient) -> None:
+    """The Workbench's zip download: it re-posts `answer_key.request` with `format=zip` (spec 13.4)."""
+    envelope = generate(client, seed="Zürich ✓")
+
+    response = client.post("/api/v1/sample-files", params={"format": "zip"}, json=envelope["answer_key"]["request"])
+
+    assert response.status_code == 200, response.text
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        xml_member, answer_key_member = archive.namelist()
+        xml = archive.read(xml_member).decode("utf-8")
+        answer_key = archive.read(answer_key_member).decode("utf-8")
+    assert xml == envelope["sample_file"]["xml"]
+    assert answer_key == answer_key_json(AnswerKey.model_validate(envelope["answer_key"]))
+    # The Workbench builds its Answer Key JSON download with `JSON.stringify(answer_key, null, 2) + "\n"`.
+    assert answer_key == json.dumps(envelope["answer_key"], indent=2, ensure_ascii=False) + "\n"
+
+
+def test_the_zip_is_byte_for_byte_reproducible(client: TestClient) -> None:
+    first, second = (
+        client.post("/api/v1/sample-files", params={"format": "zip"}, json=ZIP_SETTINGS).content for _ in range(2)
+    )
+
+    assert first == second
+
+
+def test_an_unknown_format_is_a_422_naming_the_parameter(client: TestClient) -> None:
+    response = client.post("/api/v1/sample-files", params={"format": "tar"}, json={})
+
+    assert response.status_code == 422
+    assert [e["field"] for e in response.json()["errors"]] == ["format"]
 
 
 def test_message_versions_lists_the_eleven_with_the_default_flagged(client: TestClient) -> None:

@@ -1,9 +1,10 @@
 """The `sample-files` endpoints: generation and what a client needs to build a request (spec 12.1)."""
 
 from decimal import Decimal
+from typing import Literal
 
 import structlog
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
@@ -22,7 +23,7 @@ from pain_demo.generation.request import (
     GenerationRequest,
     MessageVersion,
 )
-from pain_demo.generation.sample_file import GeneratedSampleFile
+from pain_demo.generation.sample_file import GeneratedSampleFile, zip_bytes
 from pain_demo.generation.screening import NameScreen
 from pain_demo.problems import BODY_TOO_LARGE, BUILD_FAILED, VALIDATION_ERROR
 from pain_demo.renderer import RenderFailed
@@ -37,9 +38,20 @@ log = structlog.get_logger("pain_demo.generation")
     "/sample-files",
     operation_id="generate_sample_file",
     summary="Generate a Sample File and its Answer Key",
-    responses={**BODY_TOO_LARGE, **VALIDATION_ERROR, **BUILD_FAILED},
+    response_model=GeneratedSampleFile,
+    responses={
+        200: {
+            "description": "The JSON envelope, or with `format=zip` a zip of `<name>.xml` and `<name>.answer-key.json`",
+            "content": {"application/zip": {"schema": {"type": "string", "format": "binary"}}},
+        },
+        **BODY_TOO_LARGE,
+        **VALIDATION_ERROR,
+        **BUILD_FAILED,
+    },
 )
-async def generate_sample_file(request: Request, body: GenerationRequest) -> GeneratedSampleFile:
+async def generate_sample_file(
+    request: Request, body: GenerationRequest, format: Literal["json", "zip"] = "json"
+) -> GeneratedSampleFile | Response:
     effective = body.resolve()
     state = request.app.state
     add_log_fields(
@@ -60,6 +72,12 @@ async def generate_sample_file(request: Request, body: GenerationRequest) -> Gen
         log.error("build_failed", xsd_messages=error.messages, effective_request=effective.model_dump(mode="json"))
         raise
     add_log_fields(request, outcome="generated", warning_count=len(generated.answer_key.warnings))
+    if format == "zip":
+        return Response(
+            zip_bytes(generated),
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{generated.sample_file.zip_filename}"'},
+        )
     return generated
 
 

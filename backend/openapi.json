@@ -12,23 +12,45 @@
         ],
         "summary": "Generate a Sample File and its Answer Key",
         "operationId": "generate_sample_file",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "json",
+                "zip"
+              ],
+              "type": "string",
+              "default": "json",
+              "title": "Format"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GenerationRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "The JSON envelope, or with `format=zip` a zip of `<name>.xml` and `<name>.answer-key.json`",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GeneratedSampleFile"
+                }
+              },
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }

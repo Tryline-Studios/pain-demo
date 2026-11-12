@@ -782,7 +782,9 @@ export type $defs = Record<string, never>;
 export interface operations {
     generate_sample_file: {
         parameters: {
-            query?: never;
+            query?: {
+                format?: "json" | "zip";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -793,13 +795,14 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Successful Response */
+            /** @description The JSON envelope, or with `format=zip` a zip of `<name>.xml` and `<name>.answer-key.json` */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["GeneratedSampleFile"];
+                    "application/zip": string;
                 };
             };
             /** @description The request body is over the cap */
