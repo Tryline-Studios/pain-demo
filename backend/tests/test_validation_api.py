@@ -646,3 +646,16 @@ def test_a_pattern_of_a_type_without_a_hint_keeps_the_plain_message(client: Test
     (problem,) = problems_of(client, pain001().replace(b"<NbOfTxs>1</NbOfTxs>", b"<NbOfTxs>one</NbOfTxs>"))
 
     assert problem["message"] == "NbOfTxs 'one' on line 4 doesn't match the pattern [0-9]{1,15}"
+
+
+def test_a_type_the_schema_walk_cannot_reach_is_recognised_from_its_pattern(client: TestClient) -> None:
+    """Supplementary data is lax: a nested Document is still validated, but its path runs through a wildcard."""
+    nested = with_creditor("09", b"<CtctDtls><PhneNb>123</PhneNb></CtctDtls>").split(b"?>\n", 1)[1]
+    content = pain001("09").replace(b"<Cdtr/>", b"<Cdtr/><SplmtryData><Envlp>" + nested + b"</Envlp></SplmtryData>")
+
+    (problem,) = problems_of(client, content)
+
+    assert (
+        problem["path"] == f"{TX}/SplmtryData/Envlp/Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/CtctDtls/PhneNb"
+    )
+    assert problem["message"].startswith("PhneNb '123' on line 16 is not an international phone number: expected +")
