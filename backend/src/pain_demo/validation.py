@@ -22,6 +22,15 @@ _PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
 _ENUMERATION = re.compile(r"The value '(.*)' is not an element of the set \{(.*)\}")
 _DATATYPE = re.compile(r": '(.*)' is not a valid value of the atomic type '(?:\{[^}]*\})?([^']+)'")
 _LENGTH = re.compile(r"length of '(\d+)'; this \w+ the allowed \w+ length of '(\d+)'")
+_HINTS = [
+    (re.compile(r"ISODate"), "YYYY-MM-DD, like 2009-12-31"),
+    (re.compile(r"ISOYear"), "YYYY, like 2009"),
+]
+"""XSD type families (names vary by Message Version) and what a valid value looks like."""
+
+
+def _hint(type_name: str | None) -> str | None:
+    return next((hint for family, hint in _HINTS if type_name and family.fullmatch(type_name)), None)
 
 
 class ProblemCode(StrEnum):
@@ -181,7 +190,8 @@ def _classify(tag: str, attribute: str | None, line: int, error: etree._LogEntry
         return ProblemCode.INVALID_VALUE, f"{subject} '{value}' {where} is not one of {allowed.replace("'", '')}"
     if error.type_name == "SCHEMAV_CVC_DATATYPE_VALID_1_2_1" and (match := _DATATYPE.search(cause)):
         value, datatype = match.groups()
-        return ProblemCode.INVALID_VALUE, f"{subject} '{value}' {where} is not a valid {datatype}"
+        hint = f": expected {expected}" if (expected := _hint(datatype)) else ""
+        return ProblemCode.INVALID_VALUE, f"{subject} '{value}' {where} is not a valid {datatype}{hint}"
     if error.type_name == "SCHEMAV_CVC_MAXLENGTH_VALID" and (match := _LENGTH.search(cause)):
         length, limit = match.groups()
         return ProblemCode.TOO_LONG, f"{subject} {where} is {length} characters long; the maximum is {limit}"

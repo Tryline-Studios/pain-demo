@@ -351,7 +351,7 @@ def test_a_valid_message_of_every_version_passes_the_xsd_and_counts_its_transact
             b"<ReqdExctnDt>2026-01-02</ReqdExctnDt>",
             b"<ReqdExctnDt>tomorrow</ReqdExctnDt>",
             (6, "ReqdExctnDt", "/Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt", "invalid_value"),
-            "ReqdExctnDt 'tomorrow' on line 6 is not a valid ISODate",
+            "ReqdExctnDt 'tomorrow' on line 6 is not a valid ISODate: expected YYYY-MM-DD, like 2009-12-31",
             id="invalid_value from a datatype",
         ),
         pytest.param(
@@ -494,3 +494,32 @@ def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(
 
     # Behind a shared schema lock the quick upload could only finish after the slow one's validation.
     assert (quick.json()["valid"], slow.result().json()["valid"], saw_quick_finish) == (True, True, [True])
+
+
+def with_creditor(version: str, inside: bytes) -> bytes:
+    """pain001() with `inside` placed in the Creditor."""
+    return pain001(version).replace(b"<Cdtr/>", b"<Cdtr>" + inside + b"</Cdtr>")
+
+
+def with_tax_year(version: str, year: bytes) -> bytes:
+    return pain001(version).replace(b"<Cdtr/>", b"<Cdtr/><Tax><Rcrd><Prd><Yr>" + year + b"</Yr></Prd></Rcrd></Tax>")
+
+
+@pytest.mark.parametrize(
+    ("version", "year", "message"),
+    [
+        pytest.param(
+            "03", b"2009", "Yr '2009' on line 9 is not a valid ISODate: expected YYYY-MM-DD, like 2009-12-31", id="03"
+        ),
+        pytest.param(
+            "11", b"2009-12-31", "Yr '2009-12-31' on line 9 is not a valid ISOYear: expected YYYY, like 2009", id="11"
+        ),
+    ],
+)
+def test_a_tax_year_of_the_wrong_type_says_what_the_version_expects(
+    client: TestClient, version: str, year: bytes, message: str
+) -> None:
+    (problem,) = problems_of(client, with_tax_year(version, year))
+
+    assert (problem["code"], problem["message"]) == ("invalid_value", message)
+    assert "is not a valid value of the atomic type" in problem["cause"]
