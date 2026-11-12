@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from pain_demo.api.v1 import catalogue as catalogue_api
 from pain_demo.api.v1 import meta
+from pain_demo.api.v1 import validation as validation_api
 from pain_demo.body_limit import BodyLimitMiddleware
 from pain_demo.catalogue import DEFAULT_ROOT, Catalogue, CatalogueError, load_catalogue
 from pain_demo.generation.clean_banks import DEFAULT_PATH, CleanBankList, CleanBankListError, load_clean_banks
@@ -38,8 +39,11 @@ def create_app(
     install_problem_handlers(app)
     app.include_router(meta.router, prefix=API_PREFIX)
     app.include_router(catalogue_api.router, prefix=API_PREFIX)
+    app.include_router(validation_api.router, prefix=API_PREFIX)
     # Added innermost first: the request context wraps everything else.
-    app.add_middleware(BodyLimitMiddleware)
+    app.add_middleware(
+        BodyLimitMiddleware, path_caps={str(app.url_path_for("validate_message")): validation_api.MAX_UPLOAD_BYTES}
+    )
     app.add_middleware(RequestContextMiddleware, quiet_paths=frozenset({str(app.url_path_for("get_health"))}))
     return app
 

@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/validations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate an Uploaded Message: always 200 with a Validation Report */
+        post: operations["validate_message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -321,6 +338,11 @@ export interface components {
         NonEmpty: string;
         /** @enum {string} */
         Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
+        /**
+         * ProblemCode
+         * @enum {string}
+         */
+        ProblemCode: "malformed_xml" | "dtd_not_allowed" | "unsupported_message" | "missing_element" | "unexpected_element" | "pattern_mismatch" | "invalid_value" | "too_long" | "too_short" | "schema_violation";
         /** RegistrationNumber */
         RegistrationNumber: {
             value: components["schemas"]["NonEmpty"];
@@ -335,6 +357,15 @@ export interface components {
         Script: "latin" | "cyrillic" | "arabic" | "han";
         /** @enum {string} */
         ScriptSource: "stated" | "derived";
+        /** UploadedFile */
+        UploadedFile: {
+            /** Name */
+            name: string | null;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Sha256 */
+            sha256: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -347,6 +378,38 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** ValidationProblem */
+        ValidationProblem: {
+            /** Line */
+            line: number | null;
+            /** Column */
+            column: number | null;
+            /** Tag */
+            tag: string | null;
+            /** Path */
+            path: string | null;
+            code: components["schemas"]["ProblemCode"];
+            /** Cause */
+            cause: string | null;
+            /** Message */
+            message: string;
+        };
+        /** ValidationReport */
+        ValidationReport: {
+            /** Valid */
+            valid: boolean;
+            /** Message Version */
+            message_version: string | null;
+            /** Encoding */
+            encoding: string | null;
+            /** Transaction Count */
+            transaction_count: number | null;
+            file: components["schemas"]["UploadedFile"];
+            /** Problems */
+            problems: components["schemas"]["ValidationProblem"][];
+            /** Truncated */
+            truncated: boolean;
         };
         /**
          * Verification
@@ -469,6 +532,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+                "application/xml": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationReport"];
                 };
             };
         };
