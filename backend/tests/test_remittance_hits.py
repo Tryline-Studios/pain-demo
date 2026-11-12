@@ -46,7 +46,7 @@ def test_a_remittance_mention_names_the_entity_in_the_element_the_answer_key_rec
             assert name in text
             assert text != name
             assert len(text) <= 140
-        assert name in [n.value for n in CATALOGUE.entities[hit["entity"]["id"]].names]
+        assert hit["name"]["source"]["value"] in [n.value for n in CATALOGUE.entities[hit["entity"]["id"]].names]
         for absent in ("rendering_mode", "bic", "lei", "address_from_listing"):
             assert hit.get(absent) is None
 
@@ -83,10 +83,10 @@ def test_a_sentence_that_would_exceed_140_characters_is_redrawn(tmp_path: Path) 
         envelopes = [generate(client, seed=f"long-{n}", transaction_count=100, hit_count=100) for n in range(2)]
 
     sentences = [
-        str(resolve(tree(e), hit["xpath"])[0].text)
+        (str(resolve(tree(e), hit["xpath"])[0].text), hit["name"]["rendered"])
         for e in envelopes
         for hit in e["answer_key"]["hits"]
         if hit.get("element") in {"ustrd", "addtl_rmt_inf"}
     ]
-    assert sentences
-    assert all(long_name in s and len(s) <= 140 for s in sentences)
+    assert any(name == long_name for _, name in sentences)
+    assert all(name in s and len(s) <= 140 for s, name in sentences)

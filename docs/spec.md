@@ -442,7 +442,7 @@ A listed non-Latin name verbatim (e.g. `ПАО Сбербанк`). The XSD allow
 
 A romanisation generated from a listed Cyrillic name under a named scheme, deliberately not on any list.
 
-- Library `iuliia`, pinned exactly. Schemes: a curated subset of six with distinct output: ICAO, BGN/PCGN, ISO 9, ALA-LC, Russian passport 2013, Wikipedia. The scheme is chosen by the RNG and recorded.
+- Library `iuliia`, pinned exactly. Schemes: a curated subset of six with distinct output: ICAO, BGN/PCGN, ISO 9, ALA-LC, GOST R 52535.1-2006 (the passport scheme until 2013; ICAO Doc 9303 already covers passports since), Wikipedia. The scheme is chosen by the RNG and recorded.
 - If the result equals a listed Latin name case-insensitively, another scheme is drawn. If every scheme collides, the variant is impossible for that Entity.
 - Cyrillic only in v1. Entities whose only non-Latin names are in another script (the roster has one Persian name) do not support transliteration.
 
@@ -452,7 +452,7 @@ Starts from any Latin-script listed name (primary or alias; never a non-Latin na
 
 | Operation | Applies to | Example |
 |---|---|---|
-| `typo` (one substitution, transposition, deletion or insertion; never in a token's first two characters) | all | `Sberbank` to `Sbrebank` |
+| `typo` (one substitution, transposition, deletion or insertion of a letter; never in the first two letters of a word, where any non-letter splits words) | all | `Sberbank` to `Sbrebank` |
 | `drop_legal_form` | Legal Entities | `Evraz PLC` to `Evraz` |
 | `abbreviate_legal_form` / `expand_legal_form` | Legal Entities | `Public Joint Stock Company` to `PJSC` and back |
 | `punctuation` (hyphen to space and back; drop quotes, brackets, dots, diacritics) | all | `Alfa-Bank` to `Alfa Bank` |
@@ -462,14 +462,14 @@ Starts from any Latin-script listed name (primary or alias; never a non-Latin na
 | `whitespace` (double or trailing space) | all | |
 
 - Case changes are not a fuzz: every Screening Tool is case-insensitive.
-- Budget: at most two operations per name, at most one `typo`, and the result must keep a Jaro-Winkler similarity of at least 0.85 to its base (`rapidfuzz`, pinned exactly) or the RNG redraws.
+- Budget: at most two operations per name, at most one `typo`, and the result must keep a Jaro-Winkler similarity of at least 0.85 to its base, measured with the whitespace tokens of each sorted so `reorder_tokens` costs nothing while typos and drops still count (`rapidfuzz`, pinned exactly), or the RNG redraws.
 - One intensity in v1. Levels can be added later without changing the Answer Key.
 - The legal-form dictionary is a code constant, not catalogue data.
 
 ### 7.6 General rules
 
 - Candidate names over 140 characters (`Nm` is `Max140Text`) are never chosen. A fuzz result over 140 is redrawn.
-- An Entity **supports** a variant when it has at least one candidate name for it: `exact` always; `alias` when it has a non-primary Latin name; `native_script` when it has a non-Latin name; `transliteration` when it has a Cyrillic name and at least one scheme does not collide; `fuzzed` always. `GET /entities` publishes the supported set per Entity (section 12.1).
+- An Entity **supports** a variant when it has at least one candidate name for it: `exact` always; `alias` when it has a non-primary Latin name; `native_script` when it has a non-Latin name; `transliteration` when it has a Cyrillic name and at least one scheme does not collide; `fuzzed` when it has a Latin name. `GET /entities` publishes the supported set per Entity (section 12.1).
 - An explicit request for a variant the Entity cannot support is a validation error naming the Entity and the variant. When the app chooses variants itself it draws only from those the Entity supports. Never a silent fallback to `exact`.
 - The Answer Key records, per placed name: Entity id, Name Variant, the rendered string as it appears in the XML, the source name (value, source type, script, Listing), the scheme for a transliteration, and the base name plus ordered operations for a fuzz.
 

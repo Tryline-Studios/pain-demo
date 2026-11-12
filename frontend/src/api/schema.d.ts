@@ -415,6 +415,8 @@ export interface components {
             /** Sha256 */
             sha256: string;
         };
+        /** @enum {string} */
+        FuzzOperation: "typo" | "drop_legal_form" | "abbreviate_legal_form" | "expand_legal_form" | "punctuation" | "reorder_tokens" | "drop_token" | "initial" | "whitespace";
         /** GeneratedSampleFile */
         GeneratedSampleFile: {
             sample_file: components["schemas"]["SampleFile"];
@@ -588,6 +590,18 @@ export interface components {
             /** Rendered */
             rendered: string;
             source: components["schemas"]["NameSource"];
+            /** @description Transliteration only */
+            scheme?: components["schemas"]["TransliterationScheme"] | null;
+            /**
+             * Base
+             * @description Fuzzed only: the listed name altered
+             */
+            base?: string | null;
+            /**
+             * Operations
+             * @description Fuzzed only: the operations, in the order applied
+             */
+            operations?: components["schemas"]["FuzzOperation"][] | null;
         };
         /** IndividualDetail */
         IndividualDetail: {
@@ -816,6 +830,8 @@ export interface components {
         };
         /** @enum {string} */
         SupportedCountry: "GB" | "IE" | "DE" | "FR" | "IT" | "ES" | "NL" | "BE" | "PL" | "AT" | "PT" | "US";
+        /** @enum {string} */
+        TransliterationScheme: "icao" | "bgn_pcgn" | "iso_9" | "ala_lc" | "gost_52535" | "wikipedia";
         /** Trigger */
         Trigger: {
             /**

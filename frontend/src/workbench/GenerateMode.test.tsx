@@ -373,6 +373,8 @@ describe("Generate mode: Hits", () => {
         "Entity",
         "Name Variant",
         "Rendered name",
+        "Scheme",
+        "Operations",
         "BIC",
         "LEI",
         "Triggers",
@@ -392,6 +394,8 @@ describe("Generate mode: Hits", () => {
         "DAEDONG CREDIT BANK",
         "",
         "",
+        "",
+        "",
         "name",
         "ofac_sdn, uk",
       ],
@@ -407,6 +411,8 @@ describe("Generate mode: Hits", () => {
         "t-bank",
         "exact",
         "T-BANK",
+        "",
+        "",
         "TICSRUMM",
         "",
         "name, bic",
@@ -422,8 +428,10 @@ describe("Generate mode: Hits", () => {
         "ustrd",
         "",
         "t-bank",
-        "exact",
-        "T-BANK",
+        "fuzzed",
+        "T BANK",
+        "",
+        "punctuation",
         "",
         "",
         "name",
@@ -510,7 +518,7 @@ describe("Generate mode: Hits", () => {
     expect(first).toContain("<Nm>[h2: T-BANK]</Nm>");
     expect(first).toContain("<Nm>Jane Smith</Nm>");
     expect(second).toContain("<Nm>T-BANK</Nm>");
-    expect(second).toContain("<Ustrd>[h3: Invoice 447102 payment to T-BANK]</Ustrd>");
+    expect(second).toContain("<Ustrd>[h3: Invoice 447102 payment to T BANK]</Ustrd>");
     expect(shown.querySelectorAll("mark")).toHaveLength(0);
     expect(shown.textContent?.match(/\[h\d/g)).toHaveLength(3);
   });

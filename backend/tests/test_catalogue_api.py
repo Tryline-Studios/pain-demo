@@ -1,6 +1,11 @@
 """The `catalogue` endpoints: `GET /entities` and `GET /entities/{id}` (spec section 12.1)."""
 
+from pathlib import Path
+
 from fastapi.testclient import TestClient
+from test_catalogue import MINIMAL_BANK, write_catalogue
+
+from pain_demo.app import create_app
 
 
 def ids(response_json: list[dict[str, object]]) -> list[object]:
@@ -107,7 +112,7 @@ def test_list_entities_summarises_every_entity_in_id_order(client: TestClient, r
         "display_name": "PUBLIC JOINT STOCK COMPANY SBERBANK OF RUSSIA",
         "lists": ["ofac_sdn", "uk"],
         "countries": ["RU", "CN", "IN"],
-        "name_variants": ["exact", "alias", "native_script", "fuzzed"],
+        "name_variants": ["exact", "alias", "native_script", "transliteration", "fuzzed"],
         "placements": [
             "debtor",
             "debtor_agent",
@@ -131,7 +136,7 @@ def test_an_individual_supports_party_and_remittance_placements_only(client: Tes
     assert abramovich["display_name"] == "Roman Arkadyevich ABRAMOVICH"
     assert abramovich["lists"] == ["uk"]
     assert abramovich["countries"] == ["RU", "IL", "PT"]
-    assert abramovich["name_variants"] == ["exact", "alias", "native_script", "fuzzed"]
+    assert abramovich["name_variants"] == ["exact", "alias", "native_script", "transliteration", "fuzzed"]
     assert abramovich["placements"] == ["debtor", "creditor", "ultimate_debtor", "ultimate_creditor", "remittance"]
     assert abramovich["has_bic"] is False
 
@@ -142,6 +147,12 @@ def test_a_corporate_without_a_non_latin_name_lacks_native_script(client: TestCl
     assert ntmk["name_variants"] == ["exact", "alias", "fuzzed"]
     assert ntmk["placements"] == ["debtor", "creditor", "ultimate_debtor", "ultimate_creditor", "remittance"]
     assert ntmk["has_bic"] is False
+
+
+def test_only_an_entity_with_a_cyrillic_name_supports_transliteration(client: TestClient) -> None:
+    # Bank Melli Iran's one non-Latin name is Persian: no transliteration in v1 (spec 7.4).
+    assert summary_of(client, "bank-melli-iran")["name_variants"] == ["exact", "alias", "native_script", "fuzzed"]
+    assert summary_of(client, "evraz-plc")["name_variants"] == ["exact", "native_script", "transliteration", "fuzzed"]
 
 
 def test_a_bank_with_only_a_gleif_bic_has_a_bic(client: TestClient) -> None:
@@ -310,3 +321,31 @@ def test_get_entity_for_an_unknown_id_is_a_404_problem(client: TestClient) -> No
         "detail": "No Entity with id 'no-such-entity'",
         "instance": "req-404",
     }
+
+
+CYRILLIC_BANK = """
+[[names]]
+value = "Банк"
+source_type = "aka"
+script = "cyrillic"
+script_source = "stated"
+listing = { list = "ofac_sdn", entry_id = "1" }
+"""
+
+
+def test_an_entity_whose_every_transliteration_is_listed_does_not_support_it(tmp_path: Path) -> None:
+    write_catalogue(tmp_path, {"test-bank": MINIMAL_BANK.replace("TEST BANK", "BANK") + CYRILLIC_BANK})
+    with TestClient(create_app(catalogue_root=tmp_path)) as client:
+        (summary,) = client.get("/api/v1/entities").json()
+
+    assert summary["name_variants"] == ["exact", "native_script", "fuzzed"]
+
+
+def test_an_entity_with_no_latin_name_does_not_support_fuzzed(tmp_path: Path) -> None:
+    cyrillic_only = MINIMAL_BANK.replace('"TEST BANK"', '"Тест Банк"').replace('"latin"', '"cyrillic"')
+    write_catalogue(tmp_path, {"test-bank": cyrillic_only})
+    with TestClient(create_app(catalogue_root=tmp_path)) as client:
+        (summary,) = client.get("/api/v1/entities").json()
+
+    assert "native_script" in summary["name_variants"]
+    assert "fuzzed" not in summary["name_variants"]

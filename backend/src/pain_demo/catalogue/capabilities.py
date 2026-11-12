@@ -1,12 +1,10 @@
-"""What an Entity supports: Name Variants (spec 7.6) and Placements (spec 6.1), as `GET /entities` publishes them.
-
-`transliteration` joins the supported set with its own ticket, once the scheme collision check exists.
-"""
+"""What an Entity supports: Name Variants (spec 7.6) and Placements (spec 6.1), as `GET /entities` publishes them."""
 
 from collections.abc import Callable
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pain_demo.catalogue.schema import Entity, EntityType, Name
+from pain_demo.catalogue.transliteration import SCHEMES, TransliterationScheme, transliterate
 
 type NameVariant = Literal["exact", "alias", "native_script", "transliteration", "fuzzed"]
 type Placement = Literal[
@@ -57,14 +55,39 @@ VERBATIM_SOURCES: dict[NameVariant, Callable[[Name], bool]] = {
 """Which catalogue names each verbatim Name Variant renders (spec 7.1 to 7.3)."""
 
 
-def supported_name_variants(entity: Entity) -> list[NameVariant]:
+class Transliteration(NamedTuple):
+    name: Name
+    """The listed Cyrillic name."""
+    scheme: TransliterationScheme
+    latin: str
+
+
+def transliterations(entity: Entity) -> list[Transliteration]:
+    """Every transliteration that fits `Nm` and is no listed Latin name, case-insensitively (spec 7.4); a colliding
+    scheme is simply not among them."""
+    listed = {name.value.casefold() for name in entity.names if name.script == "latin"}
+    found = []
+    for name in candidate_names(entity):
+        if name.script == "cyrillic":
+            for scheme in SCHEMES:
+                latin = transliterate(name.value, scheme)
+                if latin.casefold() not in listed and len(latin) <= MAX_NAME_LENGTH:
+                    found.append(Transliteration(name, scheme, latin))
+    return found
+
+
+def supported_name_variants(entity: Entity, offered: list[Transliteration] | None = None) -> list[NameVariant]:
+    """`offered` is `transliterations(entity)` when the caller already has it."""
     names = candidate_names(entity)
     variants: list[NameVariant] = ["exact"]
     if any(map(VERBATIM_SOURCES["alias"], names)):
         variants.append("alias")
     if any(map(VERBATIM_SOURCES["native_script"], names)):
         variants.append("native_script")
-    variants.append("fuzzed")
+    if offered if offered is not None else transliterations(entity):
+        variants.append("transliteration")
+    if any(name.script == "latin" for name in names):  # a fuzz needs a Latin base (spec 7.5)
+        variants.append("fuzzed")
     return variants
 
 

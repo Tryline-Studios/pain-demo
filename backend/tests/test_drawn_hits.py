@@ -14,7 +14,9 @@ from test_clean_banks import scratch_catalogue
 
 from pain_demo.app import create_app
 from pain_demo.catalogue import load_catalogue
+from pain_demo.catalogue.capabilities import supported_name_variants
 from pain_demo.catalogue.schema import Bank
+from pain_demo.catalogue.transliteration import transliterate
 from pain_demo.generation.clean_banks import IBAN_COUNTRIES, load_clean_banks
 from pain_demo.identifiers import bic_country
 from pain_demo.settings import Settings
@@ -25,6 +27,7 @@ PARTIES = {"debtor", "creditor", "ultimate_debtor", "ultimate_creditor"}
 NOT_AGENTS = {*PARTIES, "remittance"}
 FIXED = {"created_at": "2026-11-12T09:30:00Z", "execution_date": "2026-11-13"}
 PMT_INF = "/Document/CstmrCdtTrfInitn/PmtInf"
+VERBATIM = {"exact", "alias", "native_script"}
 
 
 def generate(client: TestClient, **settings: object) -> dict:
@@ -68,7 +71,7 @@ def test_each_hit_names_a_listed_entity_at_its_xpath(client: TestClient) -> None
         (element,) = resolve(document, hit["xpath"])
         assert element.text == hit["name"]["rendered"]
         entity = CATALOGUE.entities[hit["entity"]["id"]]
-        assert hit["name"]["rendered"] in [name.value for name in entity.names]
+        assert hit["name"]["source"]["value"] in [name.value for name in entity.names]
         assert hit["entity"]["entity_type"] == entity.entity_type
         assert hit["entity"]["listings"] == [{"list": x.list, "entry_id": x.entry_id} for x in entity.listings]
         assert (hit["origin"], hit["paired_with"], hit["displaced"]) == ("drawn", None, None)
@@ -178,8 +181,10 @@ def test_an_entity_in_a_higher_intermediary_slot_gets_clean_banks_below_it(full:
     assert slots[1] > 0
 
 
-def test_names_are_listed_verbatim_with_their_source_and_variant(full: dict) -> None:
-    for hit in full["answer_key"]["hits"]:
+def test_verbatim_names_are_listed_with_their_source_and_variant(full: dict) -> None:
+    verbatim = [hit for hit in full["answer_key"]["hits"] if hit["name"]["variant"] in VERBATIM]
+    assert {hit["name"]["variant"] for hit in verbatim} == VERBATIM
+    for hit in verbatim:
         name = hit["name"]
         entity = CATALOGUE.entities[hit["entity"]["id"]]
         listed = [
@@ -195,6 +200,35 @@ def test_names_are_listed_verbatim_with_their_source_and_variant(full: dict) -> 
             "native_script": source.script != "latin",
         }
         assert expected[name["variant"]], (hit["entity"]["id"], name)
+        assert not {"scheme", "base", "operations"} & set(name)
+
+
+def test_a_transliteration_records_its_scheme_and_is_on_no_list(full: dict) -> None:
+    hits = [hit for hit in full["answer_key"]["hits"] if hit["name"]["variant"] == "transliteration"]
+    assert hits
+    for hit in hits:
+        name = hit["name"]
+        entity = CATALOGUE.entities[hit["entity"]["id"]]
+        assert name["source"]["script"] == "cyrillic"
+        assert name["source"]["value"] in [n.value for n in entity.names]
+        assert name["rendered"] == transliterate(name["source"]["value"], name["scheme"])
+        assert name["rendered"].casefold() not in {n.value.casefold() for n in entity.names}
+        assert hit["triggers"][0] == {"kind": "name", "value": name["rendered"], "listed_on": []}
+        assert not {"base", "operations"} & set(name)
+
+
+def test_a_fuzz_records_its_listed_latin_base_and_its_operations_in_order(full: dict) -> None:
+    hits = [hit for hit in full["answer_key"]["hits"] if hit["name"]["variant"] == "fuzzed"]
+    assert hits
+    for hit in hits:
+        name = hit["name"]
+        entity = CATALOGUE.entities[hit["entity"]["id"]]
+        assert name["base"] == name["source"]["value"]
+        assert name["source"]["script"] == "latin"
+        assert name["base"] in [n.value for n in entity.names]
+        assert 1 <= len(name["operations"]) <= 2
+        assert name["rendered"] != name["base"]
+        assert "scheme" not in name
 
 
 ACCOUNT_OF = {"debtor": "DbtrAcct", "debtor_agent": "DbtrAcct", "creditor": "CdtrAcct", "creditor_agent": "CdtrAcct"}
@@ -343,7 +377,8 @@ def test_a_bank_without_a_catalogue_bic_is_placed_by_name_only(tmp_path: Path) -
     for hit in agents:
         assert (hit["rendering_mode"], hit["bic"]) == ("name_only", None)
         assert [t["kind"] for t in hit["triggers"]] == ["name"]
-        assert resolve(document, hit["xpath"])[0].text == "PLAINVIEW TEST BANK"
+        assert resolve(document, hit["xpath"])[0].text == hit["name"]["rendered"]
+        assert hit["name"]["source"]["value"] == "PLAINVIEW TEST BANK"
         assert beside(document, hit["xpath"], "BICFI") == []
 
 
@@ -383,8 +418,9 @@ verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
         ]
 
     # Three OFAC primaries against one UK primary: the UK name takes half the draws, not a quarter (spec 7.1).
-    assert {hit["name"]["variant"] for hit in hits} == {"exact"}
-    uk_share = sum(hit["name"]["source"]["listing"]["list"] == "uk" for hit in hits) / len(hits)
+    assert {hit["name"]["variant"] for hit in hits} == {"exact", "fuzzed"}
+    exact = [hit for hit in hits if hit["name"]["variant"] == "exact"]
+    uk_share = sum(hit["name"]["source"]["listing"]["list"] == "uk" for hit in exact) / len(exact)
     assert uk_share == pytest.approx(0.5, abs=0.08)
 
 
@@ -406,7 +442,8 @@ listing = {{ list = "ofac_sdn", entry_id = "1" }}
         hits = generate(client, seed="long", transaction_count=20, hit_count=22)["answer_key"]["hits"]
 
     assert len(long_name) == 141
-    assert {(hit["name"]["variant"], hit["name"]["rendered"]) for hit in hits} == {("exact", "TEST BANK")}
+    assert {hit["name"]["source"]["value"] for hit in hits} == {"TEST BANK"}
+    assert {hit["name"]["variant"] for hit in hits} == {"exact", "fuzzed"}
 
 
 def test_placements_and_name_variants_follow_the_spec_weights(client: TestClient) -> None:
@@ -443,10 +480,14 @@ def test_placements_and_name_variants_follow_the_spec_weights(client: TestClient
     intermediaries = sum(share for placement, share in banks.items() if placement.startswith("intermediary"))
     assert intermediaries == pytest.approx(30 / bank_total, abs=0.07), banks
     assert banks["intermediary_agent_1"] > banks["intermediary_agent_2"] > banks["intermediary_agent_3"] > 0
-    # Sberbank has exact, alias and native script names: 40 / 25 / 5, renormalised over 70.
-    every_variant = shares([h for h in hits if h["entity"]["id"] in {"sberbank", "vtb-bank", "alfa-bank"}], "variant")
-    assert every_variant["exact"] == pytest.approx(40 / 70, abs=0.15), every_variant
-    assert every_variant["native_script"] < every_variant["alias"] < every_variant["exact"]
+    # Over the Entities that support all five: exact 40, alias 25, fuzzed 20, transliteration 10, native script 5.
+    all_five = [h for h in hits if len(supported_name_variants(CATALOGUE.entities[h["entity"]["id"]])) == 5]
+    every_variant = shares(all_five, "variant")
+    expected = {"exact": 0.4, "alias": 0.25, "fuzzed": 0.2, "transliteration": 0.1, "native_script": 0.05}
+    assert every_variant == pytest.approx(expected, abs=0.05), every_variant
+    # Evraz NTMK has no non-Latin name, so it draws from exact, alias and fuzzed only (too few Hits to check shares).
+    ntmk = shares([h for h in hits if h["entity"]["id"] == "evraz-ntmk"], "variant")
+    assert set(ntmk) == {"exact", "alias", "fuzzed"}
 
 
 def test_a_hit_leaves_every_other_transaction_untouched(client: TestClient) -> None:
