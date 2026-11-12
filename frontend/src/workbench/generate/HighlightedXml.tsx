@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import type { components } from "@/api/schema";
+import { XmlLine } from "@/workbench/XmlLine";
+import { lineStates } from "@/workbench/xmlTokens";
 
 type Hit = components["schemas"]["Hit"];
 
@@ -37,15 +39,22 @@ export function HighlightedXml({ xml, hits }: { xml: string; hits: Hit[] }) {
     const byPath = new Map(hits.map((hit) => [hit.xpath, hit]));
     const split = xml.split("\n");
     const paths = leafPaths(split);
-    return split.map((text, at) => ({ text, hit: byPath.get(paths[at] ?? "") }));
+    const states = lineStates(split);
+    return split.map((text, at) => ({ text, state: states[at], hit: byPath.get(paths[at] ?? "") }));
   }, [xml, hits]);
 
   return (
     <pre className="max-h-[70vh] overflow-auto rounded-b-[10px] bg-code px-[18px] py-3 font-mono text-[12.5px] leading-[22px]">
-      {lines.map(({ text, hit }, at) => {
+      {lines.map(({ text, state, hit }, at) => {
         const end = at === lines.length - 1 ? "" : "\n";
         if (hit === undefined) {
-          return text + end;
+          return (
+            // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
+            <span key={at}>
+              <XmlLine line={text} state={state} />
+              {end}
+            </span>
+          );
         }
         // The element's text sits between the opening tag's `>` and the closing tag's `<`.
         const open = text.indexOf(">") + 1;
@@ -53,11 +62,11 @@ export function HighlightedXml({ xml, hits }: { xml: string; hits: Hit[] }) {
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
           <span key={at}>
-            {text.slice(0, open)}
+            <XmlLine line={text.slice(0, open)} state={state} />
             <mark title={hit.id} className="rounded-sm bg-hit px-0.5 text-hit-foreground">
               {text.slice(open, close)}
             </mark>
-            {text.slice(close)}
+            <XmlLine line={text.slice(close)} />
             {end}
           </span>
         );

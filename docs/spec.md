@@ -735,6 +735,8 @@ Prototype (throwaway, never merged): https://claude.ai/artifact/N5sTHZfmtRV7xch5
 
 Summary tiles (transactions, hits, echoed Seed, version), download buttons (zip, XML, Answer Key JSON, Answer Key CSV), then tabs with the **Answer Key table as the default**, the Sample File XML (hits highlighted) and warnings. Before the first generate, an empty state. A 422 renders as a problem block and as inline field errors on the rows the dotted paths point at.
 
+The XML tab is syntax-coloured (tag names, attribute names, attribute values, punctuation, the XML declaration and text each in their own colour, from theme CSS variables with at least 4.5:1 contrast); the colours change only the text, so the Hit highlighting shows through. A small per-line tokenizer in the frontend does it, with no dependency ([#90](https://github.com/Tryline-Studios/pain-demo/issues/90)).
+
 ### 13.4 Data flow
 
 The form is populated from `GET /options`, `GET /message-versions` and `GET /entities` (supported Name Variants and Placements per Entity drive the disabled options). It posts to `POST /sample-files` or `POST /sample-files/csv`, renders the JSON envelope, and downloads via `?format=zip`. The UI uses only the public API through the generated client (`openapi-fetch`, `openapi-react-query`).
@@ -921,6 +923,7 @@ Source: [Upload Validation in the Workbench](https://github.com/Tryline-Studios/
 - **Input (left pane).** A drop zone that also opens a file picker (`.xml`, up to 10 MB), and a paste box with a "Validate pasted XML" button. A file is sent as multipart so its name is reported; pasted XML is sent as a raw `application/xml` body.
 - **Report (right pane).** Summary tiles: verdict, Message Version, transactions, problem count (`100+` when `truncated`) and encoding, then the file name, size and a short sha256. Below them, the Uploaded Message's source with line numbers: lines with a Validation Problem are highlighted and its `code` and `message` appear inline under the line. A problem rail on the right lists every problem with `code`, line, `message`, and the `path` and raw `cause`; clicking one scrolls the source to its line. Problems with no line (such as a `dtd_not_allowed` without one) appear in the rail only. A valid message shows "No problems found".
 - **Large files.** The source view is virtualised, rendering only the visible lines, so a 10 MB message shows every line. Whether that is a small dependency or a hand-rolled windowed list is left to the build ticket.
+- **Syntax colouring.** The source is syntax-coloured like the XML tab of section 13.3, under the problem-line highlight. Only visible lines are tokenized; one cheap pass per upload records the state each line starts in, so a comment, CDATA section or tag spanning lines is coloured correctly ([#90](https://github.com/Tryline-Studios/pain-demo/issues/90)).
 - **Request problems.** A 413, 415 or 422 is shown as a problem block in the report area, like a 422 in section 13.3.
 - **From a generated Sample File.** Generate mode gains a "Validate this Sample File" action that switches to Validate with the generated XML loaded. It is built once generation exists.
 

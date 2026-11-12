@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { problemKey, type ValidationProblem } from "@/workbench/validate/useValidation";
+import { XmlLine } from "@/workbench/XmlLine";
+import { lineStates } from "@/workbench/xmlTokens";
 
 /** Every source line and every inline problem is one row of this many pixels, so offsets are plain sums. */
 const ROW = 20;
@@ -36,6 +38,8 @@ export function SourceView({
     }
     return offsets;
   }, [lines, byLine]);
+  // One cheap pass per source, so a comment or CDATA section opened above the window still colours lines inside it.
+  const states = useMemo(() => lineStates(lines), [lines]);
 
   const scroller = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -91,7 +95,9 @@ export function SourceView({
                   >
                     {line}
                   </span>
-                  <span className="whitespace-pre pr-4">{text}</span>
+                  <span className="whitespace-pre pr-4">
+                    <XmlLine line={text} state={states[line - 1]} />
+                  </span>
                 </div>
                 {lineProblems?.map((problem) => (
                   <div
