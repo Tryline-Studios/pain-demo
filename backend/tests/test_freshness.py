@@ -135,6 +135,27 @@ def test_drift_is_reported_and_exits_non_zero(
     assert "no drift" not in out
 
 
+def test_a_bic11_on_the_catalogue_matches_its_bic8_on_the_list(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    code, out = verify_catalogue(catalogue_root(tmp_path, bic="SABRRUMMXXX"), capsys)
+
+    assert (code, "no drift" in out) == (0, True)
+
+
+def test_a_uk_list_whose_date_cannot_be_parsed_says_so_with_its_own_exit_code(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fetch(url: str) -> bytes:
+        return fake_fetch(url).replace(b"12/11/2026", b"2026-11-12T08:00:00")
+
+    code = freshness.main(["catalogue", "--catalogue-root", str(catalogue_root(tmp_path))], fetch=fetch)
+
+    assert code == freshness.UNREADABLE_LIST
+    assert code != freshness.FOUND
+    assert "could not parse the UK Sanctions List DateGenerated '2026-11-12T08:00:00'" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize(
     "ofac_name",
     [

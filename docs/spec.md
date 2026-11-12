@@ -807,8 +807,8 @@ CI byte-compares them, and uploads each Sample File to `POST /validations`, whic
 | Recipe | What it does | Where it runs |
 |---|---|---|
 | `just upgrade-generators` | bumps whichever named pins among `pain001`, `Faker`, `schwifty`, `iuliia`, `rapidfuzz`, regenerates the goldens and shows the diff for review | by hand |
-| `just verify-catalogue` | downloads the current OFAC SDN and UK Sanctions List files and reports catalogue drift: delisted, renamed, BIC changed. Imports nothing. | by hand, never CI |
-| `just verify-clean-banks` | checks every Clean Bank List entry by name and BIC against the current OFAC SDN and UK Sanctions List files and reports matches. Imports nothing. | by hand, never CI |
+| `just verify-catalogue` | downloads the current OFAC SDN and UK Sanctions List files and reports catalogue drift: delisted, renamed, BIC changed (compared by BIC8). Imports nothing. Exits 0 clean, 1 on drift, 2 when a downloaded list is in a format it cannot parse. | by hand, never CI |
+| `just verify-clean-banks` | checks every Clean Bank List entry by name and BIC against the current OFAC SDN and UK Sanctions List files and reports matches. Imports nothing. Exits 0 clean, 1 on a match, 2 as above. | by hand, never CI |
 | `just build-clean-banks` | rebuilds the Clean Bank List from the pinned schwifty registry minus catalogue matches; a human reviews the diff | by hand |
 | `just openapi` | regenerates `backend/openapi.json` from the app | by hand; CI checks drift |
 | `just gen-client` | regenerates the TypeScript client from `openapi.json` | by hand; CI checks drift |

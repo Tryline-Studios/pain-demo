@@ -1,12 +1,15 @@
 """`just verify-catalogue` and `just verify-clean-banks`: check our frozen data against the live lists (spec 3.4, 4.3).
 
-Both download the current OFAC `SDN_ADVANCED.XML` and UK Sanctions List XML, report, and exit 1 when they find
-something, so they can be scripted. Neither writes anything: a human edits the catalogue or the Clean Bank List from
-the report, regenerates the goldens and bumps the minor version (spec 15.4). They run by hand, never in CI.
+Both download the current OFAC `SDN_ADVANCED.XML` and UK Sanctions List XML and report, so they can be scripted. Exit
+codes: 0 nothing found, 1 drift or a match found (`FOUND`), 2 a downloaded list is not in the format we parse
+(`UNREADABLE_LIST`; argparse also uses 2 for bad arguments). Neither writes anything: a human edits the catalogue or
+the Clean Bank List from the report, regenerates the goldens and bumps the minor version (spec 15.4). They run by
+hand, never in CI.
 
 - `catalogue`: each catalogue Listing is looked up by OFAC UID (SDN List entries only) or UK Unique ID. It is
   *delisted* when the entry is gone, *renamed* when a name the catalogue takes from it is no longer on it, and *BIC
-  changed* when the BICs the catalogue takes from an OFAC Listing differ from the entry's `SWIFT/BIC` features.
+  changed* when the BIC8s of the BICs the catalogue takes from an OFAC Listing differ from those of the entry's
+  `SWIFT/BIC` features (so `SABRRUMM` and `SABRRUMMXXX` are the same BIC).
 - `clean-banks`: each Clean Bank List entry matches when its normalised name equals any name on either list, or its
   BIC8 equals the BIC8 of any OFAC `SWIFT/BIC` (the UK list has no BIC field).
 """
@@ -14,6 +17,7 @@ the report, regenerates the goldens and bumps the minor version (spec 15.4). The
 import argparse
 import io
 import re
+import sys
 import unicodedata
 import urllib.request
 from collections.abc import Callable, Iterator
@@ -29,6 +33,9 @@ from pain_demo.identifiers import bic8
 
 OFAC_URL = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ADVANCED.XML"
 UK_URL = "https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml"
+
+FOUND = 1
+UNREADABLE_LIST = 2
 
 _OFAC_NS = "{https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/ADVANCED_XML}"
 
@@ -49,7 +56,8 @@ class SanctionsFile:
 
 
 def parse_ofac(source: bytes) -> SanctionsFile:
-    """The SDN List entries of `SDN_ADVANCED.XML`, streamed: the file is over 100 MB."""
+    """The SDN List entries of `SDN_ADVANCED.XML`. The file is over 100 MB: its bytes are held in memory, but it is
+    parsed incrementally and each entry cleared once read, so the parsed tree never holds the whole file."""
     issued = ""
     bic_feature_types: set[str] = set()
     sdn_list_ids: set[str] = set()
@@ -88,9 +96,18 @@ def _ofac_party(party: etree._Element, bic_feature_types: set[str]) -> ListEntry
     return ListEntry(names=names, bics=bics)
 
 
+class UnreadableList(Exception):
+    """A downloaded list is not in the format this module parses."""
+
+
 def parse_uk(source: bytes) -> SanctionsFile:
     root = etree.fromstring(source)
-    generated = datetime.strptime(root.findtext("DateGenerated", "").strip(), "%d/%m/%Y").date().isoformat()
+    date_generated = root.findtext("DateGenerated", "").strip()
+    try:
+        generated = datetime.strptime(date_generated, "%d/%m/%Y").date().isoformat()
+    except ValueError:
+        msg = f"could not parse the UK Sanctions List DateGenerated {date_generated!r}: expected DD/MM/YYYY"
+        raise UnreadableList(msg) from None
     entries: dict[str, ListEntry] = {}
     for designation in root.iter("Designation"):
         names = [
@@ -123,7 +140,7 @@ def catalogue_drift(catalogue: Catalogue, ofac: SanctionsFile, uk: SanctionsFile
             if listing.list == "ofac_sdn":
                 ours = sorted(bic.value for bic in getattr(entity, "bics", []) if bic.listing == listing.ref)
                 theirs = sorted(entry.bics)
-                if ours != theirs:
+                if {bic8(bic) for bic in ours} != {bic8(bic) for bic in theirs}:
                     yield f"{where} BIC changed: catalogue {ours}, list {theirs}"
 
 
@@ -158,7 +175,11 @@ def main(argv: list[str] | None = None, fetch: Callable[[str], bytes] = download
     args = parser.parse_args(argv)
 
     catalogue = load_catalogue(args.catalogue_root)
-    ofac, uk = parse_ofac(fetch(OFAC_URL)), parse_uk(fetch(UK_URL))
+    try:
+        ofac, uk = parse_ofac(fetch(OFAC_URL)), parse_uk(fetch(UK_URL))
+    except UnreadableList as error:
+        print(error, file=sys.stderr)
+        return UNREADABLE_LIST
     for file in (ofac, uk):
         print(f"{file.label} {file.issued}: {len(file.entries)} entries")
     if args.check == "catalogue":
@@ -167,7 +188,7 @@ def main(argv: list[str] | None = None, fetch: Callable[[str], bytes] = download
         banks = clean_banks.load_clean_banks(catalogue, args.clean_banks)
         found, nothing = list(clean_bank_matches(banks, ofac, uk)), "no Clean Bank List entry matches either list"
     print("\n".join(found) or nothing)
-    return 1 if found else 0
+    return FOUND if found else 0
 
 
 if __name__ == "__main__":
