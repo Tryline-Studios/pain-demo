@@ -2,7 +2,7 @@ import { Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { saveFile } from "@/lib/saveFile";
-import { AnswerKeyTable } from "@/workbench/generate/AnswerKeyTable";
+import { AnswerKeyTable, ExposuresTable } from "@/workbench/generate/AnswerKeyTable";
 import { HighlightedXml } from "@/workbench/generate/HighlightedXml";
 import { type Generation, siblingFilename } from "@/workbench/generate/useGeneration";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
@@ -80,7 +80,7 @@ function Result({ generation }: { generation: Generation }) {
   if (generated === undefined) {
     return null;
   }
-  const { warnings, hits } = generated.answer_key;
+  const { warnings, hits, exposures } = generated.answer_key;
   return (
     <Tabs defaultValue="answer-key" className="min-w-0 gap-0 rounded-[10px] border bg-card shadow-xs">
       <TabsList variant="line" className="h-[42px]! w-full justify-start gap-5 border-b px-[18px]">
@@ -96,6 +96,12 @@ function Result({ generation }: { generation: Generation }) {
       </TabsList>
       <TabsContent value="answer-key" className="min-w-0">
         <AnswerKeyTable hits={hits} />
+        {exposures.length === 0 ? null : (
+          <div className="border-t">
+            <h3 className="px-[18px] pt-4 pb-2 font-semibold text-sm">Exposures</h3>
+            <ExposuresTable exposures={exposures} />
+          </div>
+        )}
       </TabsContent>
       <TabsContent value="xml" className="min-w-0">
         <HighlightedXml xml={generated.sample_file.xml} hits={hits} />
@@ -136,6 +142,7 @@ export function OutputPane({ generation, onValidate }: { generation: Generation;
             </span>
           )}
         </Tile>
+        <Tile label="Exposures">{generated?.answer_key.exposures.length ?? "–"}</Tile>
         <Tile label="Message Version">
           <MonoValue>{generated?.answer_key.message_version ?? "–"}</MonoValue>
         </Tile>
