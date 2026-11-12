@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -20,7 +21,7 @@ def quiet_test_client() -> None:
     logging.getLogger("httpx2").setLevel(logging.WARNING)
 
 
-def json_lines(captured: str) -> list[dict[str, object]]:
+def json_lines(captured: str) -> list[dict[str, Any]]:
     return [json.loads(line) for line in captured.splitlines() if line.strip()]
 
 
