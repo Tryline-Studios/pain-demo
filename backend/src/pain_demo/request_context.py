@@ -26,6 +26,11 @@ def request_id_of(request: Request) -> str:
     return request.state.request_id
 
 
+def add_log_fields(request: Request, **fields: object) -> None:
+    """Adds fields to this request's one `request` log event (spec 14.3). Never pass bodies or customer data."""
+    request.scope["state"].setdefault("log_fields", {}).update(fields)
+
+
 class RequestContextMiddleware:
     """Assigns every HTTP request an id, echoes it as a response header, binds it to every log line of the request
     and logs one `request` event when the response is done (at DEBUG for the paths in `quiet_paths`)."""
@@ -42,7 +47,8 @@ class RequestContextMiddleware:
 
         request = Request(scope)
         request_id = resolve_request_id(request.headers.get(REQUEST_ID_HEADER))
-        scope.setdefault("state", {})["request_id"] = request_id
+        state = scope.setdefault("state", {})
+        state["request_id"] = request_id
         status = HTTPStatus.INTERNAL_SERVER_ERROR.value
         started = time.perf_counter()
 
@@ -66,4 +72,5 @@ class RequestContextMiddleware:
                     path=request.url.path,
                     status=status,
                     duration_ms=round((time.perf_counter() - started) * 1000, 1),
+                    **state.get("log_fields", {}),
                 )
