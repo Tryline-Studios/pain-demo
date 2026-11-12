@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { OutputPane } from "@/workbench/OutputPane";
 import { SettingsPane } from "@/workbench/SettingsPane";
 import { SETTINGS_WIDTH_MAX, SETTINGS_WIDTH_MIN, useSettingsPaneWidth } from "@/workbench/useSettingsPaneWidth";
+import { useValidation } from "@/workbench/validate/useValidation";
 import { ValidateInput } from "@/workbench/validate/ValidateInput";
 import { ValidationReportPane } from "@/workbench/validate/ValidationReportPane";
 
@@ -15,6 +16,7 @@ const MODES = ["Generate", "Validate"] as const;
 export function Workbench() {
   const { width, dragging, startResize, resizeByKey } = useSettingsPaneWidth();
   const [mode, setMode] = useState<(typeof MODES)[number]>("Generate");
+  const validation = useValidation();
 
   const onHandleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (resizeByKey(event.key)) {
@@ -49,7 +51,7 @@ export function Workbench() {
         className="min-w-0"
         style={{ width: `${width}px` }}
       >
-        {mode === "Generate" ? <SettingsPane /> : <ValidateInput />}
+        {mode === "Generate" ? <SettingsPane /> : <ValidateInput validation={validation} />}
       </aside>
       {/* biome-ignore lint/a11y/useSemanticElements: an interactive resize handle; hr is non-interactive and cannot carry the grip */}
       <div
@@ -76,7 +78,7 @@ export function Workbench() {
         </section>
       ) : (
         <section aria-label="Validation Report" className="min-w-0">
-          <ValidationReportPane />
+          <ValidationReportPane validation={validation} />
         </section>
       )}
     </div>
