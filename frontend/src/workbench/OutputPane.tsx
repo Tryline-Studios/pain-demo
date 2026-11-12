@@ -60,6 +60,10 @@ function Header({ generation, onValidate }: { generation: Generation; onValidate
             <Download aria-hidden />
             Answer Key JSON
           </Button>
+          <Button variant="outline" className={BUTTON} onClick={() => generation.downloadAnswerKeyCsv(generated)}>
+            <Download aria-hidden />
+            Answer Key CSV
+          </Button>
         </div>
         <Button
           className={PRIMARY_BUTTON}
@@ -131,7 +135,7 @@ export function OutputPane({ generation, onValidate }: { generation: Generation;
   return (
     <div className="flex flex-col gap-6">
       <Header generation={generation} onValidate={onValidate} />
-      {generation.zipError === null ? null : <ProblemBlock error={generation.zipError} />}
+      {generation.downloadError === null ? null : <ProblemBlock error={generation.downloadError} />}
       <div className={TILES}>
         <Tile label="Transactions">{file?.transaction_count ?? "–"}</Tile>
         <Tile label="Hits">

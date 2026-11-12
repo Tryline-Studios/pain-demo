@@ -78,6 +78,16 @@ openapi-check:
 build-clean-banks:
     uv run python -m pain_demo.generation.build_clean_banks
 
+# Download the live OFAC SDN and UK Sanctions List files and report catalogue drift; exits 1 on drift, imports nothing
+[working-directory: 'backend']
+verify-catalogue:
+    uv run python -m pain_demo.freshness catalogue
+
+# Download the live OFAC SDN and UK Sanctions List files and report Clean Bank List matches; exits 1 on a match
+[working-directory: 'backend']
+verify-clean-banks:
+    uv run python -m pain_demo.freshness clean-banks
+
 # --- frontend ---
 
 [working-directory: 'frontend']

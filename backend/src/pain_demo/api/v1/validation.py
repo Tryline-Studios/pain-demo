@@ -4,7 +4,6 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 
 from pain_demo import validation
@@ -61,7 +60,7 @@ async def validate_message(request: Request) -> ValidationReport:
         raise RequestValidationError(
             [{"loc": ("body", "file"), "msg": "A non-empty file is required", "type": "missing"}]
         )
-    report = await run_in_threadpool(validation.validate_message, content, name)
+    report = await validation.validate(content, name)
     add_log_fields(
         request,
         message_version=report.message_version,
