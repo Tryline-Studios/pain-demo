@@ -1,10 +1,7 @@
+import type { components } from "@/api/schema";
+
 /** The problem details body our API sends for a refused request (spec 12.3); `errors` only on a 422. */
-type ProblemDetails = {
-  title?: string;
-  status?: number;
-  detail?: string;
-  errors?: { field: string; message: string }[];
-};
+type ProblemDetails = Partial<components["schemas"]["RequestValidationProblem"]>;
 
 /** A refused request, shown where its result would have gone (spec 13.3). A network failure has no body. */
 export function ProblemBlock({ error }: { error: unknown }) {

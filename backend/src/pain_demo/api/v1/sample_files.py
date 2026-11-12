@@ -24,7 +24,7 @@ from pain_demo.generation.request import (
 )
 from pain_demo.generation.sample_file import GeneratedSampleFile
 from pain_demo.generation.screening import NameScreen
-from pain_demo.problems import BuildFailed
+from pain_demo.problems import BODY_TOO_LARGE, BuildFailed
 from pain_demo.renderer import RenderFailed
 from pain_demo.request_context import add_log_fields
 
@@ -37,6 +37,7 @@ log = structlog.get_logger("pain_demo.generation")
     "/sample-files",
     operation_id="generate_sample_file",
     summary="Generate a Sample File and its Answer Key",
+    responses=BODY_TOO_LARGE,
 )
 async def generate_sample_file(request: Request, body: GenerationRequest) -> GeneratedSampleFile:
     effective = body.resolve()

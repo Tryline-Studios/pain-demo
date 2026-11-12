@@ -34,11 +34,31 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "`validation_error`: the request does not fit the model",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the cap",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -67,6 +87,26 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -85,6 +125,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Options"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -109,6 +169,26 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
@@ -127,6 +207,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GeneratorVersion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -207,11 +307,21 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "`validation_error`: the request does not fit the model",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -249,11 +359,31 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "`validation_error`: the request does not fit the model",
             "content": {
-              "application/json": {
+              "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No Entity with that id",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -300,6 +430,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the cap",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "The request body's content type is refused",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
@@ -965,6 +1135,29 @@
           "corporate"
         ]
       },
+      "FieldError": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "message",
+          "code"
+        ],
+        "title": "FieldError"
+      },
       "FileFacts": {
         "properties": {
           "message_id": {
@@ -1190,19 +1383,6 @@
         ],
         "title": "GeneratorVersion",
         "description": "Recorded in every Answer Key and returned by `GET /version`; key order is the wire order."
-      },
-      "HTTPValidationError": {
-        "properties": {
-          "detail": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationError"
-            },
-            "type": "array",
-            "title": "Detail"
-          }
-        },
-        "type": "object",
-        "title": "HTTPValidationError"
       },
       "Health": {
         "properties": {
@@ -1543,6 +1723,40 @@
           "remittance"
         ]
       },
+      "Problem": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "instance": {
+            "type": "string",
+            "title": "Instance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "status",
+          "detail",
+          "instance"
+        ],
+        "title": "Problem",
+        "description": "A problem details body. `type` is `about:blank` for plain HTTP errors and a stable token otherwise."
+      },
       "ProblemCode": {
         "type": "string",
         "enum": [
@@ -1590,6 +1804,48 @@
           "listing"
         ],
         "title": "RegistrationNumber"
+      },
+      "RequestValidationProblem": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "validation_error"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": "Validation error"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status",
+            "default": 422
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "instance": {
+            "type": "string",
+            "title": "Instance"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "instance",
+          "errors"
+        ],
+        "title": "RequestValidationProblem",
+        "description": "`type` is `validation_error`; `field` is a dotted path into the request model, e.g. `hits[2].name_variant`."
       },
       "SampleFile": {
         "properties": {
@@ -1730,46 +1986,6 @@
           "sha256"
         ],
         "title": "UploadedFile"
-      },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": {
-            "type": "string",
-            "title": "Message"
-          },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
-          }
-        },
-        "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
-        "title": "ValidationError"
       },
       "ValidationProblem": {
         "properties": {

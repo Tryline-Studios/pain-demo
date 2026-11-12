@@ -120,3 +120,43 @@ def install_problem_handlers(app: FastAPI) -> None:
     app.add_exception_handler(RequestValidationError, handle_validation_error)
     app.add_exception_handler(BuildFailed, handle_build_failed)
     app.add_exception_handler(Exception, handle_unexpected_error)
+
+
+PROBLEM_RESPONSES: dict[int | str, dict[str, Any]] = {
+    HTTPStatus.UNPROCESSABLE_CONTENT: {
+        "model": RequestValidationProblem,
+        "description": "`validation_error`: the request does not fit the model",
+    },
+    HTTPStatus.INTERNAL_SERVER_ERROR: {
+        "model": Problem,
+        "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+    },
+}
+"""Declared on every operation, which also stops FastAPI adding its own `HTTPValidationError` 422."""
+
+BODY_TOO_LARGE: dict[int | str, dict[str, Any]] = {
+    HTTPStatus.REQUEST_ENTITY_TOO_LARGE: {"model": Problem, "description": "The request body is over the cap"}
+}
+UNSUPPORTED_MEDIA_TYPE: dict[int | str, dict[str, Any]] = {
+    HTTPStatus.UNSUPPORTED_MEDIA_TYPE: {"model": Problem, "description": "The request body's content type is refused"}
+}
+
+
+def problem_openapi(app: FastAPI) -> None:
+    """Declare every error response as `application/problem+json`, the media type the handlers send.
+
+    FastAPI files a response `model` under `application/json`; this moves it once the document is built.
+    """
+    build = app.openapi
+
+    def openapi() -> dict[str, Any]:
+        if app.openapi_schema is None:
+            for methods in build()["paths"].values():
+                for operation in methods.values():
+                    for status, response in operation["responses"].items():
+                        if status >= "400" and "application/json" in response.get("content", {}):
+                            response["content"] = {PROBLEM_MEDIA_TYPE: response["content"]["application/json"]}
+        assert app.openapi_schema is not None  # noqa: S101 - `build` caches the document it returns
+        return app.openapi_schema
+
+    app.openapi = openapi  # ty: ignore[invalid-assignment] - the override FastAPI documents for customising

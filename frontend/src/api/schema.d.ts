@@ -379,6 +379,15 @@ export interface components {
         };
         /** @enum {string} */
         EntityType: "individual" | "bank" | "corporate";
+        /** FieldError */
+        FieldError: {
+            /** Field */
+            field: string;
+            /** Message */
+            message: string;
+            /** Code */
+            code: string;
+        };
         /** FileFacts */
         FileFacts: {
             /** Message Id */
@@ -483,11 +492,6 @@ export interface components {
              * Format: date
              */
             catalogue_snapshot: string;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
         };
         /** Health */
         Health: {
@@ -597,6 +601,25 @@ export interface components {
         /** @enum {string} */
         Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
         /**
+         * Problem
+         * @description A problem details body. `type` is `about:blank` for plain HTTP errors and a stable token otherwise.
+         */
+        Problem: {
+            /**
+             * Type
+             * @default about:blank
+             */
+            type: string;
+            /** Title */
+            title: string;
+            /** Status */
+            status: number;
+            /** Detail */
+            detail: string;
+            /** Instance */
+            instance: string;
+        };
+        /**
          * ProblemCode
          * @enum {string}
          */
@@ -608,6 +631,33 @@ export interface components {
             type: components["schemas"]["NonEmpty"];
             country?: components["schemas"]["CountryCode"] | null;
             listing: components["schemas"]["ListingRef"];
+        };
+        /**
+         * RequestValidationProblem
+         * @description `type` is `validation_error`; `field` is a dotted path into the request model, e.g. `hits[2].name_variant`.
+         */
+        RequestValidationProblem: {
+            /**
+             * Type
+             * @default validation_error
+             */
+            type: string;
+            /**
+             * Title
+             * @default Validation error
+             */
+            title: string;
+            /**
+             * Status
+             * @default 422
+             */
+            status: number;
+            /** Detail */
+            detail: string;
+            /** Instance */
+            instance: string;
+            /** Errors */
+            errors: components["schemas"]["FieldError"][];
         };
         /** SampleFile */
         SampleFile: {
@@ -676,19 +726,6 @@ export interface components {
             size_bytes: number;
             /** Sha256 */
             sha256: string;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
         /** ValidationProblem */
         ValidationProblem: {
@@ -765,13 +802,31 @@ export interface operations {
                     "application/json": components["schemas"]["GeneratedSampleFile"];
                 };
             };
-            /** @description Validation Error */
+            /** @description The request body is over the cap */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -794,6 +849,24 @@ export interface operations {
                     "application/json": components["schemas"]["MessageVersionOption"][];
                 };
             };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     get_options: {
@@ -812,6 +885,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Options"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -834,6 +925,24 @@ export interface operations {
                     "application/json": components["schemas"]["Health"];
                 };
             };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     get_version: {
@@ -852,6 +961,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GeneratorVersion"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -878,13 +1005,22 @@ export interface operations {
                     "application/json": components["schemas"]["EntitySummary"][];
                 };
             };
-            /** @description Validation Error */
+            /** @description `validation_error`: the request does not fit the model */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -909,13 +1045,31 @@ export interface operations {
                     "application/json": components["schemas"]["EntityDetail"];
                 };
             };
-            /** @description Validation Error */
+            /** @description No Entity with that id */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -944,6 +1098,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationReport"];
+                };
+            };
+            /** @description The request body is over the cap */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body's content type is refused */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

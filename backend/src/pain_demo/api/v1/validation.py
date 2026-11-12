@@ -8,6 +8,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 
 from pain_demo import validation
+from pain_demo.problems import BODY_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE
 from pain_demo.request_context import add_log_fields
 from pain_demo.validation import ValidationReport
 
@@ -51,6 +52,7 @@ async def _read_upload(request: Request) -> tuple[bytes, str | None]:
     "/validations",
     operation_id="validate_message",
     summary="Validate an Uploaded Message: always 200 with a Validation Report",
+    responses={**BODY_TOO_LARGE, **UNSUPPORTED_MEDIA_TYPE},
     openapi_extra={"requestBody": _REQUEST_BODY},
 )
 async def validate_message(request: Request) -> ValidationReport:
