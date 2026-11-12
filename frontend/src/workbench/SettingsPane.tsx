@@ -3,6 +3,7 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { api } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DataSection, type DataSettings, defaultDataSettings, suppliedData } from "@/workbench/generate/DataSection";
 import {
   defaultFileSettings,
   Field,
@@ -44,6 +45,11 @@ export function SettingsPane({ generation }: { generation: Generation }) {
   // The API's limit (spec 12.4); an unreadable transaction count is left for the API to reject.
   const hitLimit = Number(settings?.transaction_count) + 2;
   const hitCountTooHigh = hitCount !== undefined && Number(hitCount) > hitLimit;
+  const [data, setData] = useState<DataSettings>(defaultDataSettings);
+  const supplied = suppliedData(data);
+  // A 422's dotted paths, for the fields they name (spec 13.3).
+  const problem = generation.error as { errors?: { field: string; message: string }[] } | null;
+  const fieldErrors = new Map((problem?.errors ?? []).map((e) => [e.field, e.message]));
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -51,6 +57,9 @@ export function SettingsPane({ generation }: { generation: Generation }) {
       generation.generate({
         ...generationRequest(changed),
         ...(hitCount === undefined ? {} : { hit_count: Number(hitCount) }),
+        ...supplied,
+        // The count shown, not the API's default of one per supplied row: rows past the supplied ones are generated.
+        ...("transactions" in supplied ? { transaction_count: Number(settings.transaction_count) } : {}),
       });
     }
   };
@@ -72,7 +81,7 @@ export function SettingsPane({ generation }: { generation: Generation }) {
         )}
       </Section>
       <Section title="Data" hint="Generated or supplied">
-        <p className="text-muted-foreground text-sm">Supplied Data arrives with its own tickets.</p>
+        <DataSection value={data} errors={fieldErrors} onChange={setData} />
       </Section>
       <Section title="Hits" hint="Hit Count and named Hits">
         <Field label="Hit Count">
