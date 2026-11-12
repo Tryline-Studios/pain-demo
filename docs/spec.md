@@ -827,7 +827,7 @@ Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Stu
 | `PAIN_DEMO_LOG_LEVEL` | `INFO` | `DEBUG` adds the corpus.build scenario and build report per request |
 | `PAIN_DEMO_GIT_SHA` | the checkout's `HEAD`, else `unknown` | the commit reported in the Generator Version; the image build sets it because the container has no `.git` (added by the walking-skeleton ticket, [#23](https://github.com/Tryline-Studios/pain-demo/issues/23)) |
 
-Not configurable (code constants): the 100-transaction cap; the default countries, amount range and currencies; Placement, Name Variant, intermediary slot and remittance element weights; the background rates for optional roles; the fuzz budget and the 0.85 similarity threshold; the transliteration scheme set; the legal-form dictionary; the Exposure city lists; the 1 MB body limit; the 10 MB Upload Validation limit and the 100-problem cap.
+Not configurable (code constants): the 100-transaction cap; the default countries, amount range and currencies; Placement, Name Variant, intermediary slot and remittance element weights; the background rates for optional roles; the fuzz budget and the 0.85 similarity threshold; the transliteration scheme set; the legal-form dictionary; the Exposure city lists; the 1 MB body limit; the 10 MB Upload Validation limit, the 500,000-element limit and the 100-problem cap.
 
 ---
 
@@ -869,13 +869,14 @@ Each layer runs only if the previous one passed, so a malformed file reports one
 1. **Well-formed XML.** Parsed with lxml hardened for untrusted input: no entity resolution, no network, no DTD loading, no huge-tree mode. Any encoding the XML declaration names and lxml supports is accepted; with no declaration, UTF-8 (a BOM is fine). Undecodable bytes are `malformed_xml`.
 2. **No DTD.** Any `<!DOCTYPE>` is `dtd_not_allowed`. Real pain.001 never carries one.
 3. **Supported message.** The root `Document` namespace must be `urn:iso:std:iso:20022:tech:xsd:pain.001.001.NN` for one of the eleven Message Versions (.03 to .13), which sets `message_version`. Anything else is `unsupported_message`, naming the namespace found.
-4. **XSD-valid** against that Message Version's schema. All errors are collected in one pass.
+4. **At most 500,000 elements.** More is `too_many_elements`, naming the count and the limit ([#70](https://github.com/Tryline-Studios/pain-demo/issues/70)). The richest realistic 10 MB pain.001 (every optional element, minimum-length values, no indentation) has about 400,000; a flood of empty elements reaches 1.3 million. The XSD cost grows with errors times each error's position among its siblings, so a hostile file under the limit can still take tens of seconds; it holds only its own worker thread (section 17.4).
+5. **XSD-valid** against that Message Version's schema. All errors are collected in one pass.
 
 Rules beyond the XSD (MDR or CBPR+ usage rules, IBAN checksums, `NbOfTxs` and `CtrlSum` consistency) are not checked yet; see section 17.9.
 
 ### 17.4 Schemas
 
-The XSDs are pain001's bundled schemas for .03 to .13, the same ones the renderer validates against (section 10.4), so what we validate cannot drift from what we generate. The renderer module stays the only pain001 import and also exposes the compiled schema per Message Version; schemas are compiled once and reused. `docs/xsd/` is not committed (the example `.03` file supplied for this feature is identical to the bundled one apart from whitespace).
+The XSDs are pain001's bundled schemas for .03 to .13, the same ones the renderer validates against (section 10.4), so what we validate cannot drift from what we generate. The renderer module stays the only pain001 import and also exposes the compiled schema per Message Version; schemas are compiled once per worker thread and reused, so concurrent validations never wait for each other (an lxml schema's error log belongs to the schema, not the call). `docs/xsd/` is not committed (the example `.03` file supplied for this feature is identical to the bundled one apart from whitespace).
 
 ### 17.5 Validation Problem
 
@@ -891,7 +892,7 @@ The XSDs are pain001's bundled schemas for .03 to .13, the same ones the rendere
 - `path` is an XPath of local names with 1-based positions, no namespace prefixes; null for `malformed_xml`.
 - `tag` is the element's local name; null where there is no element.
 - `cause` is the parser's text, kept for experts; `message` is our own sentence built from `code` and the values the parser gives (element, value, pattern, expected elements, length limit).
-- `code` is a closed enum in OpenAPI: `malformed_xml`, `dtd_not_allowed`, `unsupported_message`, `missing_element`, `unexpected_element`, `pattern_mismatch`, `invalid_value`, `too_long`, `too_short`, and the catch-all `schema_violation` (message falls back to `cause`). Adding a code is an additive change.
+- `code` is a closed enum in OpenAPI: `malformed_xml`, `dtd_not_allowed`, `unsupported_message`, `too_many_elements`, `missing_element`, `unexpected_element`, `pattern_mismatch`, `invalid_value`, `too_long`, `too_short`, and the catch-all `schema_violation` (message falls back to `cause`). Adding a code is an additive change.
 
 ### 17.6 Ordering and cap
 
@@ -903,7 +904,7 @@ The one INFO event per request (section 14.3) adds `message_version`, `valid`, p
 
 ### 17.8 Testing
 
-- pytest through the HTTP seam: one fixture per layer and per code, at least one per Message Version, the raw and multipart paths, 413, 415, the 100-problem cap.
+- pytest through the HTTP seam: one fixture per layer and per code, at least one per Message Version, the raw and multipart paths, 413, 415, the 100-problem cap, just over and at the element limit, and two validations of the same Message Version running concurrently.
 - Round trip: every golden Sample File (section 15.3) is uploaded and must come back valid.
 - An XXE and an entity-expansion fixture prove the parser hardening.
 
