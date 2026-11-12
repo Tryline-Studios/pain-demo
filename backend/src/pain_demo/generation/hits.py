@@ -9,13 +9,19 @@ import random
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from typing import Literal, cast
+from typing import Literal
 
 from pydantic import BaseModel, Field
-from schwifty import BIC, IBAN
+from schwifty import BIC
 
 from pain_demo.catalogue import Catalogue
-from pain_demo.catalogue.capabilities import NameVariant, Placement, candidate_names
+from pain_demo.catalogue.capabilities import (
+    PLACEMENT_ELIGIBILITY,
+    VERBATIM_SOURCES,
+    NameVariant,
+    Placement,
+    candidate_names,
+)
 from pain_demo.catalogue.schema import (
     Address as CatalogueAddress,
 )
@@ -26,77 +32,79 @@ from pain_demo.catalogue.schema import (
     EntityType,
     Individual,
     ListingRef,
-    Name,
     NameSourceType,
     SanctionsList,
     Script,
 )
-from pain_demo.generation.clean_banks import IBAN_COUNTRIES, CleanBankList, SupportedCountry
-from pain_demo.generation.generated_data import COUNTRIES, GeneratedData, digits
+from pain_demo.generation.generated_data import GeneratedData
 from pain_demo.generation.model import (
     Account,
     Agent,
-    Iban,
     ListedAddress,
-    OtherAccount,
     Party,
     SampleFileModel,
     Transaction,
 )
 from pain_demo.generation.request import EffectiveRequest
 from pain_demo.generation.seeds import stream
+from pain_demo.identifiers import bic_country
 
-PARTY_WEIGHTS: dict[Placement, float] = {"creditor": 35, "ultimate_creditor": 15, "ultimate_debtor": 15, "debtor": 10}
-"""Placement of a Corporate or Individual (spec 6.5). The remittance mention (25) joins with its own ticket."""
-_SLOT_WEIGHTS: dict[Placement, float] = {
-    "intermediary_agent_1": 60,
-    "intermediary_agent_2": 30,
-    "intermediary_agent_3": 10,
+
+@dataclass(frozen=True)
+class PlacementRule:
+    """What generation knows about one Placement; who may take it is `PLACEMENT_ELIGIBILITY` (spec 6.1)."""
+
+    name_path: str
+    """The `Nm` element, under `PmtInf` for a file-level Placement and under `CdtTrfTxInf[n]` otherwise."""
+    agent: bool = False
+    file_level: bool = False
+    party_weight: float = 0
+    """Drawn for a Corporate or Individual (spec 6.5)."""
+    bank_weight: float = 0
+    """Drawn for a Bank (spec 6.5)."""
+
+
+_PARTY_WEIGHTS: dict[Placement, float] = {"creditor": 35, "ultimate_creditor": 15, "ultimate_debtor": 15, "debtor": 10}
+
+
+def _bank_party_role(placement: Placement) -> float:
+    """A Bank's "party roles 10", which the spec does not split: shared over the party roles as for a party."""
+    return 10 * _PARTY_WEIGHTS[placement] / sum(_PARTY_WEIGHTS.values())
+
+
+def _party(placement: Placement, name_path: str, *, file_level: bool = False) -> PlacementRule:
+    weight = _PARTY_WEIGHTS[placement]
+    return PlacementRule(name_path, file_level=file_level, party_weight=weight, bank_weight=_bank_party_role(placement))
+
+
+PLACEMENTS: dict[Placement, PlacementRule] = {
+    "creditor_agent": PlacementRule("CdtrAgt/FinInstnId/Nm", agent=True, bank_weight=40),
+    # The Intermediary Agent's 30 shared by the slot weights 60/30/10.
+    "intermediary_agent_1": PlacementRule("IntrmyAgt1/FinInstnId/Nm", agent=True, bank_weight=30 * 60 / 100),
+    "intermediary_agent_2": PlacementRule("IntrmyAgt2/FinInstnId/Nm", agent=True, bank_weight=30 * 30 / 100),
+    "intermediary_agent_3": PlacementRule("IntrmyAgt3/FinInstnId/Nm", agent=True, bank_weight=30 * 10 / 100),
+    "debtor_agent": PlacementRule("DbtrAgt/FinInstnId/Nm", agent=True, file_level=True, bank_weight=15),
+    "creditor": _party("creditor", "Cdtr/Nm"),
+    "ultimate_creditor": _party("ultimate_creditor", "UltmtCdtr/Nm"),
+    "ultimate_debtor": _party("ultimate_debtor", "UltmtDbtr/Nm"),
+    "debtor": _party("debtor", "Dbtr/Nm", file_level=True),
 }
-_BANK_PARTY_ROLES = 10
-"""A Bank's "party roles 10", which the spec does not split: shared over the party roles as `PARTY_WEIGHTS` are."""
-BANK_WEIGHTS: dict[Placement, float] = {
-    "creditor_agent": 40,
-    **{slot: 30 * weight / 100 for slot, weight in _SLOT_WEIGHTS.items()},
-    "debtor_agent": 15,
-    **{role: _BANK_PARTY_ROLES * weight / sum(PARTY_WEIGHTS.values()) for role, weight in PARTY_WEIGHTS.items()},
-}
-"""Placement of a Bank (spec 6.5), the Intermediary Agent's 30 shared by the slot weights 60/30/10. The remittance
-mention (5) joins with its own ticket."""
+"""Every drawn Placement, in draw order: the order feeds `choices`, so changing it changes every Seed's Hits. The
+remittance mention (25 for a party, 5 for a Bank) joins with its own ticket."""
 NAME_VARIANT_WEIGHTS: dict[NameVariant, float] = {"exact": 40, "alias": 25, "native_script": 5}
 """The verbatim Name Variants (spec 6.5); transliteration and fuzzed join with their own tickets."""
-FILE_LEVEL: tuple[Placement, ...] = ("debtor", "debtor_agent")
-AGENTS: frozenset[Placement] = frozenset(
-    {"debtor_agent", "creditor_agent", "intermediary_agent_1", "intermediary_agent_2", "intermediary_agent_3"}
-)
-_IBAN_COUNTRIES = frozenset({"BY", "IR", *IBAN_COUNTRIES})
-"""Where a Hit's account is an IBAN (spec 6.9); everywhere else it is `Othr/Id`."""
 _PMT_INF = "/Document/CstmrCdtTrfInitn/PmtInf"
-_NAME_PATHS: dict[Placement, str] = {
-    "debtor": "Dbtr/Nm",
-    "debtor_agent": "DbtrAgt/FinInstnId/Nm",
-    "creditor": "Cdtr/Nm",
-    "creditor_agent": "CdtrAgt/FinInstnId/Nm",
-    "ultimate_debtor": "UltmtDbtr/Nm",
-    "ultimate_creditor": "UltmtCdtr/Nm",
-    "intermediary_agent_1": "IntrmyAgt1/FinInstnId/Nm",
-    "intermediary_agent_2": "IntrmyAgt2/FinInstnId/Nm",
-    "intermediary_agent_3": "IntrmyAgt3/FinInstnId/Nm",
-}
-_FIRST_WITH_AGENT_LEI = "pain.001.001.09"
+_FIRST_WITH_AGENT_LEI = 9
 """`FinInstnId/LEI` exists from .09; earlier versions get no LEI rather than a dropped one."""
 
 
-def _exact(name: Name) -> bool:
-    # A non-Latin primary name (ПАО Сбербанк) is a native_script candidate, not an exact one.
-    return name.source_type == "primary" and name.script == "latin"
-
-
-_CANDIDATES = {
-    "exact": _exact,
-    "alias": lambda name: name.source_type != "primary" and name.script == "latin",
-    "native_script": lambda name: name.script != "latin",
-}
+def placement_weights(entity_type: EntityType) -> dict[Placement, float]:
+    """The default Placement draw for an Entity Type (spec 6.5), over the Placements it is eligible for."""
+    return {
+        placement: rule.bank_weight if entity_type == "bank" else rule.party_weight
+        for placement, rule in PLACEMENTS.items()
+        if entity_type in PLACEMENT_ELIGIBILITY[placement]
+    }
 
 
 class NameSource(BaseModel):
@@ -185,19 +193,23 @@ def draw(request: EffectiveRequest, catalogue: Catalogue) -> list[_Planned]:
 
         def weights(entity: Entity, *, forced: bool = forced) -> dict[Placement, float]:
             # Leaving taken file-level Placements out is the spec's "redrawn", without the loop.
-            table = BANK_WEIGHTS if entity.entity_type == "bank" else PARTY_WEIGHTS
-            return {p: w for p, w in table.items() if p not in taken and (p in FILE_LEVEL or not forced)}
+            table = placement_weights(entity.entity_type)
+            return {p: w for p, w in table.items() if p not in taken and (PLACEMENTS[p].file_level or not forced)}
 
         entity = _next_entity(queue, entities, rng, lambda entity: bool(weights(entity)))
         options = weights(entity)
         (placement,) = rng.choices(list(options), weights=list(options.values()))
-        if placement in FILE_LEVEL:
+        if PLACEMENTS[placement].file_level:
             taken.add(placement)
         else:
             free_transactions -= 1
         planned.append(_Planned(entity, placement))
     numbers = iter(rng.sample(range(1, request.transaction_count + 1), request.transaction_count - free_transactions))
-    return [p if p.placement in FILE_LEVEL else replace(p, transaction=next(numbers)) for p in planned]
+    return [p if PLACEMENTS[p.placement].file_level else replace(p, transaction=next(numbers)) for p in planned]
+
+
+def _wire_order(plan: _Planned) -> tuple[bool, int, str]:
+    return plan.transaction is not None, plan.transaction or 0, xpath(plan.placement, plan.transaction)
 
 
 def _next_entity(
@@ -216,42 +228,42 @@ def _next_entity(
 
 
 class _Placer:
-    def __init__(
-        self, request: EffectiveRequest, catalogue: Catalogue, clean_banks: CleanBankList, data: GeneratedData
-    ) -> None:
+    def __init__(self, request: EffectiveRequest, catalogue: Catalogue, data: GeneratedData) -> None:
         self.request = request
         self.catalogue = catalogue
-        self.clean_banks = clean_banks
         self.data = data
 
     def place(self, model: SampleFileModel) -> tuple[SampleFileModel, list[Hit]]:
         hits: list[Hit] = []
         transactions = list(model.transactions)
         planned = draw(self.request, self.catalogue)
+        # Ids follow the Answer Key order (spec 11.4): file-level first, then by transaction number, then by XPath.
+        wire_order = sorted(range(len(planned)), key=lambda k: _wire_order(planned[k]))
+        ids = {k: f"h{n}" for n, k in enumerate(wire_order, start=1)}
         # The agent's account wins over its Debtor's: the account is serviced by the Bank.
-        order = sorted(range(len(planned)), key=lambda k: planned[k].placement in AGENTS)
+        order = sorted(range(len(planned)), key=lambda k: PLACEMENTS[planned[k].placement].agent)
         for k in order:
             plan = planned[k]
             rng = stream(self.request.seed, f"hits/{k + 1}")
             name = _name(rng, plan.entity)
-            agent_hit = plan.placement in AGENTS
+            agent_hit = PLACEMENTS[plan.placement].agent
             bic = (
                 rng.choice(plan.entity.bics)
                 if agent_hit and isinstance(plan.entity, Bank) and plan.entity.bics
                 else None
             )
-            address = _address(rng, plan.entity, bic.value[4:6] if bic else None)
+            address = _address(rng, plan.entity, bic_country(bic.value) if bic else None)
             listed = _listed(address) if address else None
             lei = self._lei(plan.entity) if agent_hit else None
             if agent_hit:
                 party_or_agent: Party | Agent = Agent(
                     bic=bic.value if bic else None, name=name.rendered, lei=lei, address=listed
                 )
-                country = bic.value[4:6] if bic else self._country(plan.entity, address)
-                account = self._account(rng, country, _bank_code(bic.value) if bic else None)
+                country = bic_country(bic.value) if bic else self._country(plan.entity, address)
+                account = self.data.account(rng, country, _bank_code(bic.value) if bic else None)
             else:
                 party_or_agent = Party(name=name.rendered, address=listed)
-                account = self._account(rng, self._country(plan.entity, address), None)
+                account = self.data.account(rng, self._country(plan.entity, address), None)
             if plan.transaction is None:
                 model = _place_file(model, plan.placement, party_or_agent, account)
                 end_to_end_id = None
@@ -261,7 +273,7 @@ class _Placer:
                 end_to_end_id = tx.end_to_end_id
             hits.append(
                 Hit(
-                    id="",
+                    id=ids[k],
                     scope="file" if plan.transaction is None else "transaction",
                     transaction_number=plan.transaction,
                     end_to_end_id=end_to_end_id,
@@ -284,37 +296,18 @@ class _Placer:
                 )
             )
         model = replace(model, transactions=tuple(transactions))
-        hits.sort(key=lambda hit: (hit.scope != "file", hit.transaction_number or 0, hit.xpath))
-        return model, [hit.model_copy(update={"id": f"h{n}"}) for n, hit in enumerate(hits, start=1)]
+        return model, sorted(hits, key=lambda hit: int(hit.id[1:]))
 
     def _lei(self, entity: Entity) -> str | None:
         if isinstance(entity, Individual) or entity.lei is None:
             return None
-        return entity.lei.value if self.request.message_version >= _FIRST_WITH_AGENT_LEI else None
+        return entity.lei.value if _version_number(self.request.message_version) >= _FIRST_WITH_AGENT_LEI else None
 
     def _country(self, entity: Entity, address: CatalogueAddress | None) -> str:
         """Where a sanctioned party banks: its Listing address, else its stated countries, else the Debtor's."""
         if address:
             return address.country
         return entity.countries[0] if entity.countries else self.request.countries[0]
-
-    def _account(self, rng: random.Random, country: str, bank_code: str | None) -> Account:
-        """A clean account in `country` (spec 6.9): IBAN for BY, IR and the IBAN defaults, else `Othr/Id`."""
-        if country == "IR":
-            # schwifty's IR spec has no bank or account positions and yields all zeros: BBAN 0 + bank + 18 digits.
-            return Iban(_iban("IR", "0" + digits(rng, 21)))
-        profile = COUNTRIES.get(country)  # one of the twelve clean countries, else None
-        if country in _IBAN_COUNTRIES:
-            account_digits = profile.account_digits if profile else 16  # BY: 16 after the bank code and branch
-            if bank_code is None and profile:
-                bank_code = rng.choice(self.clean_banks.for_country(cast("SupportedCountry", country))).bank_code
-            codes = {"bank_code": bank_code} if bank_code else {}
-            if account_digits:
-                codes["account_code"] = digits(rng, account_digits)
-            return Iban(str(IBAN.random(country, random=rng, use_registry=False, **codes)))
-        if country == "RU":
-            return OtherAccount("40702810" + digits(rng, 12))  # 20 digits: balance account, currency, then the rest
-        return OtherAccount(digits(rng, (profile.account_digits or 10) if profile else 16))
 
     def _place_tx(
         self, tx: Transaction, rng: random.Random, placement: Placement, hit: Party | Agent, account: Account
@@ -339,11 +332,10 @@ def place_hits(
     model: SampleFileModel,
     request: EffectiveRequest,
     catalogue: Catalogue,
-    clean_banks: CleanBankList,
     data: GeneratedData,
 ) -> tuple[SampleFileModel, list[Hit]]:
     """Overlay `request.hit_count` drawn Hits on the clean model; the Hits come back ordered and numbered."""
-    return _Placer(request, catalogue, clean_banks, data).place(model)
+    return _Placer(request, catalogue, data).place(model)
 
 
 def _place_file(model: SampleFileModel, placement: Placement, hit: Party | Agent, account: Account) -> SampleFileModel:
@@ -355,13 +347,13 @@ def _place_file(model: SampleFileModel, placement: Placement, hit: Party | Agent
 def xpath(placement: Placement, transaction: int | None) -> str:
     """Built from the model: lxml's own paths are `/*/*/*[2]` under a default namespace."""
     if transaction is None:
-        return f"{_PMT_INF}/{_NAME_PATHS[placement]}"
-    return f"{_PMT_INF}/CdtTrfTxInf[{transaction}]/{_NAME_PATHS[placement]}"
+        return f"{_PMT_INF}/{PLACEMENTS[placement].name_path}"
+    return f"{_PMT_INF}/CdtTrfTxInf[{transaction}]/{PLACEMENTS[placement].name_path}"
 
 
 def _name(rng: random.Random, entity: Entity) -> HitName:
     names = candidate_names(entity)  # never over 140 characters (spec 7.6)
-    candidates = {variant: [n for n in names if _CANDIDATES[variant](n)] for variant in NAME_VARIANT_WEIGHTS}
+    candidates = {variant: [n for n in names if VERBATIM_SOURCES[variant](n)] for variant in NAME_VARIANT_WEIGHTS}
     weights = {variant: w for variant, w in NAME_VARIANT_WEIGHTS.items() if candidates[variant]}
     (variant,) = rng.choices(list(weights), weights=list(weights.values()))
     name = rng.choice(candidates[variant])
@@ -384,15 +376,14 @@ def _listed(address: CatalogueAddress) -> ListedAddress:
 
 def _bank_code(bic: str) -> str | None:
     """The Bank's own domestic code where schwifty's registry has it (spec 6.9); BY IBANs carry the BIC's first four."""
-    if bic[4:6] == "BY":
+    if bic_country(bic) == "BY":
         return bic[:4]
     codes = BIC(bic).domestic_bank_codes
     return codes[0] if codes else None
 
 
-def _iban(country: str, bban: str) -> str:
-    numeric = int("".join(str(int(char, 36)) for char in bban + country + "00"))
-    return f"{country}{98 - numeric % 97:02d}{bban}"
+def _version_number(message_version: str) -> int:
+    return int(message_version.rsplit(".", 1)[1])
 
 
 def _triggers(entity: Entity, rendered: str, bic: Bic | None, lei: str | None) -> list[Trigger]:

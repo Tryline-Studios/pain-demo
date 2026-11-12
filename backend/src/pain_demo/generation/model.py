@@ -42,7 +42,7 @@ class Agent:
     routing_number: str | None = None
     """The ABA routing number of a US agent, rendered as its clearing system member id."""
     lei: str | None = None
-    """`FinInstnId/LEI`, which .03 to .08 cannot hold: the build drops it there with an Answer Key warning."""
+    """`FinInstnId/LEI`, which exists from .09: a Hit leaves it None before then rather than have the build drop it."""
     address: ListedAddress | None = None
 
 

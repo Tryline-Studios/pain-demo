@@ -126,7 +126,7 @@ def generate(
 ) -> GeneratedSampleFile:
     """Blocking: run it in a worker thread."""
     data = GeneratedData(request, clean_banks, screen)
-    model, hits = place_hits(data.sample_file_model(), request, catalogue, clean_banks, data)
+    model, hits = place_hits(data.sample_file_model(), request, catalogue, data)
     file_hit_ids = [hit.id for hit in hits if hit.scope == "file"]
     rendered = render(model)
     declaration, _, body = rendered.xml.decode("utf-8").partition("\n")

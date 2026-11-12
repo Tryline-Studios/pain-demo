@@ -3,6 +3,7 @@
 `transliteration` joins the supported set with its own ticket, once the scheme collision check exists.
 """
 
+from collections.abc import Callable
 from typing import Literal
 
 from pain_demo.catalogue.schema import Entity, EntityType, Name
@@ -47,12 +48,21 @@ def candidate_names(entity: Entity) -> list[Name]:
     return [name for name in entity.names if len(name.value) <= MAX_NAME_LENGTH]
 
 
+VERBATIM_SOURCES: dict[NameVariant, Callable[[Name], bool]] = {
+    # A non-Latin primary name (ПАО Сбербанк) is a native_script source, not an exact one.
+    "exact": lambda name: name.source_type == "primary" and name.script == "latin",
+    "alias": lambda name: name.source_type != "primary" and name.script == "latin",
+    "native_script": lambda name: name.script != "latin",
+}
+"""Which catalogue names each verbatim Name Variant renders (spec 7.1 to 7.3)."""
+
+
 def supported_name_variants(entity: Entity) -> list[NameVariant]:
     names = candidate_names(entity)
     variants: list[NameVariant] = ["exact"]
-    if any(name.script == "latin" and name.source_type != "primary" for name in names):
+    if any(map(VERBATIM_SOURCES["alias"], names)):
         variants.append("alias")
-    if any(name.script != "latin" for name in names):
+    if any(map(VERBATIM_SOURCES["native_script"], names)):
         variants.append("native_script")
     variants.append("fuzzed")
     return variants
