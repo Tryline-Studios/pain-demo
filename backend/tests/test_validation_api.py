@@ -1,13 +1,18 @@
 """Upload Validation through the HTTP seam (spec section 17)."""
 
 import hashlib
+import threading
 import time
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from lxml import etree
+
+from pain_demo import renderer
 
 URL = "/api/v1/validations"
 XML = {"Content-Type": "application/xml"}
@@ -412,3 +417,80 @@ def test_exactly_one_hundred_problems_are_not_truncated(client: TestClient) -> N
     report = client.post(URL, content=with_transactions(pain001(), *[BAD_CURRENCY] * 100), headers=XML).json()
 
     assert (len(report["problems"]), report["truncated"]) == (100, False)
+
+
+ELEMENT_LIMIT = 500_000
+"""Spec section 17.3, layer 4."""
+BASE_ELEMENTS = 24
+"""Elements in pain001() with an empty RmtInf, before any Ustrd lines."""
+
+
+def with_ustrd(lines: int, ustrd: bytes) -> bytes:
+    return pain001().replace(b"<Cdtr/>", b"<Cdtr/><RmtInf>" + ustrd * lines + b"</RmtInf>")
+
+
+def test_a_message_over_the_element_limit_is_refused_before_the_xsd(client: TestClient) -> None:
+    content = with_ustrd(ELEMENT_LIMIT - BASE_ELEMENTS + 1, b"<Ustrd/>")  # each Ustrd empty, so an XSD error if it ran
+
+    report = client.post(URL, content=content, headers=XML).json()
+
+    assert (report["valid"], report["message_version"], report["transaction_count"]) == (
+        False,
+        "pain.001.001.03",
+        None,
+    )
+    assert report["problems"] == [
+        {
+            "line": None,
+            "column": None,
+            "tag": None,
+            "path": None,
+            "code": "too_many_elements",
+            "cause": None,
+            "message": "The file has 500,001 elements; the limit is 500,000",
+        }
+    ]
+
+
+def test_a_message_at_the_element_limit_is_validated(client: TestClient) -> None:
+    content = with_ustrd(ELEMENT_LIMIT - BASE_ELEMENTS, b"<Ustrd>x</Ustrd>")
+
+    report = client.post(URL, content=content, headers=XML).json()
+
+    assert (report["valid"], report["problems"], report["transaction_count"]) == (True, [], 1)
+
+
+def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real_schema = renderer.schema
+    slow_is_validating, quick_has_its_report = threading.Event(), threading.Event()
+    saw_quick_finish: list[bool] = []
+
+    class PausedSchema:
+        """The first upload's schema: its validation waits, inside the XSD layer, for the second upload's report."""
+
+        def __init__(self, version: str) -> None:
+            self.real = real_schema(version)
+
+        @property
+        def error_log(self) -> etree._ListErrorLog:
+            return self.real.error_log
+
+        def validate(self, root: etree._Element) -> bool:
+            slow_is_validating.set()
+            saw_quick_finish.append(quick_has_its_report.wait(5))
+            return self.real.validate(root)
+
+    def schema(version: str) -> object:
+        return real_schema(version) if slow_is_validating.is_set() else PausedSchema(version)
+
+    monkeypatch.setattr(renderer, "schema", schema)
+    with ThreadPoolExecutor(1) as pool:
+        slow = pool.submit(client.post, URL, content=pain001(), headers=XML)
+        assert slow_is_validating.wait(5)
+        quick = client.post(URL, content=pain001(), headers=XML)
+        quick_has_its_report.set()
+
+    # Behind a shared schema lock the quick upload could only finish after the slow one's validation.
+    assert (quick.json()["valid"], slow.result().json()["valid"], saw_quick_finish) == (True, True, [True])

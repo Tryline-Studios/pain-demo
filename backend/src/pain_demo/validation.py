@@ -3,7 +3,6 @@
 import hashlib
 import itertools
 import re
-import threading
 from enum import StrEnum
 
 from lxml import etree
@@ -15,7 +14,8 @@ from pain_demo.generation.request import MESSAGE_VERSIONS
 _NAMESPACE_PREFIX = "urn:iso:std:iso:20022:tech:xsd:"
 _PARSER_POSITION = re.compile(r", line \d+, column \d+$")
 MAX_PROBLEMS = 100
-_SCHEMA_LOCKS: dict[str, threading.Lock] = {version: threading.Lock() for version in MESSAGE_VERSIONS}
+MAX_ELEMENTS = 500_000
+"""Above the richest realistic 10 MB pain.001 (about 400,000 elements) and well below a flood (about 1.3 million)."""
 _ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
 _EXPECTED = re.compile(r"Expected is (?:one of )?\( (.*) \)")
 _PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
@@ -28,6 +28,7 @@ class ProblemCode(StrEnum):
     MALFORMED_XML = "malformed_xml"
     DTD_NOT_ALLOWED = "dtd_not_allowed"
     UNSUPPORTED_MESSAGE = "unsupported_message"
+    TOO_MANY_ELEMENTS = "too_many_elements"
     MISSING_ELEMENT = "missing_element"
     UNEXPECTED_ELEMENT = "unexpected_element"
     PATTERN_MISMATCH = "pattern_mismatch"
@@ -84,13 +85,14 @@ def _doctype_line(content: bytes, encoding: str) -> int | None:
 class _Rejected(Exception):
     """An Uploaded Message stopped before the XSD layer, with its one problem."""
 
-    def __init__(self, problem: ValidationProblem, encoding: str | None = None) -> None:
+    def __init__(self, problem: ValidationProblem, encoding: str | None = None, version: str | None = None) -> None:
         self.problem = problem
         self.encoding = encoding
+        self.version = version
 
 
-def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
-    """The first three layers: returns the encoding, the Message Version and the root, or raises `_Rejected`."""
+def _layers_before_xsd(content: bytes) -> tuple[str, str, etree._Element]:
+    """The first four layers: returns the encoding, the Message Version and the root, or raises `_Rejected`."""
     try:
         root = etree.fromstring(content, _parser())
     except etree.XMLSyntaxError as error:
@@ -125,17 +127,23 @@ def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
             message=message,
         )
         raise _Rejected(problem, encoding)
+    elements = sum(1 for _ in root.iter(etree.Element))
+    if elements > MAX_ELEMENTS:
+        message = f"The file has {elements:,} elements; the limit is {MAX_ELEMENTS:,}"
+        raise _Rejected(ValidationProblem(code=ProblemCode.TOO_MANY_ELEMENTS, message=message), encoding, version)
     return encoding, version, root
 
 
 def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
-    schema = renderer.schema(version)
-    # One compiled schema is shared by every request thread, and its error log is per schema, not per call.
-    with _SCHEMA_LOCKS[version]:
-        schema.validate(root)
-        # shortcut: lxml offers no error cap, so libxml2 logs every XSD error with a sibling-counting path; 40k
-        # errors (a 6 MB file of bad transactions) take about 10 s under this lock. Cap elements up front if that bites.
-        return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
+    schema = renderer.schema(version)  # this thread's own, so concurrent uploads never wait on a shared one
+    schema.validate(root)
+    # shortcut: lxml offers no error cap and records every XSD error with a path that walks the preceding siblings,
+    # so the cost grows at least with the square of the erroring siblings under one parent: 40k took 1.5 s and 120k
+    # 12.6 s on an idle M3 Pro; under CPU load 40k took 21 s and 240k about 240 s. A file at MAX_ELEMENTS is
+    # unmeasured and may take far more than minutes. lxml takes the GIL once per error, which slows (never blocks)
+    # every other thread meanwhile: beside 50k errors a quick upload took 0.5 to 1.7 s. The follow-up ticket adds a
+    # time-budgeted worker.
+    return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
 
 
 def _path(find: etree.XPathDocumentEvaluator, lxml_path: str) -> str | None:
@@ -204,9 +212,9 @@ def _schema_problem(find: etree.XPathDocumentEvaluator, error: etree._LogEntry) 
 def validate_message(content: bytes, name: str | None) -> ValidationReport:
     """Blocking: callers on the event loop run it in a thread."""
     try:
-        encoding, version, root = _parse_message(content)
+        encoding, version, root = _layers_before_xsd(content)
     except _Rejected as rejected:
-        encoding, version, problems, transaction_count = rejected.encoding, None, [rejected.problem], None
+        encoding, version, problems, transaction_count = rejected.encoding, rejected.version, [rejected.problem], None
     else:
         tree = root.getroottree()
         # lxml's error paths use the document's own prefixes, so the XPath needs them all.

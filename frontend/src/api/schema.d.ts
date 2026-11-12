@@ -623,7 +623,7 @@ export interface components {
          * ProblemCode
          * @enum {string}
          */
-        ProblemCode: "malformed_xml" | "dtd_not_allowed" | "unsupported_message" | "missing_element" | "unexpected_element" | "pattern_mismatch" | "invalid_value" | "too_long" | "too_short" | "schema_violation";
+        ProblemCode: "malformed_xml" | "dtd_not_allowed" | "unsupported_message" | "too_many_elements" | "missing_element" | "unexpected_element" | "pattern_mismatch" | "invalid_value" | "too_long" | "too_short" | "schema_violation";
         /** RegistrationNumber */
         RegistrationNumber: {
             value: components["schemas"]["NonEmpty"];
