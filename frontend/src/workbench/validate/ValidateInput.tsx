@@ -17,12 +17,12 @@ export function ValidateInput({ validation }: { validation: Validation }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="px-1 pb-2">
+      <div className="px-1 pb-2">
         <h1 className="font-semibold text-xl tracking-tight">Validate a pain.001 message</h1>
         <p className="mt-1 text-muted-foreground text-sm">
           Checked against the XSD of the Message Version it declares (.03 to .13).
         </p>
-      </header>
+      </div>
       <label
         onDragOver={(event) => {
           event.preventDefault();

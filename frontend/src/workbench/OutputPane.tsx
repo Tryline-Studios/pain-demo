@@ -4,7 +4,6 @@ import type { GeneratedSampleFile, Generation } from "@/workbench/generate/useGe
 import { saveFile } from "@/workbench/generate/useGeneration";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { Tile } from "@/workbench/Tile";
-import { VersionTile } from "@/workbench/VersionTile";
 
 function Downloads({ generated, generation }: { generated: GeneratedSampleFile; generation: Generation }) {
   const { filename, xml } = generated.sample_file;
@@ -81,7 +80,9 @@ export function OutputPane({ generation }: { generation: Generation }) {
             {generated?.answer_key.seed ?? "–"}
           </span>
         </Tile>
-        <VersionTile />
+        <Tile label="Version">
+          <span className="block truncate">{generated?.answer_key.message_version ?? "–"}</span>
+        </Tile>
       </div>
       {generation.error !== null ? (
         <ProblemBlock error={generation.error} />

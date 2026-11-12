@@ -87,22 +87,56 @@ describe("Generate mode: the File section", () => {
 });
 
 describe("Generate mode: generating", () => {
-  it("posts the defaults, leaving the Seed for the API to pick", async () => {
+  it("posts nothing the user left alone, so the API's defaults apply", async () => {
     const bodies = recordGenerateRequests();
     const user = await openFileSection();
 
     await user.click(generateButton());
 
     await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
-    expect(bodies).toEqual([
-      {
-        message_version: "pain.001.001.03",
-        transaction_count: 10,
-        countries: ["GB", "DE"],
-        amount_min: "10.00",
-        amount_max: "50000.00",
-      },
-    ]);
+    expect(bodies).toEqual([{}]);
+  });
+
+  it("posts only the field the user changed", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+
+    await user.clear(screen.getByRole("spinbutton", { name: "Transactions" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Transactions" }), "3");
+    await user.click(generateButton());
+
+    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    expect(bodies).toEqual([{ transaction_count: 3 }]);
+  });
+
+  it("leaves a cleared Seed and deselected currencies for the API to pick", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+
+    await user.type(screen.getByRole("textbox", { name: "Seed" }), "abc");
+    await user.clear(screen.getByRole("textbox", { name: "Seed" }));
+    await user.click(chip("Currencies", "EUR"));
+    await user.click(chip("Currencies", "EUR"));
+    await user.click(generateButton());
+
+    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    expect(bodies).toEqual([{}]);
+  });
+
+  it("posts a country made the Debtor's first, keeping the others chosen", async () => {
+    const bodies = recordGenerateRequests();
+    const user = await openFileSection();
+
+    await user.click(chip("Countries", "US"));
+    await user.click(screen.getByRole("button", { name: "Make US Debtor" }));
+    await user.click(generateButton());
+
+    await within(output()).findByText(sampleXml.split("\n")[1] as string, { exact: false });
+    expect(screen.getByText("Debtor country: US")).toBeInTheDocument();
+    for (const code of ["GB", "DE", "US"]) {
+      expect(chip("Countries", code)).toHaveAttribute("aria-pressed", "true");
+    }
+    expect(bodies).toEqual([{ countries: ["US", "GB", "DE"] }]);
   });
 
   it("posts what the File section says", async () => {
@@ -154,7 +188,7 @@ describe("Generate mode: generating", () => {
     expect(seedTile).toHaveTextContent("echoed-seed");
     expect(within(output()).getByRole("group", { name: "Transactions" })).toHaveTextContent("3");
     expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("0");
-    expect(within(output()).getByRole("group", { name: "Version" })).toHaveTextContent("1.2.3");
+    expect(within(output()).getByRole("group", { name: "Version" })).toHaveTextContent("pain.001.001.09");
     expect(within(output()).queryByText("No Sample File yet")).not.toBeInTheDocument();
     expect(within(output()).getByRole("tabpanel")).toHaveTextContent('seed="echoed-seed"');
 
@@ -169,6 +203,28 @@ describe("Generate mode: generating", () => {
     await user.click(await within(output()).findByRole("tab", { name: "Warnings (0)" }));
 
     expect(within(output()).getByRole("tabpanel")).toHaveTextContent("No warnings");
+  });
+
+  it("shows no Message Version in the version tile before the first generate", async () => {
+    await openFileSection();
+
+    expect(within(output()).getByRole("group", { name: "Version" })).toHaveTextContent("–");
+  });
+
+  it("clears the previous Sample File while the next one is generating", async () => {
+    const user = await openFileSection();
+    await user.click(generateButton());
+    await within(output()).findByRole("tabpanel");
+    let answer: (response: Response) => void = () => undefined;
+    server.use(http.post("/api/v1/sample-files", () => new Promise<Response>((resolve) => (answer = resolve))));
+
+    await user.click(generateButton());
+
+    expect(await within(output()).findByText("Generating…")).toBeInTheDocument();
+    expect(within(output()).queryByRole("tabpanel")).not.toBeInTheDocument();
+    expect(within(output()).getByRole("group", { name: "Seed" })).toHaveTextContent("–");
+    answer(HttpResponse.json(generated));
+    await within(output()).findByRole("tabpanel");
   });
 
   it("disables Generate while the request is in flight", async () => {

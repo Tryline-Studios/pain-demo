@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-test("the Workbench loads through Caddy and the version tile shows the app version from the API", async ({ page }) => {
+test("the Workbench loads through Caddy and the header shows the app version from the API", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("complementary", { name: "Settings" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Output" })).toContainText("No Sample File yet");
-  const versionTile = page.getByRole("group", { name: "Version" });
-  await expect(versionTile.getByText(/^\d+\.\d+\.\d+$/)).toBeVisible();
+  await expect(page.getByRole("banner").getByText(/^\d+\.\d+\.\d+$/)).toBeVisible();
 });
 
 test("Generate mode generates a clean Sample File through Caddy and downloads it", async ({ page }) => {
@@ -21,6 +20,7 @@ test("Generate mode generates a clean Sample File through Caddy and downloads it
   const output = page.getByRole("region", { name: "Output" });
   await expect(output.getByRole("group", { name: "Seed" })).toHaveText(/smoke/);
   await expect(output.getByRole("group", { name: "Transactions" })).toHaveText(/3/);
+  await expect(output.getByRole("group", { name: "Version" })).toHaveText(/pain\.001\.001\.09/);
   await expect(output.getByRole("tabpanel")).toContainText("urn:iso:std:iso:20022:tech:xsd:pain.001.001.09");
 
   for (const [button, name] of [

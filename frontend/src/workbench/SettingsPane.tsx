@@ -40,18 +40,18 @@ export function SettingsPane({ generation }: { generation: Generation }) {
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (settings !== undefined) {
-      generation.generate(generationRequest(settings));
+      generation.generate(generationRequest(changed));
     }
   };
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-      <header className="px-1 pb-2">
+      <div className="px-1 pb-2">
         <h1 className="font-semibold text-xl tracking-tight">pain.001 Sample File generator</h1>
         <p className="mt-1 text-muted-foreground text-sm">
           Generate a Sample File and the Answer Key that goes with it.
         </p>
-      </header>
+      </div>
       <Section title="File" hint="Message Version, transactions, Seed">
         {settings === undefined || options.data === undefined || messageVersions.data === undefined ? (
           <p className="text-muted-foreground text-sm">
@@ -62,7 +62,7 @@ export function SettingsPane({ generation }: { generation: Generation }) {
             options={options.data}
             messageVersions={messageVersions.data}
             value={settings}
-            onChange={setChanged}
+            onChange={(patch) => setChanged((previous) => ({ ...previous, ...patch }))}
           />
         )}
       </Section>

@@ -1,5 +1,6 @@
 import { type KeyboardEvent, useState } from "react";
 import { cn } from "@/lib/utils";
+import { AppVersion } from "@/workbench/AppVersion";
 import { useGeneration } from "@/workbench/generate/useGeneration";
 import { OutputPane } from "@/workbench/OutputPane";
 import { SettingsPane } from "@/workbench/SettingsPane";
@@ -46,22 +47,25 @@ export function Workbench() {
         "cursor-col-resize": dragging,
       })}
     >
-      {/* biome-ignore lint/a11y/useSemanticElements: a toggle of two pressed-state buttons, not a form fieldset */}
-      <div role="group" aria-label="Mode" className="col-span-3 mb-6 inline-flex w-fit rounded-lg border bg-card p-1">
-        {MODES.map((name) => (
-          <button
-            key={name}
-            type="button"
-            aria-pressed={mode === name}
-            onClick={() => setMode(name)}
-            className={cn("rounded-md px-4 py-1.5 font-medium text-sm", {
-              "bg-primary text-primary-foreground": mode === name,
-            })}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      <header className="col-span-3 mb-6 flex items-center justify-between gap-4">
+        {/* biome-ignore lint/a11y/useSemanticElements: a toggle of two pressed-state buttons, not a form fieldset */}
+        <div role="group" aria-label="Mode" className="inline-flex w-fit rounded-lg border bg-card p-1">
+          {MODES.map((name) => (
+            <button
+              key={name}
+              type="button"
+              aria-pressed={mode === name}
+              onClick={() => setMode(name)}
+              className={cn("rounded-md px-4 py-1.5 font-medium text-sm", {
+                "bg-primary text-primary-foreground": mode === name,
+              })}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+        <AppVersion />
+      </header>
       <aside aria-label={panes.inputLabel} className="min-w-0" style={{ width: `${width}px` }}>
         {panes.input}
       </aside>

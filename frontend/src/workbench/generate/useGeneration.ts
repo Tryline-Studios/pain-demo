@@ -23,9 +23,10 @@ export function useGeneration() {
   const mutation = api.useMutation("post", "/api/v1/sample-files");
   const zip = api.useMutation("post", "/api/v1/sample-files");
 
-  const generate = (body: GenerationRequest) => {
+  const generate = (body: Partial<GenerationRequest>) => {
     zip.reset();
-    mutation.mutate({ body });
+    // Every field is optional on the wire; the generated type marks the ones with defaults as required.
+    mutation.mutate({ body: body as GenerationRequest });
   };
 
   const downloadZip = (generated: GeneratedSampleFile) =>

@@ -32,16 +32,17 @@ export function defaultFileSettings(options: Options): FileSettings {
   };
 }
 
-/** The request body: an empty Seed or no currency chips are left out, so the API picks them (spec 5.1). */
-export function generationRequest(settings: FileSettings): GenerationRequest {
+/**
+ * The request body: only the fields the user changed, so the API's defaults apply to the rest. A cleared Seed or no
+ * currency chips are left out too, so the API picks them (spec 5.1).
+ */
+export function generationRequest(changed: Partial<FileSettings>): Partial<GenerationRequest> {
+  const { transaction_count, seed, currencies, ...rest } = changed;
   return {
-    message_version: settings.message_version,
-    transaction_count: Number(settings.transaction_count),
-    ...(settings.seed === "" ? {} : { seed: settings.seed }),
-    countries: settings.countries,
-    ...(settings.currencies.length === 0 ? {} : { currencies: settings.currencies }),
-    amount_min: settings.amount_min,
-    amount_max: settings.amount_max,
+    ...rest,
+    ...(transaction_count === undefined ? {} : { transaction_count: Number(transaction_count) }),
+    ...(seed ? { seed } : {}),
+    ...(currencies?.length ? { currencies } : {}),
   };
 }
 
@@ -102,9 +103,9 @@ export function FileSection({
   options: Options;
   messageVersions: MessageVersionOption[];
   value: FileSettings;
-  onChange: (value: FileSettings) => void;
+  onChange: (patch: Partial<FileSettings>) => void;
 }) {
-  const set = (patch: Partial<FileSettings>) => onChange({ ...value, ...patch });
+  const set = onChange;
   const currencies = [...new Set(options.countries.map((c) => c.currency))];
 
   return (
@@ -152,7 +153,19 @@ export function FileSection({
           chosen={value.countries}
           onToggle={(country) => set({ countries: toggle(value.countries, country) })}
         />
-        <span className="text-muted-foreground">Debtor country: {value.countries[0] ?? "none"}</span>
+        <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+          <span>Debtor country: {value.countries[0] ?? "none"}</span>
+          {value.countries.slice(1).map((country) => (
+            <button
+              key={country}
+              type="button"
+              onClick={() => set({ countries: [country, ...value.countries.filter((c) => c !== country)] })}
+              className="rounded-full border border-dashed px-2 text-xs hover:text-foreground"
+            >
+              Make {country} Debtor
+            </button>
+          ))}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-6">
         <Field label="Minimum amount">

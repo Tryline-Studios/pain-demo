@@ -15,19 +15,17 @@ function resizeHandle() {
 }
 
 describe("Workbench", () => {
-  it("shows the app version from the API in the version tile", async () => {
+  it("shows the app version from the API in the header", async () => {
     renderWithQueries(<Workbench />);
 
-    const tile = await screen.findByRole("group", { name: "Version" });
-    expect(await within(tile).findByText("1.2.3")).toBeInTheDocument();
+    expect(await within(screen.getByRole("banner")).findByText("1.2.3")).toBeInTheDocument();
   });
 
   it("says so when the version cannot be loaded", async () => {
     server.use(http.get("/api/v1/version", () => HttpResponse.error()));
     renderWithQueries(<Workbench />);
 
-    const tile = await screen.findByRole("group", { name: "Version" });
-    expect(await within(tile).findByText("unavailable")).toBeInTheDocument();
+    expect(await within(screen.getByRole("banner")).findByText("unavailable")).toBeInTheDocument();
   });
 
   it("shows the empty state in the output pane before the first generate", () => {
