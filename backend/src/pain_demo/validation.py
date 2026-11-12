@@ -6,13 +6,21 @@ import threading
 from enum import StrEnum
 
 from lxml import etree
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from pain_demo import renderer
 
 MESSAGE_VERSIONS = tuple(f"pain.001.001.{n:02d}" for n in range(3, 14))
 _NAMESPACE_PREFIX = "urn:iso:std:iso:20022:tech:xsd:"
 _PARSER_POSITION = re.compile(r", line \d+, column \d+$")
+MAX_PROBLEMS = 100
+_SCHEMA_LOCKS = {version: threading.Lock() for version in MESSAGE_VERSIONS}
+_ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
+_EXPECTED = re.compile(r"Expected is (?:one of )?\( (.*) \)")
+_PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
+_ENUMERATION = re.compile(r"The value '(.*)' is not an element of the set \{(.*)\}")
+_DATATYPE = re.compile(r": '(.*)' is not a valid value of the atomic type '(?:\{[^}]*\})?([^']+)'")
+_LENGTH = re.compile(r"length of '(\d+)'; this \w+ the allowed \w+ length of '(\d+)'")
 
 
 class ProblemCode(StrEnum):
@@ -29,12 +37,15 @@ class ProblemCode(StrEnum):
 
 
 class ValidationProblem(BaseModel):
-    line: int | None
-    column: int | None
-    tag: str | None
-    path: str | None
+    # The defaults are for building problems; every field is still always in the response.
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
+    line: int | None = None
+    column: int | None = None
+    tag: str | None = None
+    path: str | None = None
     code: ProblemCode
-    cause: str | None
+    cause: str | None = None
     message: str
 
 
@@ -69,47 +80,34 @@ def _doctype_line(content: bytes, encoding: str) -> int | None:
     return text.count("\n", 0, offset) + 1 if offset >= 0 else None
 
 
-def _check(content: bytes) -> tuple[str | None, str | None, etree._Element | None, ValidationProblem | None]:
-    """The first three layers; returns the encoding, the Message Version, the root once all pass, or the problem."""
+class _Rejected(Exception):
+    """An Uploaded Message stopped before the XSD layer, with its one problem."""
+
+    def __init__(self, problem: ValidationProblem, encoding: str | None = None) -> None:
+        self.problem = problem
+        self.encoding = encoding
+
+
+def _parse_message(content: bytes) -> tuple[str, str, etree._Element]:
+    """The first three layers: returns the encoding, the Message Version and the root, or raises `_Rejected`."""
     try:
         root = etree.fromstring(content, _parser())
     except etree.XMLSyntaxError as error:
         line, column = error.position
-        cause = error.msg
-        clean = _PARSER_POSITION.sub("", cause).strip()
+        clean = _PARSER_POSITION.sub("", error.msg).strip()
         message = f"The file is not well-formed XML: {clean} (line {line}, column {column})"
-        return (
-            None,
-            None,
-            None,
-            ValidationProblem(
-                line=line,
-                column=column,
-                tag=None,
-                path=None,
-                code=ProblemCode.MALFORMED_XML,
-                cause=cause,
-                message=message,
-            ),
+        problem = ValidationProblem(
+            line=line, column=column, code=ProblemCode.MALFORMED_XML, cause=error.msg, message=message
         )
+        raise _Rejected(problem) from None
     docinfo = root.getroottree().docinfo
     encoding = docinfo.encoding
     if docinfo.doctype:
         message = "The file declares a DOCTYPE; a pain.001 message must not carry a DTD"
-        return (
-            encoding,
-            None,
-            None,
-            ValidationProblem(
-                line=_doctype_line(content, encoding),
-                column=None,
-                tag=None,
-                path=None,
-                code=ProblemCode.DTD_NOT_ALLOWED,
-                cause=None,
-                message=message,
-            ),
+        problem = ValidationProblem(
+            line=_doctype_line(content, encoding), code=ProblemCode.DTD_NOT_ALLOWED, message=message
         )
+        raise _Rejected(problem, encoding)
     qname = etree.QName(root)
     version = qname.namespace.removeprefix(_NAMESPACE_PREFIX) if qname.namespace else None
     if qname.localname != "Document" or version not in MESSAGE_VERSIONS:
@@ -118,31 +116,15 @@ def _check(content: bytes) -> tuple[str | None, str | None, etree._Element | Non
             f"Root element '{qname.localname}' has {found}; expected a Document in "
             f"{_NAMESPACE_PREFIX}pain.001.001.03 to .13"
         )
-        return (
-            encoding,
-            None,
-            None,
-            ValidationProblem(
-                line=root.sourceline,
-                column=None,
-                tag=qname.localname,
-                path=f"/{qname.localname}",
-                code=ProblemCode.UNSUPPORTED_MESSAGE,
-                cause=None,
-                message=message,
-            ),
+        problem = ValidationProblem(
+            line=root.sourceline,
+            tag=qname.localname,
+            path=f"/{qname.localname}",
+            code=ProblemCode.UNSUPPORTED_MESSAGE,
+            message=message,
         )
-    return encoding, version, root, None
-
-
-MAX_PROBLEMS = 100
-_SCHEMA_LOCKS = {version: threading.Lock() for version in MESSAGE_VERSIONS}
-_ELEMENT = re.compile(r"^Element '(?:\{[^}]*\})?([^']+)'(?:, attribute '([^']+)')?: ")
-_EXPECTED = re.compile(r"Expected is (?:one of )?\( (.*) \)")
-_PATTERN = re.compile(r"The value '(.*)' is not accepted by the pattern '(.*)'")
-_ENUMERATION = re.compile(r"The value '(.*)' is not an element of the set \{(.*)\}")
-_DATATYPE = re.compile(r": '(.*)' is not a valid value of the atomic type '(?:\{[^}]*\})?([^']+)'")
-_LENGTH = re.compile(r"length of '(\d+)'; this \w+ the allowed \w+ length of '(\d+)'")
+        raise _Rejected(problem, encoding)
+    return encoding, version, root
 
 
 def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
@@ -218,10 +200,11 @@ def _schema_problem(tree: etree._ElementTree, error: etree._LogEntry) -> Validat
 
 def validate_message(content: bytes, name: str | None) -> ValidationReport:
     """Blocking: callers on the event loop run it in a thread."""
-    encoding, version, root, problem = _check(content)
-    problems = [problem] if problem else []
-    transaction_count = None
-    if root is not None and version is not None:
+    try:
+        encoding, version, root = _parse_message(content)
+    except _Rejected as rejected:
+        encoding, version, problems, transaction_count = rejected.encoding, None, [rejected.problem], None
+    else:
         tree = root.getroottree()
         errors = _xsd_errors(root, version)
         problems = [_schema_problem(tree, error) for error in errors[: MAX_PROBLEMS + 1]]

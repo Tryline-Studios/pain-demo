@@ -31,7 +31,7 @@ _REQUEST_BODY = {
 }
 
 
-async def _uploaded(request: Request) -> tuple[bytes, str | None]:
+async def _read_upload(request: Request) -> tuple[bytes, str | None]:
     """The Uploaded Message's bytes and file name (None for a raw body); 415 for any other content type."""
     media_type = request.headers.get("content-type", "").partition(";")[0].strip().lower()
     if media_type == "application/xml":
@@ -54,7 +54,7 @@ async def _uploaded(request: Request) -> tuple[bytes, str | None]:
     openapi_extra={"requestBody": _REQUEST_BODY},
 )
 async def validate_message(request: Request) -> ValidationReport:
-    content, name = await _uploaded(request)
+    content, name = await _read_upload(request)
     if not content:
         raise RequestValidationError(
             [{"loc": ("body", "file"), "msg": "A non-empty file is required", "type": "missing"}]
