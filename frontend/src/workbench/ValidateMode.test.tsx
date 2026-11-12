@@ -63,7 +63,7 @@ const invalidReport: ValidationReport = {
 };
 
 /** Answers every validation with `body`, recording what the request carried. */
-function answerWith(body: ValidationReport, status = 200) {
+function answerWith(body: object, status = 200) {
   const seen: { contentType: string | null; text: string; fileName: string | null }[] = [];
   server.use(
     http.post("/api/v1/validations", async ({ request }) => {
@@ -75,7 +75,10 @@ function answerWith(body: ValidationReport, status = 200) {
       } else {
         seen.push({ contentType, text: await request.text(), fileName: null });
       }
-      return HttpResponse.json(body, { status });
+      return HttpResponse.json(body, {
+        status,
+        headers: status === 200 ? {} : { "Content-Type": "application/problem+json" },
+      });
     }),
   );
   return seen;
@@ -185,5 +188,49 @@ describe("Validate mode", () => {
 
     expect(await within(report()).findByText("Only the first 100 problems are shown.")).toBeInTheDocument();
     expect(tile("Problems")).toHaveTextContent("100+");
+  });
+
+  it("shows a refused request as a problem block in the report area", async () => {
+    answerWith(
+      {
+        type: "about:blank",
+        title: "Content Too Large",
+        status: 413,
+        detail: "The Uploaded Message is larger than 10 MB",
+        instance: "req-1",
+      },
+      413,
+    );
+    const user = await openValidate();
+
+    await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File(["<Document/>"], "huge.xml"));
+
+    const problem = await within(report()).findByRole("alert");
+    expect(problem).toHaveTextContent("Content Too Large");
+    expect(problem).toHaveTextContent("The Uploaded Message is larger than 10 MB");
+    expect(problem).toHaveTextContent("413");
+    expect(within(report()).queryByText("No message validated yet")).not.toBeInTheDocument();
+  });
+
+  it("lists the field errors of a 422", async () => {
+    answerWith(
+      {
+        type: "validation_error",
+        title: "Validation error",
+        status: 422,
+        detail: "1 field failed validation",
+        instance: "req-2",
+        errors: [{ field: "file", message: "Field required", code: "missing" }],
+      },
+      422,
+    );
+    const user = await openValidate();
+
+    await user.type(screen.getByRole("textbox", { name: "Paste XML" }), "<Document/>");
+    await user.click(screen.getByRole("button", { name: "Validate pasted XML" }));
+
+    const problem = await within(report()).findByRole("alert");
+    expect(problem).toHaveTextContent("1 field failed validation");
+    expect(problem).toHaveTextContent("file: Field required");
   });
 });

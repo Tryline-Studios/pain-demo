@@ -1,3 +1,4 @@
+import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { Tile } from "@/workbench/Tile";
 import { ProblemRail } from "@/workbench/validate/ProblemRail";
 import type { Validation } from "@/workbench/validate/useValidation";
@@ -15,14 +16,16 @@ export function ValidationReportPane({ validation }: { validation: Validation })
         <Tile label="Problems">{report ? (report.truncated ? "100+" : report.problems.length) : "–"}</Tile>
         <Tile label="Encoding">{report?.encoding ?? "–"}</Tile>
       </div>
-      {report === undefined ? (
+      {validation.isError ? <ProblemBlock error={validation.error} /> : null}
+      {validation.isIdle ? (
         <div className="flex min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed text-center">
           <p className="font-medium text-lg">No message validated yet</p>
           <p className="mt-2 max-w-md text-muted-foreground text-sm">
             Choose a file or paste XML on the left. The verdict and every Validation Problem will show here.
           </p>
         </div>
-      ) : (
+      ) : null}
+      {report === undefined ? null : (
         <>
           <p className="flex flex-wrap gap-x-3 text-muted-foreground text-sm">
             <span className="font-medium text-foreground">{report.file.name ?? "Pasted XML"}</span>
