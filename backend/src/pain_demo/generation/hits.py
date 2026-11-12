@@ -391,7 +391,11 @@ def _name(rng: random.Random, entity: Entity) -> HitName:
     candidates = {variant: [n for n in names if VERBATIM_SOURCES[variant](n)] for variant in NAME_VARIANT_WEIGHTS}
     weights = {variant: w for variant, w in NAME_VARIANT_WEIGHTS.items() if candidates[variant]}
     (variant,) = rng.choices(list(weights), weights=list(weights.values()))
-    name = rng.choice(candidates[variant])
+    pool = candidates[variant]
+    if variant == "exact":  # a Listing first, then one of its primary names (spec 7.1)
+        listing = rng.choice(list(dict.fromkeys(name.listing for name in pool)))
+        pool = [name for name in pool if name.listing == listing]
+    name = rng.choice(pool)
     source = NameSource(value=name.value, type=name.source_type, script=name.script, listing=name.listing)
     return HitName(variant=variant, rendered=name.value, source=source)
 

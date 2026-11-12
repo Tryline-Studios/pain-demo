@@ -346,6 +346,47 @@ def test_a_bank_without_a_catalogue_bic_is_placed_by_name_only(tmp_path: Path) -
         assert beside(document, hit["xpath"], "BICFI") == []
 
 
+def primary_name(value: str, listing: str) -> str:
+    return f"""
+[[names]]
+value = "{value}"
+source_type = "primary"
+script = "latin"
+script_source = "stated"
+listing = {listing}
+"""
+
+
+def test_an_exact_name_picks_a_listing_first_then_one_of_its_primary_names(tmp_path: Path) -> None:
+    ofac, uk = '{ list = "ofac_sdn", entry_id = "1" }', '{ list = "uk", entry_id = "RUS0001" }'
+    bank = (
+        MINIMAL_BANK
+        + """
+[[listings]]
+list = "uk"
+entry_id = "RUS0001"
+programmes = ["The Russia (Sanctions) (EU Exit) Regulations 2019"]
+designation_date = 2022-03-10
+verified = { snapshot_date = 2026-09-11, source_file = "UK-Sanctions-List.xml" }
+"""
+        + primary_name("TEST BANK TWO", ofac)
+        + primary_name("TEST BANK THREE", ofac)
+        + primary_name("Test Bank PLC", uk)
+    )
+    write_catalogue(tmp_path, {"test-bank": bank})
+    with TestClient(create_app(catalogue_root=tmp_path)) as client:
+        hits = [
+            hit
+            for n in range(3)
+            for hit in generate(client, seed=f"exact-{n}", transaction_count=100, hit_count=100)["answer_key"]["hits"]
+        ]
+
+    # Three OFAC primaries against one UK primary: the UK name takes half the draws, not a quarter (spec 7.1).
+    assert {hit["name"]["variant"] for hit in hits} == {"exact"}
+    uk_share = sum(hit["name"]["source"]["listing"]["list"] == "uk" for hit in hits) / len(hits)
+    assert uk_share == pytest.approx(0.5, abs=0.08)
+
+
 def test_names_over_140_characters_are_never_chosen(tmp_path: Path) -> None:
     long_name = "LONG" * 35 + "X"
     bank = MINIMAL_BANK + "".join(
