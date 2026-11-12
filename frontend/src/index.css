@@ -14,6 +14,7 @@
   --color-label: var(--label);
   --color-border-strong: var(--border-strong);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-hover: var(--primary-hover);
   --color-destructive-soft: var(--destructive-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
@@ -84,6 +85,7 @@
   --label: #45526a;
   --border-strong: #c3ccd8;
   --primary-soft: #e8effd;
+  --primary-hover: #1e40af;
   --destructive-soft: #fdecea;
   --success: #0b7a4b;
   --success-soft: #e5f4ec;
@@ -130,6 +132,7 @@
   --label: #aeb8c9;
   --border-strong: #33415a;
   --primary-soft: #17264a;
+  --primary-hover: #9dbbff;
   --destructive-soft: #3a1715;
   --success: #4bd394;
   --success-soft: #0e2a1e;

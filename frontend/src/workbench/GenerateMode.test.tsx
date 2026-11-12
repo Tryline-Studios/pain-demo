@@ -190,7 +190,7 @@ describe("Generate mode: generating", () => {
     expect(within(output()).getByRole("group", { name: "Hits" })).toHaveTextContent("0");
     expect(within(output()).getByRole("group", { name: "Message Version" })).toHaveTextContent("pain.001.001.09");
     expect(within(output()).getByRole("group", { name: "XSD" })).toHaveTextContent("Valid");
-    expect(within(output()).getByRole("heading", { name: "Sample File" })).toBeInTheDocument();
+    expect(within(output()).getByRole("heading", { name: "Sample File", level: 2 })).toBeInTheDocument();
     expect(within(output()).getByText(generated.sample_file.filename)).toBeInTheDocument();
     expect(within(output()).queryByText("No Sample File yet")).not.toBeInTheDocument();
     await user.click(within(output()).getByRole("tab", { name: "XML" }));
@@ -430,6 +430,12 @@ describe("Generate mode: Hits", () => {
         "ofac_sdn",
       ],
     ]);
+    // As on the canvas: ids and the Entity in mono, the Placement as a tag.
+    const firstRow = within(rows[1] as HTMLElement).getAllByRole("cell");
+    for (const column of [0, 2, 6, 8]) {
+      expect(firstRow[column]).toHaveClass("font-mono");
+    }
+    expect(within(firstRow[5] as HTMLElement).getByText("debtor").tagName).toBe("SPAN");
     // The XPath column is cut to fit; the full path is its tooltip.
     expect(within(output()).getByRole("cell", { name: "/Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Nm" })).toHaveAttribute(
       "title",

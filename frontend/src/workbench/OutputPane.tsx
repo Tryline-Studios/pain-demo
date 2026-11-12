@@ -8,8 +8,14 @@ import { type Generation, siblingFilename } from "@/workbench/generate/useGenera
 import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { MonoValue, TILES, Tile } from "@/workbench/Tile";
 
-/** Buttons at the canvas's 36px height with a 6px radius. */
-export const BUTTON = "h-9 rounded-md px-3.5";
+/**
+ * Buttons at the canvas's 36px height with a 6px radius, focused by the solid 2px outline the other controls use
+ * (shadcn's faint ring is under 3:1 in Light).
+ */
+export const BUTTON =
+  "h-9 rounded-md px-3.5 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1 focus-visible:ring-0";
+/** The canvas's darker accent on hover keeps the label at 4.5:1 (shadcn's 80% primary does not). */
+export const PRIMARY_BUTTON = `${BUTTON} hover:bg-primary-hover`;
 
 type OnValidate = (file: File) => void;
 
@@ -23,7 +29,7 @@ function Header({ generation, onValidate }: { generation: Generation; onValidate
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="flex min-w-0 flex-col gap-1">
-        <h1 className="font-semibold text-[22px] tracking-[-0.015em]">Sample File</h1>
+        <h2 className="font-semibold text-[22px] tracking-[-0.015em]">Sample File</h2>
         <span className="truncate font-mono text-label text-xs">{filename}</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -55,7 +61,10 @@ function Header({ generation, onValidate }: { generation: Generation; onValidate
             Answer Key JSON
           </Button>
         </div>
-        <Button className={BUTTON} onClick={() => onValidate(new File([xml], filename, { type: "application/xml" }))}>
+        <Button
+          className={PRIMARY_BUTTON}
+          onClick={() => onValidate(new File([xml], filename, { type: "application/xml" }))}
+        >
           Validate this Sample File
         </Button>
       </div>

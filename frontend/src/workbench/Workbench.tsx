@@ -4,7 +4,8 @@ import { AppVersion } from "@/workbench/AppVersion";
 import { useGeneration } from "@/workbench/generate/useGeneration";
 import { OutputPane } from "@/workbench/OutputPane";
 import { SettingsPane } from "@/workbench/SettingsPane";
-import { SEGMENT, SEGMENTED, ThemeSwitch } from "@/workbench/ThemeSwitch";
+import { segmentClass, segmentedGroupClass } from "@/workbench/segmented";
+import { ThemeSwitch } from "@/workbench/ThemeSwitch";
 import { SETTINGS_WIDTH_MAX, SETTINGS_WIDTH_MIN, useSettingsPaneWidth } from "@/workbench/useSettingsPaneWidth";
 import { useValidation } from "@/workbench/validate/useValidation";
 import { ValidateInput } from "@/workbench/validate/ValidateInput";
@@ -68,19 +69,19 @@ export function Workbench() {
             </g>
           </svg>
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="font-bold text-[15px] tracking-[-0.01em]">pain-demo</span>
+            <h1 className="font-bold text-[15px] tracking-[-0.01em]">pain-demo</h1>
             <span className="text-[13px] text-muted-foreground">ISO 20022 pain.001 Workbench</span>
           </div>
         </div>
         {/* biome-ignore lint/a11y/useSemanticElements: a toggle of two pressed-state buttons, not a form fieldset */}
-        <div role="group" aria-label="Mode" className={SEGMENTED}>
+        <div role="group" aria-label="Mode" className={segmentedGroupClass}>
           {MODES.map((name) => (
             <button
               key={name}
               type="button"
               aria-pressed={mode === name}
               onClick={() => setMode(name)}
-              className={SEGMENT}
+              className={segmentClass}
             >
               {name}
             </button>

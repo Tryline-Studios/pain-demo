@@ -24,6 +24,7 @@ const COLUMNS: [string, (hit: Hit) => string | number | null | undefined][] = [
 ];
 
 const CELL = "px-3.5 py-3";
+const MONO = new Set(["Hit", "Transaction", "Element", "Entity"]);
 
 /** One row per Hit, in Answer Key order. */
 export function AnswerKeyTable({ hits }: { hits: Hit[] }) {
@@ -57,8 +58,14 @@ export function AnswerKeyTable({ hits }: { hits: Hit[] }) {
                 >
                   {hit.xpath}
                 </TableCell>
-              ) : (
+              ) : label === "Placement" ? (
                 <TableCell key={label} className={CELL}>
+                  <span className="inline-flex h-[22px] items-center rounded px-2 font-medium text-primary text-xs bg-primary-soft">
+                    {hit.placement}
+                  </span>
+                </TableCell>
+              ) : (
+                <TableCell key={label} className={cn(CELL, { "font-mono": MONO.has(label) })}>
                   {value(hit)}
                 </TableCell>
               ),

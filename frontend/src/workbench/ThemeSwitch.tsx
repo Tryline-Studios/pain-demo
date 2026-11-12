@@ -1,6 +1,7 @@
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { segmentClass, segmentedGroupClass } from "@/workbench/segmented";
 
 /** Also read by the inline script in `index.html`, which applies the theme before first paint. */
 export const THEME_KEY = "workbench.theme";
@@ -37,10 +38,6 @@ function rememberTheme(theme: Theme): void {
   }
 }
 
-export const SEGMENTED = "inline-flex gap-0.5 rounded-lg border bg-secondary p-[3px]";
-export const SEGMENT =
-  "inline-flex h-8 items-center justify-center rounded-md px-3.5 font-medium text-label hover:text-foreground aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-sm focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1";
-
 /** Light, Dark or System; System follows `prefers-color-scheme` live. Toggles `.dark` on `<html>` (spec 13.1). */
 export function ThemeSwitch() {
   const [theme, setTheme] = useState(rememberedTheme);
@@ -59,7 +56,7 @@ export function ThemeSwitch() {
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: a toggle of three pressed-state buttons, not a form fieldset
-    <div role="group" aria-label="Colour theme" className={SEGMENTED}>
+    <div role="group" aria-label="Colour theme" className={segmentedGroupClass}>
       {THEMES.map(({ value, label, Icon }) => (
         <button
           key={value}
@@ -71,7 +68,7 @@ export function ThemeSwitch() {
             setTheme(value);
             rememberTheme(value);
           }}
-          className={cn(SEGMENT, "w-8 px-0")}
+          className={cn(segmentClass, "w-8 px-0")}
         >
           <Icon className="size-4" aria-hidden />
         </button>

@@ -2,7 +2,7 @@ import { Upload } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BUTTON } from "@/workbench/OutputPane";
+import { PRIMARY_BUTTON } from "@/workbench/OutputPane";
 import type { Validation } from "@/workbench/validate/useValidation";
 
 /** The left pane in Validate mode: drop or pick a file, or paste XML (spec 17.9). */
@@ -69,7 +69,7 @@ export function ValidateInput({ validation }: { validation: Validation }) {
         className="h-48 rounded-[10px] border border-border-strong bg-card p-3 font-mono text-xs focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1"
       />
       <Button
-        className={BUTTON}
+        className={PRIMARY_BUTTON}
         disabled={pasted === "" || validation.isPending}
         onClick={() => validation.validateXml(pasted)}
       >

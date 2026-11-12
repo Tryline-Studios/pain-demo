@@ -12,6 +12,7 @@ import {
   INPUT,
 } from "@/workbench/generate/FileSection";
 import type { Generation } from "@/workbench/generate/useGeneration";
+import { PRIMARY_BUTTON } from "@/workbench/OutputPane";
 
 function Section({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
   return (
@@ -95,7 +96,7 @@ export function SettingsPane({ generation }: { generation: Generation }) {
         <Button
           type="submit"
           size="lg"
-          className="h-9 w-full rounded-md"
+          className={`${PRIMARY_BUTTON} w-full`}
           disabled={settings === undefined || hitCountTooHigh || generation.isPending}
         >
           {generation.isPending ? "Generating…" : "Generate"}

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithQueries } from "@/test/render";
 import { THEME_KEY } from "@/workbench/ThemeSwitch";
 import { Workbench } from "@/workbench/Workbench";
+import indexHtml from "../../index.html?raw";
 
 /** A `prefers-color-scheme: dark` query the test can flip, as the OS would. */
 function mockSystemScheme(dark: boolean) {
@@ -31,6 +32,9 @@ function mockSystemScheme(dark: boolean) {
 function themeButton(name: string) {
   return within(screen.getByRole("group", { name: "Colour theme" })).getByRole("button", { name });
 }
+
+/** The pre-paint script in `index.html`, the only inline one. */
+const inlineScript = /<script>([\s\S]*?)<\/script>/.exec(indexHtml)?.[1] ?? "";
 
 function isDark() {
   return document.documentElement.classList.contains("dark");
@@ -88,5 +92,18 @@ describe("Theme switch", () => {
     expect(themeButton("Match system theme")).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(themeButton("Light theme"));
     expect(isDark()).toBe(false);
+  });
+
+  it("is applied before first paint by index.html's inline script, which reads THEME_KEY", () => {
+    window.localStorage.setItem(THEME_KEY, "dark");
+
+    new Function(inlineScript)();
+    expect(isDark()).toBe(true);
+  });
+
+  it("keeps index.html's inline script out of global scope", () => {
+    const code = inlineScript.replace(/^\s*\/\/.*$/gm, "").trim();
+
+    expect(code).toMatch(/^\{[\s\S]*\}$/);
   });
 });
