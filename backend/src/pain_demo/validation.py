@@ -59,6 +59,16 @@ def _parser() -> etree.XMLParser:
     return etree.XMLParser(resolve_entities=False, no_network=True, load_dtd=False, huge_tree=False)
 
 
+def _doctype_line(content: bytes, encoding: str) -> int | None:
+    """lxml keeps no position for the DOCTYPE, so find it in the decoded text."""
+    try:
+        text = content.decode(encoding)
+    except (LookupError, UnicodeDecodeError):
+        return None
+    offset = text.find("<!DOCTYPE")
+    return text.count("\n", 0, offset) + 1 if offset >= 0 else None
+
+
 def _check(content: bytes) -> tuple[str | None, str | None, etree._Element | None, ValidationProblem | None]:
     """The first three layers; returns the encoding, the Message Version, the root once all pass, or the problem."""
     try:
@@ -91,7 +101,7 @@ def _check(content: bytes) -> tuple[str | None, str | None, etree._Element | Non
             None,
             None,
             ValidationProblem(
-                line=None,
+                line=_doctype_line(content, encoding),
                 column=None,
                 tag=None,
                 path=None,

@@ -164,7 +164,7 @@ def test_a_doctype_is_not_allowed(client: TestClient) -> None:
 
     (problem,) = problems_of(client, content)
 
-    assert problem["code"] == "dtd_not_allowed"
+    assert (problem["code"], problem["line"]) == ("dtd_not_allowed", 2)
 
 
 def test_an_external_entity_is_never_resolved(client: TestClient, tmp_path: Path) -> None:
