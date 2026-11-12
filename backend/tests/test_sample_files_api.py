@@ -24,6 +24,7 @@ from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES as COUNTRIES
 from pain_demo.generation.clean_banks import load_clean_banks
 from pain_demo.generation.generated_data import GeneratedData
 from pain_demo.generation.model import SampleFileModel
+from pain_demo.generation.sample_file import AnswerKey, answer_key_json
 from pain_demo.renderer import RenderFailed
 from pain_demo.settings import Settings
 from pain_demo.validation import MESSAGE_VERSIONS
@@ -418,6 +419,23 @@ def test_format_zip_returns_the_sample_file_and_answer_key_in_one_zip(client: Te
     assert json.loads(answer_key) == envelope["answer_key"]
     assert answer_key.startswith('{\n  "answer_key_version": 1,\n')
     assert answer_key.endswith("}\n")
+
+
+def test_replaying_the_effective_request_as_a_zip_gives_the_same_files(client: TestClient) -> None:
+    """The Workbench's zip download: it re-posts `answer_key.request` with `format=zip` (spec 13.4)."""
+    envelope = generate(client, seed="Zürich ✓")
+
+    response = client.post("/api/v1/sample-files", params={"format": "zip"}, json=envelope["answer_key"]["request"])
+
+    assert response.status_code == 200, response.text
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        xml_member, answer_key_member = archive.namelist()
+        xml = archive.read(xml_member).decode("utf-8")
+        answer_key = archive.read(answer_key_member).decode("utf-8")
+    assert xml == envelope["sample_file"]["xml"]
+    assert answer_key == answer_key_json(AnswerKey.model_validate(envelope["answer_key"]))
+    # The Workbench builds its Answer Key JSON download with `JSON.stringify(answer_key, null, 2) + "\n"`.
+    assert answer_key == json.dumps(envelope["answer_key"], indent=2, ensure_ascii=False) + "\n"
 
 
 def test_the_zip_is_byte_for_byte_reproducible(client: TestClient) -> None:
