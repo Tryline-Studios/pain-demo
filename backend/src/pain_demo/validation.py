@@ -138,8 +138,8 @@ def _xsd_errors(root: etree._Element, version: str) -> list[etree._LogEntry]:
     schema = renderer.schema(version)  # this thread's own, so concurrent uploads never wait for each other
     schema.validate(root)
     # shortcut: lxml offers no error cap and records every XSD error with a path that walks the preceding siblings,
-    # so a hostile file under MAX_ELEMENTS can take minutes (about 4 at the cap), on its own worker thread only.
-    # Bound the validation itself (a killable worker process or a time budget) if that bites.
+    # so a hostile file under MAX_ELEMENTS can take minutes on its own worker thread (an estimate: 120k erroring
+    # siblings took 15 s and the cost grows with their square). The follow-up ticket adds a time-budgeted worker.
     return list(itertools.islice(schema.error_log, MAX_PROBLEMS + 1))
 
 
