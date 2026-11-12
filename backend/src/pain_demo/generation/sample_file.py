@@ -93,7 +93,7 @@ def generate(
     request: EffectiveRequest, clean_banks: CleanBankList, screen: NameScreen, generator: GeneratorVersion
 ) -> GeneratedSampleFile:
     """Blocking: run it in a worker thread."""
-    model = GeneratedData(request, clean_banks, screen).model()
+    model = GeneratedData(request, clean_banks, screen).sample_file_model()
     rendered = render(model)
     declaration, _, body = rendered.xml.decode("utf-8").partition("\n")
     xml = f"{declaration}\n{provenance_comment(request.seed, generator)}\n{body}"

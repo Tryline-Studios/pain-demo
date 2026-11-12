@@ -36,7 +36,7 @@ class RenderFailed(Exception):
 
 
 @dataclass(frozen=True)
-class Rendered:
+class RenderResult:
     xml: bytes
     dropped: list[str]
     """Element paths the version fitter dropped, deduplicated, in first-seen order. None carries a Placement."""
@@ -53,7 +53,7 @@ def placement_drops(dropped: list[str]) -> list[str]:
     return [path for path in dropped if _PLACEMENT_ELEMENTS.fullmatch(path.rsplit("/", 1)[-1])]
 
 
-def render(model: SampleFileModel) -> Rendered:
+def render(model: SampleFileModel) -> RenderResult:
     try:
         result = build(_scenario(model), model.message_version)
     except (BuildError, ScenarioError) as error:
@@ -61,7 +61,7 @@ def render(model: SampleFileModel) -> Rendered:
     dropped = list(dict.fromkeys(result.report.dropped))
     if lost := placement_drops(dropped):
         raise RenderFailed([f"{path} dropped in {model.message_version}" for path in lost])
-    return Rendered(xml=result.xml.encode("utf-8"), dropped=dropped)
+    return RenderResult(xml=result.xml.encode("utf-8"), dropped=dropped)
 
 
 def _scenario(model: SampleFileModel) -> dict[str, Any]:

@@ -346,14 +346,14 @@ def test_a_build_failure_is_a_500_problem_and_logs_the_effective_request(
 def test_generated_data_the_message_version_cannot_hold_is_an_answer_key_warning(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    draw = GeneratedData.model
+    draw = GeneratedData.sample_file_model
 
     def draw_with_debtor_agent_lei(self: GeneratedData) -> SampleFileModel:
         model = draw(self)
         return replace(model, debtor_agent=replace(model.debtor_agent, lei="851WYGNLUQLFZBSYGB56"))
 
     # Generated Data has no LEI yet; this stands in for any element older Message Versions cannot carry.
-    monkeypatch.setattr(GeneratedData, "model", draw_with_debtor_agent_lei)
+    monkeypatch.setattr(GeneratedData, "sample_file_model", draw_with_debtor_agent_lei)
     with TestClient(create_app(Settings(log_format="json", log_level="INFO"))) as client:
         old = generate(client, seed="lei", message_version="pain.001.001.03")
         new = generate(client, seed="lei", message_version="pain.001.001.09")

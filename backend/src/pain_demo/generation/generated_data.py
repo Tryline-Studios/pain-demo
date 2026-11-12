@@ -81,7 +81,7 @@ class GeneratedData:
         self.screen = screen
         self._fakers: dict[SupportedCountry, Faker] = {}
 
-    def model(self) -> SampleFileModel:
+    def sample_file_model(self) -> SampleFileModel:
         request = self.request
         debtor_country = request.countries[0]
         debtor_agent, debtor_account = self._bank_and_account(self._stream("file/debtor_agent"), debtor_country)
