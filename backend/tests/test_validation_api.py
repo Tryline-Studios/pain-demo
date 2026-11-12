@@ -453,15 +453,17 @@ def test_a_message_at_the_element_limit_is_validated(client: TestClient) -> None
 
 
 def test_a_slow_validation_does_not_hold_up_another_of_the_same_version(client: TestClient) -> None:
-    slow = with_ustrd(50_000, b"<Ustrd/>")  # 50,000 sibling XSD errors: a couple of seconds
+    def timed_post(content: bytes) -> tuple[dict[str, Any], float]:
+        started = time.perf_counter()
+        report = client.post(URL, content=content, headers=XML).json()
+        return report, time.perf_counter() - started
 
     with ThreadPoolExecutor(1) as pool:
-        slow_report = pool.submit(client.post, URL, content=slow, headers=XML)
+        slow = pool.submit(timed_post, with_ustrd(50_000, b"<Ustrd/>"))  # 50,000 sibling XSD errors: seconds
         time.sleep(0.5)  # let the slow upload reach the XSD layer
-        started = time.perf_counter()
-        quick = client.post(URL, content=pain001(), headers=XML)
-        waited = time.perf_counter() - started
+        quick_report, quick_took = timed_post(pain001())
+        slow_report, slow_took = slow.result()
 
-        assert quick.json()["valid"] is True
-        assert waited < 1  # a few ms on its own; waiting for the slow one would take over 1.5 s
-        assert slow_report.result().json()["truncated"] is True
+    assert (quick_report["valid"], slow_report["truncated"]) == (True, True)
+    # Behind a shared lock the quick upload would wait out the rest of the slow one.
+    assert quick_took < (slow_took - 0.5) / 2
