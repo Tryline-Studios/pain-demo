@@ -57,6 +57,17 @@ def test_sample_file_operations_are_named_and_tagged() -> None:
         assert (paths[path][method]["operationId"], paths[path][method]["tags"]) == (operation_id, ["sample-files"])
 
 
+def test_generate_sample_file_answers_json_or_a_zip() -> None:
+    operation = create_app().openapi()["paths"]["/api/v1/sample-files"]["post"]
+
+    (format_parameter,) = operation["parameters"]
+    assert (format_parameter["name"], format_parameter["in"]) == ("format", "query")
+    assert format_parameter["schema"]["enum"] == ["json", "zip"]
+    content = operation["responses"]["200"]["content"]
+    assert content["application/json"]["schema"] == {"$ref": "#/components/schemas/GeneratedSampleFile"}
+    assert content["application/zip"]["schema"] == {"type": "string", "format": "binary"}
+
+
 def test_the_transaction_cap_and_seed_length_are_published() -> None:
     properties = create_app().openapi()["components"]["schemas"]["GenerationRequest"]["properties"]
 

@@ -1,8 +1,10 @@
 """One Sample File and its Answer Key from an Effective Request (spec 9.4, 11, 12.2)."""
 
 import hashlib
+import io
 import json
 import re
+import zipfile
 from datetime import date, datetime
 from typing import Any, Literal
 
@@ -17,6 +19,7 @@ from pain_demo.version import GeneratorVersion
 
 ANSWER_KEY_VERSION = 1
 _FILENAME_SAFE = re.compile(r"[A-Za-z0-9._-]+")
+_ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
 
 
 class SampleFile(BaseModel):
@@ -74,6 +77,19 @@ class GeneratedSampleFile(BaseModel):
 def answer_key_json(answer_key: AnswerKey) -> str:
     """The canonical file form: 2-space indent and a trailing newline (spec 11.1)."""
     return answer_key.model_dump_json(indent=2) + "\n"
+
+
+def zip_bytes(generated: GeneratedSampleFile) -> bytes:
+    """`<name>.xml` and `<name>.answer-key.json` (spec 12.2), with fixed timestamps so the same file zips the same."""
+    name = generated.sample_file.filename.removesuffix(".xml")
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        for member, text in (
+            (f"{name}.xml", generated.sample_file.xml),
+            (f"{name}.answer-key.json", answer_key_json(generated.answer_key)),
+        ):
+            archive.writestr(zipfile.ZipInfo(member, date_time=_ZIP_EPOCH), text, zipfile.ZIP_DEFLATED)
+    return buffer.getvalue()
 
 
 def filename(message_version: MessageVersion, seed: str) -> str:
