@@ -88,6 +88,89 @@
         }
       }
     },
+    "/api/v1/sample-files/csv": {
+      "post": {
+        "tags": [
+          "sample-files"
+        ],
+        "summary": "Generate a Sample File and its Answer Key from Supplied Data as CSV",
+        "operationId": "generate_sample_file_from_csv",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "json",
+                "zip"
+              ],
+              "type": "string",
+              "default": "json",
+              "title": "Format"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_generate_sample_file_from_csv"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "As `POST /sample-files`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedSampleFile"
+                }
+              },
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`build_failed` (the `detail` carries the XSD messages), or an unexpected error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is over the cap",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`: the request does not fit the model",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestValidationProblem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/answer-keys/csv": {
       "post": {
         "tags": [
@@ -872,6 +955,27 @@
         ],
         "title": "Bic",
         "description": "Either the Listing that carries the BIC or an external non-sanctions citation, never both."
+      },
+      "Body_generate_sample_file_from_csv": {
+        "properties": {
+          "request": {
+            "type": "string",
+            "title": "Request",
+            "description": "The generation settings and Hits as `POST /sample-files` takes them, without Supplied Data"
+          },
+          "supplied_data": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Supplied Data",
+            "description": "One row per transaction; columns are dotted field paths such as `creditor.name`"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request",
+          "supplied_data"
+        ],
+        "title": "Body_generate_sample_file_from_csv"
       },
       "ControlRelationship": {
         "properties": {
@@ -2716,6 +2820,14 @@
           },
           "defaults": {
             "$ref": "#/components/schemas/Defaults"
+          },
+          "supplied_data_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supplied Data Columns",
+            "description": "The `POST /sample-files/csv` header template; each list at position 0, later ones are `.1`, `.2`"
           }
         },
         "type": "object",
@@ -2726,7 +2838,8 @@
           "rendering_modes",
           "exposure_countries",
           "limits",
-          "defaults"
+          "defaults",
+          "supplied_data_columns"
         ],
         "title": "Options"
       },

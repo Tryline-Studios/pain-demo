@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sample-files/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate a Sample File and its Answer Key from Supplied Data as CSV */
+        post: operations["generate_sample_file_from_csv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/answer-keys/csv": {
         parameters: {
             query?: never;
@@ -284,6 +301,19 @@ export interface components {
              * Format: date
              */
             verified_date: string;
+        };
+        /** Body_generate_sample_file_from_csv */
+        Body_generate_sample_file_from_csv: {
+            /**
+             * Request
+             * @description The generation settings and Hits as `POST /sample-files` takes them, without Supplied Data
+             */
+            request: string;
+            /**
+             * Supplied Data
+             * @description One row per transaction; columns are dotted field paths such as `creditor.name`
+             */
+            supplied_data: string;
         };
         /** ControlRelationship */
         ControlRelationship: {
@@ -1018,6 +1048,11 @@ export interface components {
             exposure_countries: components["schemas"]["ExposureCountryOption"][];
             limits: components["schemas"]["Limits"];
             defaults: components["schemas"]["Defaults"];
+            /**
+             * Supplied Data Columns
+             * @description The `POST /sample-files/csv` header template; each list at position 0, later ones are `.1`, `.2`
+             */
+            supplied_data_columns: string[];
         };
         /** @enum {string} */
         Placement: "debtor" | "debtor_agent" | "creditor" | "creditor_agent" | "ultimate_debtor" | "ultimate_creditor" | "intermediary_agent_1" | "intermediary_agent_2" | "intermediary_agent_3" | "remittance";
@@ -1464,6 +1499,60 @@ export interface operations {
         };
         responses: {
             /** @description The JSON envelope, or with `format=zip` a zip of `<name>.xml`, `<name>.answer-key.json` and `<name>.answer-key.csv` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeneratedSampleFile"];
+                    "application/zip": string;
+                };
+            };
+            /** @description The request body is over the cap */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `validation_error`: the request does not fit the model */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RequestValidationProblem"];
+                };
+            };
+            /** @description `build_failed` (the `detail` carries the XSD messages), or an unexpected error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    generate_sample_file_from_csv: {
+        parameters: {
+            query?: {
+                format?: "json" | "zip";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_generate_sample_file_from_csv"];
+            };
+        };
+        responses: {
+            /** @description As `POST /sample-files` */
             200: {
                 headers: {
                     [name: string]: unknown;

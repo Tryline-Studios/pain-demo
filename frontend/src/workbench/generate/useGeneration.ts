@@ -11,20 +11,36 @@ export function siblingFilename(sampleFilename: string, suffix: ".zip" | ".answe
 }
 
 /**
- * `POST /api/v1/sample-files` through the generated client (spec 13.4). A 422 lands in `error` as the problem details
+ * `POST /api/v1/sample-files`, or `/csv` with a CSV of Supplied Data, through the generated client (spec 13.4). A 422 lands in `error` as the problem details
  * body. The zip replays the Answer Key's Effective Request with `?format=zip`, which reproduces the same file byte
  * for byte, so nothing generated has to be kept server-side.
  */
 export function useGeneration() {
-  const mutation = api.useMutation("post", "/api/v1/sample-files");
+  const fromJson = api.useMutation("post", "/api/v1/sample-files");
+  const fromCsv = api.useMutation("post", "/api/v1/sample-files/csv");
+  // Whichever endpoint the last Generate used; the other is reset.
+  const mutation = fromCsv.isIdle ? fromJson : fromCsv;
   const zip = api.useMutation("post", "/api/v1/sample-files");
-  const csv = api.useMutation("post", "/api/v1/answer-keys/csv");
+  const answerKeyCsv = api.useMutation("post", "/api/v1/answer-keys/csv");
 
   const generate = (body: Partial<GenerationRequest>) => {
     zip.reset();
-    csv.reset();
+    answerKeyCsv.reset();
+    fromCsv.reset();
     // Every field is optional on the wire; the generated type marks the ones with defaults as required.
-    mutation.mutate({ body: body as GenerationRequest });
+    fromJson.mutate({ body: body as GenerationRequest });
+  };
+
+  /** `POST /api/v1/sample-files/csv`: the settings and Hits as the `request` part, the file as `supplied_data`. */
+  const generateFromCsv = (body: Partial<GenerationRequest>, csv: File) => {
+    zip.reset();
+    answerKeyCsv.reset();
+    fromJson.reset();
+    const form = new FormData();
+    form.append("request", JSON.stringify(body));
+    form.append("supplied_data", csv);
+    // The generated type says `supplied_data: string` (OpenAPI's binary); FormData lets the browser set the boundary.
+    fromCsv.mutate({ body: form as never, bodySerializer: (body) => body });
   };
 
   const downloadZip = (generated: GeneratedSampleFile) =>
@@ -38,7 +54,7 @@ export function useGeneration() {
 
   // The CSV projection lives in the API alone (spec 11.1), so the Workbench posts the Answer Key back for it.
   const downloadAnswerKeyCsv = (generated: GeneratedSampleFile) =>
-    csv.mutate(
+    answerKeyCsv.mutate(
       // The Answer Key goes back as it came. openapi-fetch's `Writable` reads a null-only property (`displaced`) as
       // read-only (`NonNullable<null>` is `never`) and forbids it, so no Answer Key type fits its body type.
       { body: generated.answer_key as never, parseAs: "blob" },
@@ -50,7 +66,15 @@ export function useGeneration() {
 
   // Without `format=zip` the 200 is always the JSON envelope; the union with the zip's binary is the OpenAPI's.
   const data = mutation.data as GeneratedSampleFile | undefined;
-  return { ...mutation, data, generate, downloadZip, downloadAnswerKeyCsv, downloadError: zip.error ?? csv.error };
+  return {
+    ...mutation,
+    data,
+    generate,
+    generateFromCsv,
+    downloadZip,
+    downloadAnswerKeyCsv,
+    downloadError: zip.error ?? answerKeyCsv.error,
+  };
 }
 
 export type Generation = ReturnType<typeof useGeneration>;

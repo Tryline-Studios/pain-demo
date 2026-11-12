@@ -57,11 +57,17 @@ export function SettingsPane({ generation }: { generation: Generation }) {
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (settings !== undefined && !hitCountTooHigh) {
+    if (settings === undefined || hitCountTooHigh) return;
+    const request = {
+      ...generationRequest(changed),
+      ...(hitCount === undefined ? {} : { hit_count: Number(hitCount) }),
+      ...hitsRequest(hits),
+    };
+    if (data.mode === "csv") {
+      if (data.csv !== undefined) generation.generateFromCsv(request, data.csv);
+    } else {
       generation.generate({
-        ...generationRequest(changed),
-        ...(hitCount === undefined ? {} : { hit_count: Number(hitCount) }),
-        ...hitsRequest(hits),
+        ...request,
         ...supplied,
         // The count shown, not the API's default of one per supplied row: rows past the supplied ones are generated.
         ...("transactions" in supplied ? { transaction_count: Number(settings.transaction_count) } : {}),
@@ -86,7 +92,12 @@ export function SettingsPane({ generation }: { generation: Generation }) {
         )}
       </Section>
       <Section title="Data" hint="Generated or supplied">
-        <DataSection value={data} errors={new Map(fieldErrors.map((e) => [e.field, e.message]))} onChange={setData} />
+        <DataSection
+          value={data}
+          columns={options.data?.supplied_data_columns ?? []}
+          errors={new Map(fieldErrors.map((e) => [e.field, e.message]))}
+          onChange={setData}
+        />
       </Section>
       <Section title="Hits" hint="Hit Count and named Hits">
         <Field label="Hit Count">
@@ -121,7 +132,12 @@ export function SettingsPane({ generation }: { generation: Generation }) {
           type="submit"
           size="lg"
           className={`${PRIMARY_BUTTON} w-full`}
-          disabled={settings === undefined || hitCountTooHigh || generation.isPending}
+          disabled={
+            settings === undefined ||
+            hitCountTooHigh ||
+            generation.isPending ||
+            (data.mode === "csv" && data.csv === undefined)
+          }
         >
           {generation.isPending ? "Generating…" : "Generate"}
         </Button>

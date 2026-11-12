@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { saveFile } from "@/lib/saveFile";
 import { cn } from "@/lib/utils";
 import { INPUT, LABEL } from "@/workbench/generate/FileSection";
 
@@ -10,9 +11,10 @@ type Fields = Record<string, string>;
 
 export type Row = { fields: Fields; modes: Record<string, TriState> };
 
-export type DataSettings = { supply: boolean; payment: Fields; rows: Row[] };
+/** Generated only, Supply some fields, or Upload CSV (spec 13.2); `csv` is the file chosen for the last. */
+export type DataSettings = { mode: "generated" | "supply" | "csv"; payment: Fields; rows: Row[]; csv?: File };
 
-export const defaultDataSettings: DataSettings = { supply: false, payment: {}, rows: [] };
+export const defaultDataSettings: DataSettings = { mode: "generated", payment: {}, rows: [] };
 
 type FieldSpec = { path: string; label: string };
 
@@ -91,7 +93,7 @@ function nest(fields: Fields, modes: Record<string, TriState> = {}) {
 
 /** `payment` and `transactions` for the request; nothing at all for Generated only. */
 export function suppliedData(data: DataSettings) {
-  if (!data.supply) return {};
+  if (data.mode !== "supply") return {};
   const payment = nest(data.payment);
   return {
     ...(Object.keys(payment).length ? { payment } : {}),
@@ -194,16 +196,50 @@ function ModeCard({
 }
 
 /**
+ * The Upload CSV card: the file, the flattened-field-path header it expects (spec 5.6) and that header as a template.
+ * A 422 names `supplied_data[<row>].<column>` and shows in the problem block.
+ */
+function CsvUpload({ columns, onChange }: { columns: string[]; onChange: (csv: File | undefined) => void }) {
+  const header = columns.join(",");
+  return (
+    <div className="flex flex-col gap-3">
+      <label className="flex flex-col gap-1.5">
+        <span className={LABEL}>Supplied Data CSV</span>
+        <input type="file" accept=".csv,text/csv" className="text-sm" onChange={(e) => onChange(e.target.files?.[0])} />
+      </label>
+      <p className="text-muted-foreground text-xs">
+        Columns are field paths. Payment columns are read from the first row; list positions count from 0 (
+        <code>intermediary_agents.1.bic</code>). Leave out the columns you do not supply.
+      </p>
+      <code className="max-h-32 overflow-auto break-all rounded-md border bg-muted p-2 font-mono text-xs">
+        {header}
+      </code>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="self-start"
+        onClick={() => saveFile(new Blob([`${header}\n`], { type: "text/csv" }), "supplied-data-template.csv")}
+      >
+        Download header template
+      </Button>
+    </div>
+  );
+}
+
+/**
  * Generated only, or Supply some fields: payment-level fields once per file and per-transaction rows, each empty
  * field generated and each optional element Generate / Leave out / Supply (spec 13.2). A 422's dotted paths land on
  * the fields they name.
  */
 export function DataSection({
   value,
+  columns,
   errors,
   onChange,
 }: {
   value: DataSettings;
+  columns: string[];
   errors: Map<string, string>;
   onChange: (value: DataSettings) => void;
 }) {
@@ -214,19 +250,26 @@ export function DataSection({
     <>
       <div className="flex gap-3">
         <ModeCard
-          checked={!value.supply}
+          checked={value.mode === "generated"}
           title="Generated only"
           hint="Every value drawn from the Seed"
-          onSelect={() => onChange({ ...value, supply: false })}
+          onSelect={() => onChange({ ...value, mode: "generated" })}
         />
         <ModeCard
-          checked={value.supply}
+          checked={value.mode === "supply"}
           title="Supply some fields"
           hint="Yours where given, the rest generated"
-          onSelect={() => onChange({ ...value, supply: true })}
+          onSelect={() => onChange({ ...value, mode: "supply" })}
+        />
+        <ModeCard
+          checked={value.mode === "csv"}
+          title="Upload CSV"
+          hint="One row per transaction, empty cells generated"
+          onSelect={() => onChange({ ...value, mode: "csv" })}
         />
       </div>
-      {value.supply ? (
+      {value.mode === "csv" ? <CsvUpload columns={columns} onChange={(csv) => onChange({ ...value, csv })} /> : null}
+      {value.mode === "supply" ? (
         <>
           <fieldset className="flex flex-col gap-3">
             <legend className={cn(LABEL, "mb-2")}>Payment level (one per file)</legend>

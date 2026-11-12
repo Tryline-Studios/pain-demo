@@ -91,6 +91,7 @@ def test_every_operation_declares_only_the_problem_responses_it_can_return() -> 
     }
     assert declared == {
         ("/api/v1/sample-files", "post"): {"413", "422", "500"},
+        ("/api/v1/sample-files/csv", "post"): {"413", "422", "500"},
         ("/api/v1/answer-keys/csv", "post"): {"413", "422", "500"},
         ("/api/v1/message-versions", "get"): {"500"},
         ("/api/v1/options", "get"): {"500"},

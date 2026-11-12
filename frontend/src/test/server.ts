@@ -58,6 +58,7 @@ export const options: components["schemas"]["Options"] = {
     amount_max: "50000.00",
     exposure_countries: ["RU", "BY", "IR", "KP", "SY", "VE"],
   },
+  supplied_data_columns: ["payment.debtor.name", "creditor.name", "intermediary_agents.0.bic", "amount"],
 };
 
 const PARTY_PLACEMENTS: components["schemas"]["Placement"][] = [
