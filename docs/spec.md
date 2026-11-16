@@ -23,6 +23,7 @@ Contents:
 15. [Testing, CI and upgrade procedures](#15-testing-ci-and-upgrade-procedures)
 16. [Configuration](#16-configuration)
 17. [Upload Validation](#17-upload-validation)
+18. [Validation CLI](#18-validation-cli)
 
 Appendix A: [ADR index](#appendix-a-adr-index). Appendix B: [Ticket index](#appendix-b-ticket-index). Then [Open points found while assembling](#open-points-found-while-assembling).
 
@@ -935,6 +936,101 @@ Rules beyond the XSD are out of scope: the Screening Tool validates against the 
 
 ---
 
+## 18. Validation CLI
+
+Source: [Validation CLI](https://github.com/Tryline-Studios/pain-demo/issues/100), settled in a grilling session on 2026-11-16.
+
+Upload Validation (section 17) from the command line, for checking a pain.001 file on a laptop without Docker or a running server. Development stays on macOS; the CLI must also run on Windows. It is validation only for now; other commands may follow as further subcommands.
+
+### 18.1 Invocation
+
+```
+pain validate <file> [--output-file PATH]
+python -m pain_demo validate <file> [--output-file PATH]
+```
+
+- `pyproject.toml` gains `[project.scripts] pain = "pain_demo.cli:main"`, and `pain_demo/__main__.py` calls the same `main`. There is no top-level `pain` package.
+- Run from a checkout with `uv run --project backend pain validate ...`, or install once with `uv tool install ./backend` to put `pain` on the PATH. No standalone executable.
+- `argparse` and the standard library only; no new dependency.
+- One file per run, given as a positional path. No stdin, folders or wildcards.
+
+### 18.2 Behaviour
+
+- The CLI reads the file and calls `validation.validate_message(content, name)` with the file's base name, so it runs the same layers (17.3), schemas (17.4), problem shaping (17.5) and cap (17.6) as `POST /validations`, and the same file gives the same Validation Report in the CLI, the API and the Workbench.
+- The API's limits apply unchanged: at most 10 MB of input (the constant moves from the router to `validation.py` so both share it) and the 10-second XSD budget, past which the report holds one `validation_timed_out` problem.
+- It calls `validation.shutdown()` before exiting on every path, so no worker process outlives the run. The worker already starts with `spawn`, which Windows needs.
+- No app, catalogue, `Settings` or structlog: the CLI prints the report and nothing else. Section 17.7's logging does not apply.
+
+### 18.3 Exit codes
+
+| Code | When |
+|---|---|
+| 0 | The report is valid. |
+| 1 | The report has at least one Validation Problem, including `validation_timed_out`. |
+| 2 | A usage error; the input is missing, unreadable, empty or over 10 MB; the output folder does not exist or the output path cannot be written; or the XSD worker did not start (the API's 503). One line on stderr says which. |
+
+### 18.4 Terminal report
+
+- A summary: verdict, Message Version, transactions, problem count (`100+` when `truncated`), encoding, then file name, size and a short sha256 (as the Workbench tiles, 17.9).
+- Then each problem in document order: its source line with a line-number prefix, a `^` under its column, and `code` and `message` beneath. Problems with no line come after, message only. A valid file prints "No problems found".
+- Source lines are the file decoded with the report's `encoding`, undecodable bytes replaced; a file with no detected encoding is decoded as UTF-8.
+- Colour only when stdout is a terminal and `NO_COLOR` is unset.
+- stdout is reconfigured to UTF-8 with `errors="replace"`, so a Windows console on a legacy code page never raises.
+- With `--output-file`, the terminal shows only the verdict, Message Version and problem count, then `Report written to <path>`.
+
+### 18.5 Markdown report
+
+Written to `--output-file` as UTF-8 with `\n` line endings on every OS. An existing file is overwritten; a missing parent folder is exit 2 and is not created.
+
+- A `#` heading with the file name, then a summary table: Result, Message Version, Transactions, Problems (`100+` when `truncated`), Encoding, Size, sha256.
+- A valid file: the table and "No problems found".
+- Otherwise a "Problems" section. Each problem with a line gets a window of its line and 2 lines either side; windows that overlap or touch merge into one block. Each block lists its problems first (`code`, `line:column`, `message`, `path` in backticks, and the raw `cause` in a collapsed `<details>`), then a fenced `xml` code block of the window, each line prefixed with its number (`  42 | <BIC>ABCD12</BIC>`). The fence is longer than any run of backticks inside the block, so source text cannot close it.
+- Problems with no line (`dtd_not_allowed` without one, `validation_timed_out`, and others the parser gives no position) are listed after the blocks without a code block.
+
+Example (abridged):
+
+````markdown
+# batch.xml
+
+| | |
+|---|---|
+| Result | Invalid |
+| Message Version | pain.001.001.03 |
+| Transactions | 12 |
+| Problems | 2 |
+| Encoding | UTF-8 |
+| Size | 48,211 bytes |
+| sha256 | 3f2a…c91e |
+
+## Problems
+
+### Lines 40 to 44
+
+- **pattern_mismatch** at 42:18: BIC 'ABCD12' on line 42 is not a valid BIC: …
+  `/Document/CstmrCdtTrfInitn/PmtInf[1]/CdtTrfTxInf[3]/CdtrAgt/FinInstnId/BIC`
+  <details><summary>cause</summary>Element '…BIC': [facet 'pattern'] …</details>
+
+```xml
+  40 |           <CdtrAgt>
+  41 |             <FinInstnId>
+  42 |               <BIC>ABCD12</BIC>
+  43 |             </FinInstnId>
+  44 |           </CdtrAgt>
+```
+````
+
+### 18.6 Testing
+
+- `tests/test_cli.py` at the public seam: `main([...])` in-process, asserting the exit code, stdout, stderr and the written Markdown. Cases: a valid golden, an XSD-invalid file, a malformed file, `dtd_not_allowed`, a truncated report, overlapping windows merged, a backtick run in a source line, a missing input, an empty input and a missing output folder.
+- One subprocess test runs `python -m pain_demo validate` to cover the entry point.
+- CI gains a `windows-latest` job in `backend.yml` that runs `uv sync` and only the CLI and Upload Validation tests (`tests/test_cli.py`, `tests/test_validation_api.py`). The full suite, goldens included, stays on Linux: nobody develops on Windows, so the job only proves the CLI and the spawned XSD worker run there.
+
+### 18.7 Docs
+
+The README gains a short "Validate from the command line" section: run with `uv run --project backend pain validate ...` or install with `uv tool install ./backend`, on macOS or Windows. No golden changes, so no version bump.
+
+---
+
 ## Appendix A: ADR index
 
 | ADR | Decision |
@@ -965,6 +1061,7 @@ Every other ticket explicitly declined an ADR.
 | 15 Testing and upgrades | [#5](https://github.com/Tryline-Studios/pain-demo/issues/5), [#15](https://github.com/Tryline-Studios/pain-demo/issues/15), [#14](https://github.com/Tryline-Studios/pain-demo/issues/14), [#6](https://github.com/Tryline-Studios/pain-demo/issues/6), [#13](https://github.com/Tryline-Studios/pain-demo/issues/13) |
 | 16 Configuration | [#5](https://github.com/Tryline-Studios/pain-demo/issues/5), [#17](https://github.com/Tryline-Studios/pain-demo/issues/17) |
 | 17 Upload Validation | [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-demo/issues/64), [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-demo/issues/71) |
+| 18 Validation CLI | [Validation CLI](https://github.com/Tryline-Studios/pain-demo/issues/100) |
 
 Research branches (primary sources, never merged): `research/placements-per-message-version`, `research/seeded-fake-payment-data`, `research/sanctions-list-entry-shape`, `research/entity-catalogue-roster`. Prototype branch: `prototype/ui-flow`.
 
