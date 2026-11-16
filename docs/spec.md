@@ -147,7 +147,7 @@ Source: [Entity Catalogue contents and schema](https://github.com/Tryline-Studio
 
 ### 3.2 Approved roster (v1)
 
-50 Entities, verified against OFAC files dated 2026-09-14, the UK Sanctions List dated 11/09/2026, the GLEIF BIC-to-LEI mapping dated 2026-08-28 and the GLEIF API on 2026-09-16. Full write-up: [entity-catalogue-roster.md](https://github.com/Tryline-Studios/pain-demo/blob/research/entity-catalogue-roster/docs/research/entity-catalogue-roster.md) on branch `research/entity-catalogue-roster`, with parsing scripts in `docs/research/scripts/entity-catalogue-roster/`.
+50 Entities, verified against OFAC files dated 2026-09-14, the UK Sanctions List dated 11/09/2026, the GLEIF BIC-to-LEI mapping dated 2026-08-28 and the GLEIF API on 2026-09-16. Full write-up: [entity-catalogue-roster.md](research/entity-catalogue-roster.md), with parsing scripts in `docs/research/scripts/entity-catalogue-roster/`.
 
 | Facet | Count |
 |---|---|
@@ -1063,7 +1063,7 @@ Every other ticket explicitly declined an ADR.
 | 17 Upload Validation | [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-demo/issues/64), [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-demo/issues/71) |
 | 18 Validation CLI | [Validation CLI](https://github.com/Tryline-Studios/pain-demo/issues/100) |
 
-Research branches (primary sources, never merged): `research/placements-per-message-version`, `research/seeded-fake-payment-data`, `research/sanctions-list-entry-shape`, `research/entity-catalogue-roster`. Prototype branch: `prototype/ui-flow`.
+Research write-ups (primary sources) are in `docs/research/`: `placements-per-message-version.md`, `seeded-fake-payment-data.md`, `sanctions-list-entry-shape.md`, `entity-catalogue-roster.md`.
 
 ## Open points found while assembling
 
