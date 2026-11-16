@@ -1,6 +1,7 @@
 """The Validation CLI through its public seam, `main([...])` (spec section 18)."""
 
 import hashlib
+import re
 import subprocess
 import sys
 from collections.abc import Callable
@@ -52,7 +53,7 @@ def test_an_xsd_invalid_file_exits_1_with_each_problem_under_its_source_line(
     assert main(["validate", write(tmp_path, content)]) == 1
 
     out = capsys.readouterr().out
-    assert out.startswith("Invalid  pain.001.001.03  1 problem\n")
+    assert out.startswith("Invalid  pain.001.001.03  Transactions: 1  1 problem  Encoding: UTF-8\nbatch.xml  ")
     source = next(line for line in out.splitlines() if line.endswith(TX_LINE))
     caret, problem = out.split(f"{source}\n")[1].splitlines()[:2]
     assert caret == " " * source.index("<InstdAmt") + "^"  # no XSD column, so the caret marks the element
@@ -65,8 +66,63 @@ def test_a_truncated_report_counts_its_problems_as_100_plus(tmp_path: Path, caps
     assert main(["validate", write(tmp_path, content)]) == 1
 
     out = capsys.readouterr().out
-    assert out.startswith("Invalid  pain.001.001.03  100+ problems\n")
+    assert out.startswith("Invalid  pain.001.001.03  Transactions: 102  100+ problems  Encoding: UTF-8\n")
     assert out.count("pattern_mismatch: ") == 100
+
+
+def test_a_truncated_markdown_report_counts_its_problems_as_100_plus(tmp_path: Path) -> None:
+    content = with_transactions(pain001(), *[BAD_CURRENCY] * 101)
+    output = tmp_path / "report.md"
+
+    assert main(["validate", write(tmp_path, content), "--output-file", str(output)]) == 1
+
+    assert "\n| Problems | 100+ |\n" in output.read_text(encoding="utf-8")
+
+
+def test_line_separators_other_than_newlines_do_not_shift_source_lines(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # lxml counts only \n, \r\n and \r as line breaks; U+2028 and U+0085 stay inside line 2.
+    content = (
+        pain001()
+        .replace(b'Ccy="EUR"', b'Ccy="eur"')
+        .replace(b"<Document", "<!-- a\u2028b\u0085c -->\n<Document".encode(), 1)
+    )
+    output = tmp_path / "report.md"
+
+    assert main(["validate", write(tmp_path, content)]) == 1
+    assert main(["validate", write(tmp_path, content), "--output-file", str(output)]) == 1
+
+    assert f"10 | {TX_LINE[4:]}\n" in capsys.readouterr().out
+    assert f"  10 | {TX_LINE[4:]}\n" in output.read_text(encoding="utf-8")
+
+
+def test_the_caret_marks_the_problem_element_not_a_longer_tag_that_starts_the_same(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    content = pain001().replace(b'<InstdAmt Ccy="EUR">', b'<!-- <InstdAmtX --><InstdAmt Ccy="eur">')
+
+    assert main(["validate", write(tmp_path, content)]) == 1
+
+    out = capsys.readouterr().out
+    source = next(line for line in out.splitlines() if "<!-- <InstdAmtX -->" in line)
+    caret = out.split(f"{source}\n")[1].splitlines()[0]
+    assert caret == " " * source.index("<InstdAmt ") + "^"
+
+
+def test_problems_are_listed_by_line_in_both_reports(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    # The XSD reports PmtInf's missing child (line 5) after the bad IBAN inside it (line 7).
+    content = pain001().replace(b"DE89370400440532013000", b"xx")
+    content = re.sub(rb"      <CdtTrfTxInf>.*?</CdtTrfTxInf>\n", b"", content, flags=re.DOTALL)
+    output = tmp_path / "report.md"
+
+    assert main(["validate", write(tmp_path, content)]) == 1
+    assert main(["validate", write(tmp_path, content), "--output-file", str(output)]) == 1
+
+    out = capsys.readouterr().out
+    assert out.index("missing_element: ") < out.index("pattern_mismatch: ")
+    report = output.read_text(encoding="utf-8")
+    assert report.index("**missing_element** at 5") < report.index("**pattern_mismatch** at 7")
 
 
 @pytest.mark.parametrize(
@@ -100,12 +156,12 @@ def test_a_missing_output_folder_exits_2_and_is_not_created(tmp_path: Path, caps
     assert not output.parent.exists()
 
 
-def test_a_usage_error_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
+def test_a_usage_error_exits_2_with_one_line_on_stderr(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exit_:
         main(["validate"])
 
     assert exit_.value.code == 2
-    assert "the following arguments are required: file" in capsys.readouterr().err
+    assert capsys.readouterr().err == "pain: the following arguments are required: file\n"
 
 
 def test_a_malformed_file_exits_1_and_points_at_the_broken_line(
@@ -116,7 +172,7 @@ def test_a_malformed_file_exits_1_and_points_at_the_broken_line(
     assert main(["validate", write(tmp_path, content)]) == 1
 
     out = capsys.readouterr().out
-    assert out.startswith("Invalid  unknown Message Version  1 problem\n")
+    assert out.startswith("Invalid  unknown Message Version  Transactions: unknown  1 problem  Encoding: unknown\n")
     assert "4 | </Document>\n" in out
     assert "malformed_xml: The file is not well-formed XML" in out
 
@@ -136,6 +192,18 @@ def test_a_problem_without_a_line_is_listed_by_its_message(tmp_path: Path, capsy
 
     assert capsys.readouterr().out.endswith(
         "\n\ntoo_many_elements: The file has 500,024 elements; the limit is 500,000\n"
+    )
+
+
+def test_a_problem_without_a_line_is_listed_after_the_blocks_in_markdown(tmp_path: Path) -> None:
+    content = pain001().replace(b"</CstmrCdtTrfInitn>", b"<a/>" * 500_001 + b"</CstmrCdtTrfInitn>")
+    output = tmp_path / "report.md"
+
+    assert main(["validate", write(tmp_path, content), "--output-file", str(output)]) == 1
+
+    assert output.read_text(encoding="utf-8").endswith(
+        "## Problems\n\n### Not tied to a line\n\n"
+        "- **too_many_elements**: The file has 500,024 elements; the limit is 500,000\n"
     )
 
 
