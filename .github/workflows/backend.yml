@@ -22,3 +22,17 @@ jobs:
       - run: uv sync --locked
         working-directory: backend
       - run: just ${{ matrix.recipe }}
+
+  # The Validation CLI runs on Windows laptops (spec 18.6): prove the CLI and the spawned XSD worker work there.
+  windows-cli:
+    name: cli on windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          working-directory: backend
+      - run: uv sync --locked
+        working-directory: backend
+      - run: uv run pytest tests/test_cli.py tests/test_validation_api.py
+        working-directory: backend

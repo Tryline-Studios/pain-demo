@@ -54,7 +54,7 @@ def create_app(
     app.include_router(validation_api.router, prefix=API_PREFIX)
     # Added innermost first: the request context wraps everything else.
     app.add_middleware(
-        BodyLimitMiddleware, path_caps={str(app.url_path_for("validate_message")): validation_api.MAX_UPLOAD_BYTES}
+        BodyLimitMiddleware, path_caps={str(app.url_path_for("validate_message")): validation.MAX_UPLOAD_BYTES}
     )
     app.add_middleware(RequestContextMiddleware, quiet_paths=frozenset({str(app.url_path_for("get_health"))}))
     return app
