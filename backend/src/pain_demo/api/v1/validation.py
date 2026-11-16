@@ -13,8 +13,6 @@ from pain_demo.validation import ValidationReport
 
 router = APIRouter(tags=["validation"])
 
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024
-
 # The route reads the body itself to accept two content types, so FastAPI cannot infer the request body schema.
 _REQUEST_BODY = {
     "required": True,

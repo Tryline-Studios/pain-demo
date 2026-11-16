@@ -19,6 +19,8 @@ from pain_demo.generation.request import MESSAGE_VERSIONS
 
 _NAMESPACE_PREFIX = "urn:iso:std:iso:20022:tech:xsd:"
 _PARSER_POSITION = re.compile(r", line \d+, column \d+$")
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+"""The largest Uploaded Message, through the API or the CLI."""
 MAX_PROBLEMS = 100
 MAX_ELEMENTS = 500_000
 """Above the richest realistic 10 MB pain.001 (about 400,000 elements) and well below a flood (about 1.3 million)."""

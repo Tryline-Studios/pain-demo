@@ -19,6 +19,9 @@ dependencies = [
     "pycountry>=26.2.16",
 ]
 
+[project.scripts]
+pain = "pain_demo.cli:main"
+
 [dependency-groups]
 dev = [
     "httpx2",

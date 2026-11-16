@@ -43,6 +43,17 @@ It always answers 200 with a Validation Report: `valid`, the detected Message Ve
 
 Files are capped at 10 MB, and the report lists at most 100 problems. Rules beyond the XSD (MDR or CBPR+ usage rules, IBAN checksums, `NbOfTxs` and `CtrlSum`) are not checked. In the Workbench, you drop or paste a file and get summary tiles, the source with problem lines highlighted, and a problem rail beside it. See [spec section 17](docs/spec.md#17-upload-validation).
 
+### Validate from the command line
+
+The same check runs on a laptop without Docker or a server, on macOS or Windows, with only [uv](https://docs.astral.sh/uv/) installed. From a checkout:
+
+```sh
+uv run --project backend pain validate batch.xml
+uv run --project backend pain validate batch.xml --output-file report.md
+```
+
+Or install it once with `uv tool install ./backend` to put `pain` on the PATH, then run `pain validate batch.xml`. It prints the Validation Report with each problem under its source line, or with `--output-file` writes it as Markdown with the problem lines in code blocks. It exits 0 when the file is valid, 1 when it has problems, and 2 when it could not check the file. See [spec section 18](docs/spec.md#18-validation-cli).
+
 ### Sample File generation
 
 - **Message Versions:** all eleven that pain001 supports, pain.001.001.03 to .13. The default is .03.
