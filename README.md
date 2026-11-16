@@ -5,7 +5,7 @@ Validates and generates **ISO 20022 pain.001** (Customer Credit Transfer Initiat
 - **Validate** an Uploaded Message: any pain.001 file, from this app or not, checked against its Message Version's XSD, with every Validation Problem explained in plain language.
 - **Generate** a Sample File: fake payment data (or data you supply) mixed with real Sanctioned Entities from the OFAC SDN List and the UK Sanctions List, such as Sberbank and Evraz PLC, together with an Answer Key that says exactly what the Screening Tool should flag.
 
-Both run in the **Workbench**, a single-screen web UI that opens in Validate mode, and over a REST API at `/api/v1`, which scripts and CI can call directly.
+Both run in the **Workbench**, a single-screen web UI that opens in Validate mode, and over a REST API at `/api/v1`, which scripts and CI can call directly. Validation also runs from the command line (`pain validate`) without Docker or a server.
 
 > **Status:** v1 is built: Upload Validation, Sample File generation and the Workbench all work. The build-ready spec is [`docs/spec.md`](docs/spec.md). New work is tracked as GitHub issues labelled `ready-for-agent`, and the design history is on the issue labelled `wayfinder:map` ([#1](https://github.com/Tryline-Studios/pain-demo/issues/1)).
 
@@ -22,6 +22,8 @@ Then open http://localhost:8080. Stop it with `docker compose down`.
 - The first build downloads base images and packages from Docker Hub, ghcr.io, PyPI and npm. A TLS-inspecting corporate proxy can make that fail.
 - On a virtual PC, Docker Desktop needs nested virtualisation turned on in the hypervisor.
 - Run this way, the version shows the git SHA as `unknown`, because only `just up` passes it in. Nothing else changes.
+
+To validate files only, you don't need Docker at all: see [Validate from the command line](#validate-from-the-command-line).
 
 ## What it does
 
@@ -45,14 +47,35 @@ Files are capped at 10 MB, and the report lists at most 100 problems. Rules beyo
 
 ### Validate from the command line
 
-The same check runs on a laptop without Docker or a server, on macOS or Windows, with only [uv](https://docs.astral.sh/uv/) installed. From a checkout:
+The same check runs on a laptop without Docker or a server, on macOS or Windows, with only [uv](https://docs.astral.sh/uv/) installed (uv fetches Python 3.13 itself). From the repo root of a checkout:
 
 ```sh
 uv run --project backend pain validate batch.xml
 uv run --project backend pain validate batch.xml --output-file report.md
 ```
 
-Or install it once with `uv tool install ./backend` to put `pain` on the PATH, then run `pain validate batch.xml`. It prints the Validation Report with each problem under its source line, or with `--output-file` writes it as Markdown with the problem lines in code blocks. It exits 0 when the file is valid, 1 when it has problems, and 2 when it could not check the file. See [spec section 18](docs/spec.md#18-validation-cli).
+Or install it once to put `pain` on the PATH, and run it from anywhere:
+
+```sh
+uv tool install ./backend
+pain validate batch.xml --output-file report.md
+```
+
+On Windows, in PowerShell:
+
+```powershell
+uv tool install .\backend
+pain validate C:\payments\pain.001.001.03.xml --output-file .\report.md
+```
+
+After pulling a newer version, run `uv tool install --reinstall ./backend` to update the installed `pain`. Inside the project environment, `python -m pain_demo validate ...` works too.
+
+- **Output:** a summary (verdict, Message Version, transactions, problem count, encoding, file name, size, sha256), then each Validation Problem under its numbered source line with its `code` and plain-language `message`.
+- **`--output-file PATH`** writes the report as Markdown instead: a summary table, then each problem with its line and two lines either side in an `xml` code block. An existing file is overwritten, and the folder must already exist. The terminal shows only a one-line summary and where the report went.
+- **Exit codes:** 0 when the file is valid, 1 when it has problems, and 2 when it could not check the file (missing, empty or over 10 MB, or an unwritable output path).
+- **Same limits and checks** as `POST /validations`, so a file gets the same report here, over the API and in the Workbench.
+
+See [spec section 18](docs/spec.md#18-validation-cli).
 
 ### Sample File generation
 
@@ -103,7 +126,7 @@ You need [uv](https://docs.astral.sh/uv/), [just](https://just.systems/), Node 2
 - `just setup` installs backend and frontend dependencies and the prek hooks.
 - `just dev` runs the API natively on http://127.0.0.1:8000, with docs at `/docs`. `just web-dev` runs the Workbench on Vite, with `/api` proxied to it.
 - `just up` builds both images and starts the compose stack on http://localhost:8080, with the git SHA passed in. `just down` stops it.
-- `just check` and `just test` are what CI runs. `just e2e` runs the Playwright smoke test against the compose stack.
+- `just check` and `just test` are what CI runs, plus a Windows job that runs the CLI and Upload Validation tests. `just e2e` runs the Playwright smoke test against the compose stack.
 - `just openapi` regenerates `backend/openapi.json` after an API change, and `just gen-client` regenerates the TypeScript client from it. CI fails on drift in either.
 - `just goldens` regenerates the golden Sample Files. Bump the minor version in `backend/pyproject.toml` whenever a golden changes.
 - `just upgrade-generators <library>[==<version>] ...` bumps a pinned generator library, regenerates the goldens and prints the diff.
