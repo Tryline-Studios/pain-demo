@@ -142,3 +142,9 @@ Configuration is through `PAIN_DEMO_`-prefixed environment variables ([16](docs/
 - [`docs/adr/`](docs/adr/): architecture decision records
 - [`docs/agents/`](docs/agents/): how coding agents work with the issue tracker and domain docs
 - [`NOTICE`](NOTICE): OGL v3.0 attribution and OFAC source citation
+
+## Licence
+
+Licensed under either of Apache License, Version 2.0 ([`LICENSE-APACHE`](LICENSE-APACHE)) or MIT license ([`LICENSE-MIT`](LICENSE-MIT)) at your option. The Entity Catalogue's list data stays under its source terms; see [`NOTICE`](NOTICE). Generated Sample Files and Answer Keys are yours to use; the source terms for catalogue names still apply.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
