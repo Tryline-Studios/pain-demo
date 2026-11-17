@@ -1,8 +1,16 @@
+pain-demo, Copyright (c) 2026 Tryline Studios Ltd
+Licensed under MIT OR Apache-2.0; see LICENSE-MIT and LICENSE-APACHE.
+
 NOTICE
 
 The Entity Catalogue in backend/src/pain_demo/catalogue/ is a frozen snapshot of entries from two public
 sanctions lists, with bank identifiers from GLEIF. It is sample data for testing screening tools, not a
 sanctions list, and it is not kept current (see docs/spec.md, section 3).
+
+The catalogue's values taken from these lists stay under their source terms, set out below. Only the
+selection, structure and code fall under the repo licence. The Open Government Licence does not cover
+personal data, so the UK Sanctions List details of Individuals (names, dates and places of birth,
+nationalities) are not licensed under it; they are reproduced as published by the listing authorities.
 
 UK Sanctions List
     Contains public sector information licensed under the Open Government Licence v3.0.
