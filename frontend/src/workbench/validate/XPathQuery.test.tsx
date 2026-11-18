@@ -105,6 +105,43 @@ function current() {
 }
 
 describe("XPath Query", () => {
+  it("labels the box visibly as XPath Query", async () => {
+    await upload();
+    expect(screen.getByLabelText("XPath Query")).toBe(box());
+    expect(screen.getByText("XPath Query", { selector: "label" })).toBeVisible();
+  });
+
+  it("shows the XPath cheat sheet on hovering the info button", async () => {
+    const user = await upload();
+    await user.hover(screen.getByRole("button", { name: "About XPath queries" }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("without namespace prefixes");
+  });
+
+  it("shows an XPath cheat sheet when the info button gets keyboard focus, and hides it on Esc", async () => {
+    const user = await upload();
+    const info = screen.getByRole("button", { name: "About XPath queries" });
+
+    while (document.activeElement !== info) {
+      await user.tab();
+    }
+    const tip = await screen.findByRole("tooltip");
+    expect(tip).toHaveTextContent("XPath 1.0, written without namespace prefixes.");
+    for (const example of [
+      "/Document/CstmrCdtTrfInitn",
+      "//InstdAmt",
+      "//CdtTrfTxInf[2]",
+      "//InstdAmt/@Ccy",
+      "//Cdtr[Nm='ACME Ltd']",
+      "count(//CdtTrfTxInf)",
+    ]) {
+      expect(within(tip).getByText(example)).toBeInTheDocument();
+    }
+    expect(tip).toHaveTextContent("a number, not matches");
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument());
+  });
+
   it("runs a namespace-free query after a pause, jumping to the first match and tinting every match line", async () => {
     const user = await upload();
     expect(box()).toHaveAttribute("placeholder", ROOT);

@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
@@ -115,7 +115,8 @@ describe("Validate mode", () => {
     await user.type(screen.getByRole("textbox", { name: "Paste XML" }), "<Document/>");
     await user.click(screen.getByRole("button", { name: "Validate pasted XML" }));
 
-    expect(await within(report()).findByText("No problems found")).toBeInTheDocument();
+    await waitFor(() => expect(tile("Verdict")).toHaveTextContent(/^Verdict\s*Valid$/));
+    expect(within(report()).queryByText("No problems found")).not.toBeInTheDocument();
     expect(seen).toEqual([{ contentType: "application/xml", text: "<Document/>", fileName: null }]);
     expect(tile("Verdict")).toHaveTextContent(/^Verdict\s*Valid$/);
     expect(tile("Message Version")).toHaveTextContent("pain.001.001.03");
@@ -289,13 +290,14 @@ describe("Validate mode", () => {
       expect(sourceView()).not.toHaveTextContent("dtd_not_allowed");
     });
 
-    it("shows the source of a valid message below 'No problems found'", async () => {
+    it("shows the source of a valid message straight below the tiles", async () => {
       answerWith(validReport);
       const user = await openValidate();
 
       await user.upload(screen.getByLabelText(/Drop a pain.001 file/), new File([source], "batch.xml"));
 
-      expect(await within(report()).findByText("No problems found")).toBeInTheDocument();
+      expect(await within(report()).findByRole("list", { name: "Source" })).toBeInTheDocument();
+      expect(within(report()).queryByText("No problems found")).not.toBeInTheDocument();
       expect(within(sourceView()).getAllByRole("listitem")).toHaveLength(12);
       expect(sourceLine(12)).toHaveTextContent(/^12<L12\/>$/);
     });

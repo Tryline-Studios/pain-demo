@@ -59,11 +59,6 @@ export function ValidationReportPane({ validation }: { validation: Validation })
       ) : null}
       {report === undefined ? null : (
         <>
-          {report.valid ? (
-            <div className="rounded-[10px] border border-success bg-success-soft p-8 text-center text-success">
-              <p className="font-semibold text-lg">No problems found</p>
-            </div>
-          ) : null}
           {report.truncated ? (
             <p className="text-muted-foreground text-sm">Only the first 100 problems are shown.</p>
           ) : null}
