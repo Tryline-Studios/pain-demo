@@ -4,7 +4,11 @@ import { startTagLines } from "@/workbench/xmlTokens";
 export type QueryResult =
   | { kind: "error"; message: string }
   | { kind: "scalar"; value: string }
-  | { kind: "nodes"; lines: number[]; describe: (index: number) => string };
+  /** `lines[i]` is the line of match i's owning element; null for the document or a node outside the root element. */
+  | { kind: "nodes"; lines: (number | null)[]; describe: (index: number) => string };
+
+// Browsers report a parse failure as an element in one of these namespaces, never in the message's own.
+const PARSE_ERROR_NAMESPACES = ["http://www.w3.org/1999/xhtml", "http://www.mozilla.org/newlayout/xml/parsererror.xml"];
 
 export type XPathQuery = {
   run: (query: string) => QueryResult;
@@ -17,10 +21,13 @@ export type XPathQuery = {
  * copy with namespaces stripped, as the `xpath-query` CLI does, so one query works for every Message Version. Match
  * paths and states follow the CLI: lxml `getpath` paths, then `= value`, `(no value)` or `(empty)`.
  */
-export function buildXPathQuery(lines: string[]): XPathQuery | null {
-  const parsed = new DOMParser().parseFromString(lines.join("\n"), "application/xml");
-  if (parsed.getElementsByTagName("parsererror").length > 0) {
-    return null;
+export function buildXPathQuery(source: string, lines: string[]): XPathQuery | null {
+  const parsed = new DOMParser().parseFromString(source, "application/xml");
+  const errors = parsed.getElementsByTagName("parsererror");
+  for (const error of errors) {
+    if (PARSE_ERROR_NAMESPACES.includes(error.namespaceURI ?? "")) {
+      return null;
+    }
   }
   const tagLines = startTagLines(lines);
   const doc = document.implementation.createDocument(null, null, null);
@@ -52,23 +59,27 @@ export function buildXPathQuery(lines: string[]): XPathQuery | null {
   };
   copy(parsed, doc, "");
 
-  const owner = (node: Node): Element =>
-    node instanceof Attr && node.ownerElement !== null
+  /** The element a match belongs to; null for the document itself and for comments beside the root element. */
+  const owner = (node: Node): Element | null =>
+    node instanceof Attr
       ? node.ownerElement
       : node.nodeType === Node.ELEMENT_NODE
         ? (node as Element)
         : node.parentNode?.nodeType === Node.ELEMENT_NODE
           ? (node.parentNode as Element)
-          : (doc.documentElement as Element);
+          : null;
 
   const describe = (node: Node) => {
     if (node.nodeType === Node.ELEMENT_NODE) {
       return `${pathOf(node as Element)} ${stateOf(node as Element)}`;
     }
+    if (node.nodeType === Node.DOCUMENT_NODE) {
+      return "/ (no value)";
+    }
     const step = node instanceof Attr ? `@${node.name}` : node.nodeType === Node.TEXT_NODE ? "text()" : "comment()";
     const value = (node.nodeValue ?? "").trim();
-    const where = node.nodeType === Node.DOCUMENT_NODE ? "" : `${pathOf(owner(node))}/${step}`;
-    return `${where || "/"} ${value ? `= ${value}` : "(empty)"}`;
+    const element = owner(node);
+    return `${element === null ? "" : pathOf(element)}/${step} ${value ? `= ${value}` : "(empty)"}`;
   };
 
   const run = (query: string): QueryResult => {
@@ -90,11 +101,12 @@ export function buildXPathQuery(lines: string[]): XPathQuery | null {
       return { kind: "error", message: (error instanceof Error && error.message) || "not a valid XPath 1.0 query" };
     }
     const nodes: Node[] = [];
-    const matchLines: number[] = [];
+    const matchLines: (number | null)[] = [];
     for (let at = 0; at < result.snapshotLength; at++) {
       const node = result.snapshotItem(at) as Node;
+      const element = owner(node);
       nodes.push(node);
-      matchLines.push(lineOf.get(owner(node)) ?? 1);
+      matchLines.push(element === null ? null : (lineOf.get(element) ?? null));
     }
     return { kind: "nodes", lines: matchLines, describe: (index) => describe(nodes[index] as Node) };
   };

@@ -48,10 +48,12 @@ export function SourceView({
 
   const scroller = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
+  const topsRef = useRef(tops);
+  topsRef.current = tops;
 
   // A problem jump and a query jump are separate targets; whichever changed last decides where the source is.
-  useJump(target, tops, scroller, setScrollTop);
-  useJump(found.current, tops, scroller, setScrollTop);
+  useJump(target, topsRef, scroller, setScrollTop);
+  useJump(found.current, topsRef, scroller, setScrollTop);
 
   // The scroller is at most 70vh tall, so the window height always covers it (and jsdom has no layout to measure).
   const start = Math.max(0, lineAt(tops, scrollTop) - 10);
@@ -124,14 +126,18 @@ export function SourceView({
   );
 }
 
-export type Found = { lines: number[]; current: { line: number } | null };
+/** A null line is a match with no line of its own (the document, a comment beside the root): counted, never tinted. */
+export type Found = { lines: (number | null)[]; current: { line: number } | null };
 
 const NOTHING_FOUND: Found = { lines: [], current: null };
 
-/** Scrolls the source so `jump`'s line sits a third of the way down, each time a new `jump` object arrives. */
+/**
+ * Scrolls the source so `jump`'s line sits a third of the way down, each time a new `jump` object arrives. Only the
+ * jump itself triggers it (row offsets are read through a ref), so new offsets never replay an older jump.
+ */
 function useJump(
   jump: { line: number } | null,
-  tops: Float64Array,
+  tops: RefObject<Float64Array>,
   scroller: RefObject<HTMLDivElement | null>,
   setScrollTop: (top: number) => void,
 ) {
@@ -140,7 +146,7 @@ function useJump(
     if (jump === null || element === null) {
       return;
     }
-    const top = Math.max(0, (tops[jump.line - 1] ?? 0) - element.clientHeight / 3);
+    const top = Math.max(0, (tops.current[jump.line - 1] ?? 0) - element.clientHeight / 3);
     element.scrollTop = top;
     setScrollTop(top);
   }, [jump, tops, scroller, setScrollTop]);

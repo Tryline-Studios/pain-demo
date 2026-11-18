@@ -6,7 +6,7 @@ import { ProblemRail } from "@/workbench/validate/ProblemRail";
 import { QueryBar } from "@/workbench/validate/QueryBar";
 import { type Found, SourceView, splitLines } from "@/workbench/validate/SourceView";
 import type { Validation, ValidationProblem } from "@/workbench/validate/useValidation";
-import { buildXPathQuery } from "@/workbench/validate/xpathQuery";
+import { buildXPathQuery, type XPathQuery } from "@/workbench/validate/xpathQuery";
 
 /** The right pane in Validate mode: summary tiles, the file line and the problems (spec 17.9). */
 export function ValidationReportPane({ validation }: { validation: Validation }) {
@@ -99,12 +99,10 @@ function problemCount(report: Validation["data"]) {
   return report.truncated ? "100+" : report.problems.length;
 }
 
-const MALFORMED = "XPath Query is off: the Uploaded Message is not well-formed XML";
-
 /** Why the XPath Query is off: the browser parser must never see a malformed message or a DTD (spec 17.3, 17.10). */
 function unavailableReason(problems: ValidationProblem[]) {
   if (problems.some((problem) => problem.code === "malformed_xml")) {
-    return MALFORMED;
+    return "XPath Query is off: the Uploaded Message is not well-formed XML";
   }
   if (problems.some((problem) => problem.code === "dtd_not_allowed")) {
     return "XPath Query is off: the Uploaded Message carries a DTD";
@@ -132,17 +130,26 @@ function SourceAndRail({
   const [found, setFound] = useState<Found>({ lines: [], current: null });
   const lines = useMemo(() => splitLines(source), [source]);
   const blocked = unavailableReason(problems);
-  const xpath = useMemo(() => (blocked === null ? buildXPathQuery(lines) : null), [blocked, lines]);
+  // Built on the first query, not per upload: parsing a 10 MB message takes about a second.
+  const getXPath = useMemo(() => {
+    let built: XPathQuery | null | undefined;
+    return () => {
+      if (built === undefined) {
+        built = buildXPathQuery(source, lines);
+      }
+      return built;
+    };
+  }, [source, lines]);
   const onMatches = useCallback(
-    (matched: number[], current: number | null) =>
+    (matched: (number | null)[], current: number | null) =>
       setFound({ lines: matched, current: current === null ? null : { line: current } }),
     [],
   );
   const sourcePanel = (
     <div className="flex flex-col gap-2">
       <QueryBar
-        xpath={xpath}
-        unavailable={blocked ?? (xpath === null ? MALFORMED : null)}
+        getXPath={getXPath}
+        unavailable={blocked}
         query={query}
         onQueryChange={onQueryChange}
         onMatches={onMatches}

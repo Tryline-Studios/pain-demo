@@ -158,14 +158,48 @@ describe("XPath Query", () => {
     await ask(user, "local-name(/*)", "Document");
   });
 
-  it("shows an XPath error and leaves the source where it was", async () => {
+  it("shows an XPath error and drops the last query's highlights", async () => {
     const user = await upload();
     await ask(user, "//InstdAmt", `2 matches · 1 of 2 · ${ROOT}/PmtInf/CdtTrfTxInf[1]/Amt/InstdAmt = 10.00`);
 
     await user.type(box(), "[[");
     await waitFor(() => expect(status().textContent).toMatch(/^XPath error: ./));
-    expect(tinted()).toEqual([10, 15]);
-    expect(current()).toEqual([10]);
+    expect(tinted()).toEqual([]);
+    expect(current()).toEqual([]);
+  });
+
+  it("shows an empty string result visibly", async () => {
+    const user = await upload();
+
+    await ask(user, "string(//UltmtDbtr)", "(empty string)");
+  });
+
+  it("matches a top-level comment without jumping, with a CLI-like path", async () => {
+    const user = await upload(message.replace("<Document", "<!-- prologue -->\n<Document"));
+
+    await ask(user, "/comment()", "1 match · 1 of 1 · /comment() = prologue");
+    expect(tinted()).toEqual([]);
+    expect(current()).toEqual([]);
+  });
+
+  it("queries a message that has its own element named parsererror", async () => {
+    const user = await upload(message.replace("<NbOfTxs>2</NbOfTxs>", "<NbOfTxs>2</NbOfTxs><parsererror/>"));
+
+    expect(box()).toBeEnabled();
+    await ask(user, "//parsererror", `1 match · 1 of 1 · ${ROOT}/GrpHdr/parsererror (empty)`);
+  });
+
+  it("runs the typed query before stepping when Enter comes within the pause", async () => {
+    const user = await upload();
+    await ask(user, "//MsgId", `1 match · 1 of 1 · ${ROOT}/GrpHdr/MsgId = MSG-1`);
+
+    await user.clear(box());
+    await user.type(box(), "//InstdAmt{Enter}");
+
+    expect(status().textContent).toBe(`2 matches · 2 of 2 · ${ROOT}/PmtInf/CdtTrfTxInf[2]/Amt/InstdAmt = 20.00`);
+    expect(current()).toEqual([15]);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(status().textContent).toBe(`2 matches · 2 of 2 · ${ROOT}/PmtInf/CdtTrfTxInf[2]/Amt/InstdAmt = 20.00`);
   });
 
   // jsdom's XPath engine finds no attribute by name (`@Ccy`), so these use `@*`, which both engines support.
@@ -270,6 +304,36 @@ describe("XPath Query", () => {
 
       expect(box()).toHaveValue(`${ROOT}/GrpHdr/NbOfTxs`);
       expect(status().textContent).toBe(`1 match · 1 of 1 · ${ROOT}/GrpHdr/NbOfTxs = 2`);
+    });
+
+    it("runs an accepted path once, so stepping right after is not undone by the pause", async () => {
+      const user = await upload();
+
+      await user.type(box(), "instdamt");
+      await user.keyboard("{ArrowDown}{Enter}");
+      await user.click(screen.getByRole("button", { name: "Next match" }));
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      expect(status().textContent).toBe(`2 matches · 2 of 2 · ${ROOT}/PmtInf/CdtTrfTxInf[2]/Amt/InstdAmt = 20.00`);
+      expect(current()).toEqual([15]);
+    });
+
+    it("leaves the box with Shift+Tab without accepting, and reopens the list with the arrows", async () => {
+      const user = await upload();
+
+      await user.type(box(), "msg");
+      await user.keyboard("{ArrowDown}{Shift>}{Tab}{/Shift}");
+      expect(box()).toHaveValue("msg");
+      expect(box()).not.toHaveFocus();
+
+      await user.click(box());
+      expect(box()).toHaveAttribute("aria-expanded", "false");
+      await user.keyboard("{ArrowDown}");
+      expect(box()).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getAllByRole("option")[0]).toHaveAttribute("aria-selected", "true");
+      await user.keyboard("{Escape}{ArrowUp}");
+      expect(box()).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getAllByRole("option").at(-1)).toHaveAttribute("aria-selected", "true");
     });
 
     it("hides once the query is more than a plain path, and Enter then steps through matches", async () => {

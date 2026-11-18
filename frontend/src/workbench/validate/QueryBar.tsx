@@ -8,68 +8,83 @@ import type { QueryResult, XPathQuery } from "@/workbench/validate/xpathQuery";
 
 const PLACEHOLDER = "/Document/CstmrCdtTrfInitn";
 const PAUSE_MS = 150;
+
+type Ran = { text: string; result: QueryResult | null };
 // Typeahead is for plain paths only: names, `/` and `//`.
 const NOT_PLAIN = /[[(@| ]/;
 
 /**
  * The XPath Query bar above the source view (spec 17.10): a combobox with path typeahead, Previous and Next buttons,
- * and a polite status line. A query runs 150 ms after the last keystroke; `onMatches` gets every match's line and the
- * current match's line (null for a scalar, no matches or an empty box), and is not called while the query is invalid.
+ * and a polite status line. A query runs 150 ms after the last keystroke, or at once when a suggestion is accepted or
+ * Enter, Previous or Next comes first. `onMatches` gets every match's line and the current match's line (null for a
+ * scalar, an error, no matches or an empty box). `getXPath` builds the message's query engine on first use.
  * `unavailable` disables the bar and says why.
  */
 export function QueryBar({
-  xpath,
+  getXPath,
   unavailable,
   query,
   onQueryChange,
   onMatches,
 }: {
-  xpath: XPathQuery | null;
+  getXPath: () => XPathQuery | null;
   unavailable: string | null;
   query: string;
   onQueryChange: (query: string) => void;
-  onMatches: (lines: number[], current: number | null) => void;
+  onMatches: (lines: (number | null)[], current: number | null) => void;
 }) {
-  const [result, setResult] = useState<QueryResult | null>(null);
+  // The last query run and its result; `text` tells whether the box has changed since.
+  const [ran, setRan] = useState<Ran>({ text: "", result: null });
   const [index, setIndex] = useState(0);
   const [listOpen, setListOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const listId = useId();
 
-  const execute = (text: string) => {
-    if (xpath === null) {
-      return;
-    }
-    const next = text.trim() === "" ? null : xpath.run(text);
-    setResult(next);
+  const execute = (text: string): Ran => {
+    const xpath = text.trim() === "" ? null : getXPath();
+    const result =
+      text.trim() === ""
+        ? null
+        : (xpath?.run(text) ?? { kind: "error" as const, message: "the browser cannot parse this message" });
+    const next = { text, result };
+    setRan(next);
     setIndex(0);
-    if (next === null || next.kind === "scalar") {
+    if (result?.kind === "nodes") {
+      onMatches(result.lines, result.lines[0] ?? null);
+    } else {
+      // Highlights never outlive the query that made them, even while the new one is invalid.
       onMatches([], null);
-    } else if (next.kind === "nodes") {
-      onMatches(next.lines, next.lines[0] ?? null);
     }
+    return next;
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once per pause in typing and per message, not per render
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once per pause in typing, not per render
   useEffect(() => {
+    if (ran.text === query) {
+      return;
+    }
     const timer = setTimeout(() => execute(query), PAUSE_MS);
     return () => clearTimeout(timer);
-  }, [query, xpath]);
+  }, [query, ran.text]);
 
-  const options = useMemo(
-    () => (xpath === null || query === "" || NOT_PLAIN.test(query) ? [] : rank(query, xpath.paths)),
-    [query, xpath],
-  );
+  const options = useMemo(() => {
+    const xpath = query === "" || NOT_PLAIN.test(query) ? null : getXPath();
+    return xpath === null ? [] : rank(query, xpath.paths);
+  }, [query, getXPath]);
   const shown = listOpen && options.length > 0;
+  const { result } = ran;
   const matches = result?.kind === "nodes" ? result.lines : [];
 
   const step = (delta: number) => {
-    if (matches.length === 0) {
+    // A query still inside its pause runs first, so the step lands on its matches, not the last query's.
+    const fresh = ran.text === query ? null : execute(query).result;
+    const lines = fresh === null ? matches : fresh.kind === "nodes" ? fresh.lines : [];
+    if (lines.length === 0) {
       return;
     }
-    const next = (index + delta + matches.length) % matches.length;
+    const next = ((fresh === null ? index : 0) + delta + lines.length) % lines.length;
     setIndex(next);
-    onMatches(matches, matches[next] ?? null);
+    onMatches(lines, lines[next] ?? null);
   };
 
   const accept = (path: string) => {
@@ -81,19 +96,22 @@ export function QueryBar({
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const chosen = shown ? options[active] : undefined;
-    if (shown && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (options.length === 0) {
+        return;
+      }
       event.preventDefault();
-      setActive(
-        event.key === "ArrowDown" ? (active + 1) % options.length : (active <= 0 ? options.length : active) - 1,
-      );
-    } else if ((event.key === "Enter" || event.key === "Tab") && chosen !== undefined) {
+      setListOpen(true);
+      const from = shown ? active : -1;
+      setActive(event.key === "ArrowDown" ? (from + 1) % options.length : (from <= 0 ? options.length : from) - 1);
+    } else if ((event.key === "Enter" || (event.key === "Tab" && !event.shiftKey)) && chosen !== undefined) {
       event.preventDefault();
       accept(chosen);
     } else if (event.key === "Enter") {
       event.preventDefault();
       setListOpen(false);
       step(event.shiftKey ? -1 : 1);
-    } else if (event.key === "Tab" && query === "" && !event.shiftKey) {
+    } else if (event.key === "Tab" && query === "" && !event.shiftKey && !shown) {
       event.preventDefault();
       onQueryChange(PLACEHOLDER);
     } else if (event.key === "Escape" && shown) {
@@ -193,7 +211,7 @@ function statusOf(result: QueryResult | null, index: number) {
     return `XPath error: ${result.message}`;
   }
   if (result.kind === "scalar") {
-    return result.value;
+    return result.value === "" ? "(empty string)" : result.value;
   }
   const count = result.lines.length;
   if (count === 0) {
