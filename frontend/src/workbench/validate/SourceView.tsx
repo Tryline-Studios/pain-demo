@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { problemKey, type ValidationProblem } from "@/workbench/validate/useValidation";
 import { XmlLine } from "@/workbench/XmlLine";
@@ -16,11 +16,16 @@ export function SourceView({
   lines,
   problems,
   target,
+  found = NOTHING_FOUND,
 }: {
   lines: string[];
   problems: ValidationProblem[];
   target: { line: number } | null;
+  /** The XPath Query's match lines (accent tint) and current match (accent bar); a new `current` scrolls to it. */
+  found?: Found;
 }) {
+  const matched = useMemo(() => new Set(found.lines), [found.lines]);
+  const currentLine = found.current?.line ?? null;
   const byLine = useMemo(() => {
     const grouped = new Map<number, ValidationProblem[]>();
     for (const problem of problems) {
@@ -43,16 +48,12 @@ export function SourceView({
 
   const scroller = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
+  const topsRef = useRef(tops);
+  topsRef.current = tops;
 
-  useEffect(() => {
-    const element = scroller.current;
-    if (target === null || element === null) {
-      return;
-    }
-    const top = Math.max(0, (tops[target.line - 1] ?? 0) - element.clientHeight / 3);
-    element.scrollTop = top;
-    setScrollTop(top);
-  }, [target, tops]);
+  // A problem jump and a query jump are separate targets; whichever changed last decides where the source is.
+  useJump(target, topsRef, scroller, setScrollTop);
+  useJump(found.current, topsRef, scroller, setScrollTop);
 
   // The scroller is at most 70vh tall, so the window height always covers it (and jsdom has no layout to measure).
   const start = Math.max(0, lineAt(tops, scrollTop) - 10);
@@ -78,19 +79,27 @@ export function SourceView({
           {lines.slice(start, end).map((text, at) => {
             const line = start + at + 1;
             const lineProblems = byLine.get(line);
+            // Validation Problems keep their red treatment over a query's accent.
+            const tint = lineProblems ? "bg-destructive-soft" : matched.has(line) ? "bg-primary-soft" : undefined;
             return (
               <li
                 key={line}
-                aria-current={target?.line === line ? "location" : undefined}
-                className={cn({ "bg-destructive-soft": lineProblems })}
+                aria-current={target?.line === line ? "location" : currentLine === line ? "step" : undefined}
+                className={tint}
               >
                 <div className="flex h-5">
                   <span
                     className={cn(
                       "sticky left-0 w-16 shrink-0 select-none pr-3.5 text-right tabular-nums",
-                      lineProblems ? "bg-destructive-soft text-destructive" : "bg-code text-line-number",
+                      lineProblems
+                        ? "bg-destructive-soft text-destructive"
+                        : tint
+                          ? "bg-primary-soft text-primary"
+                          : "bg-code text-line-number",
                       // The marked line's bar sits on the sticky number, so it stays put on horizontal scroll.
-                      { "shadow-[inset_3px_0_0_var(--destructive)]": target?.line === line },
+                      target?.line === line
+                        ? "shadow-[inset_3px_0_0_var(--destructive)]"
+                        : { "shadow-[inset_3px_0_0_var(--primary)]": currentLine === line },
                     )}
                   >
                     {line}
@@ -115,6 +124,32 @@ export function SourceView({
       </div>
     </div>
   );
+}
+
+/** A null line is a match with no line of its own (the document, a comment beside the root): counted, never tinted. */
+export type Found = { lines: (number | null)[]; current: { line: number } | null };
+
+const NOTHING_FOUND: Found = { lines: [], current: null };
+
+/**
+ * Scrolls the source so `jump`'s line sits a third of the way down, each time a new `jump` object arrives. Only the
+ * jump itself triggers it (row offsets are read through a ref), so new offsets never replay an older jump.
+ */
+function useJump(
+  jump: { line: number } | null,
+  tops: RefObject<Float64Array>,
+  scroller: RefObject<HTMLDivElement | null>,
+  setScrollTop: (top: number) => void,
+) {
+  useEffect(() => {
+    const element = scroller.current;
+    if (jump === null || element === null) {
+      return;
+    }
+    const top = Math.max(0, (tops.current[jump.line - 1] ?? 0) - element.clientHeight / 3);
+    element.scrollTop = top;
+    setScrollTop(top);
+  }, [jump, tops, scroller, setScrollTop]);
 }
 
 /** The source's lines as the report counts them: libxml2 normalises CRLF and lone CR to LF. */

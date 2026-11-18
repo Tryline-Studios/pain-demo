@@ -98,6 +98,25 @@ export function lineStates(lines: string[]) {
   return states;
 }
 
+/**
+ * The line (from 1) of every start tag, in source order: the nth entry is the line of the nth element in document
+ * order. Tags inside comments, CDATA sections and quoted values are skipped, as the tokenizer already tracks them.
+ */
+export function startTagLines(lines: string[]) {
+  const found: number[] = [];
+  let state = TEXT;
+  for (let at = 0; at < lines.length; at++) {
+    const line = lines[at] ?? "";
+    // A bare `<` punctuation token opens a start tag; `</`, `<?`, `<!` and `<![CDATA[` are longer.
+    state = scan(line, state, (kind, from, to) => {
+      if (kind === "punct" && to - from === 1 && line[from] === "<") {
+        found.push(at + 1);
+      }
+    });
+  }
+  return found;
+}
+
 /** One line's tokens, starting in `state` (from `lineStates`; 0 for a line that starts in text). */
 export function tokenizeLine(line: string, state: number) {
   const tokens: Token[] = [];
