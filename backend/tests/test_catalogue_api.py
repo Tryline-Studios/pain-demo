@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from test_catalogue import MINIMAL_BANK, write_catalogue
 
-from pain_demo.app import create_app
+from pain_workbench.app import create_app
 
 
 def ids(response_json: list[dict[str, object]]) -> list[object]:

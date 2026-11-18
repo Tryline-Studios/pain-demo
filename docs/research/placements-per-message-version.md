@@ -1,6 +1,6 @@
 # Placements and fields per Message Version
 
-Research for [#2](https://github.com/Tryline-Studios/pain-demo/issues/2). Question: for each pain.001 Message Version that pain001 supports (.03 to .13), which party roles exist, how agents are identified, what remittance information allows, how names and addresses are structured, and whether pain001's flat pipeline (`template.csv` columns plus the Jinja `template.xml`) actually emits each role, or whether a Placement needs a custom template.
+Research for [#2](https://github.com/Tryline-Studios/pain-workbench/issues/2). Question: for each pain.001 Message Version that pain001 supports (.03 to .13), which party roles exist, how agents are identified, what remittance information allows, how names and addresses are structured, and whether pain001's flat pipeline (`template.csv` columns plus the Jinja `template.xml`) actually emits each role, or whether a Placement needs a custom template.
 
 ## Short answer
 

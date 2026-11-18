@@ -9,8 +9,8 @@ from sample_files import resolve
 from test_catalogue import MINIMAL_BANK, write_catalogue
 from test_drawn_hits import CATALOGUE, PMT_INF, generate, tree
 
-from pain_demo.app import create_app
-from pain_demo.validation import MESSAGE_VERSIONS
+from pain_workbench.app import create_app
+from pain_workbench.validation import MESSAGE_VERSIONS
 
 ELEMENT_PATHS = {
     "ustrd": "RmtInf/Ustrd",

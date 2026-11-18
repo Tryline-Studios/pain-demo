@@ -3,7 +3,7 @@
   "seed": "golden-kitchen-sink",
   "message_version": "pain.001.001.11",
   "generator": {
-    "app_version": "0.3.0",
+    "app_version": "0.4.0",
     "git_sha": "golden",
     "pain001": "0.0.70",
     "faker": "40.39.0",
@@ -151,7 +151,7 @@
     "execution_date": "2026-01-05",
     "transaction_count": 12,
     "hit_count": 12,
-    "sha256": "85a1c55cfa52f2af5c1fb4af49434ded374e926895f1811848392bb620cf72b8"
+    "sha256": "37aa92a9bcb2673e09e15e155e8be7728777af21f0b7867be2aaee6cdb4cd16b"
   },
   "summary": {
     "by_placement": {

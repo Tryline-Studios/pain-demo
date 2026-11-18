@@ -4,13 +4,13 @@ Sample ISO 20022 pain.001 generator for testing a sanctions Screening Tool. See 
 
 ## Current phase: build
 
-The build-ready spec is `docs/spec.md`; it is the source of truth for behaviour, and every section names the ticket it came from. Work is cut into GitHub issues labelled `ready-for-agent` on `Tryline-Studios/pain-demo`, each linking the spec sections it implements and listing its acceptance criteria and blockers. Pick a ticket, implement it on a branch, keep `just check` and `just test` green, open a PR. The design map (the issue labelled `wayfinder:map`) is history now; do not reopen settled decisions there.
+The build-ready spec is `docs/spec.md`; it is the source of truth for behaviour, and every section names the ticket it came from. Work is cut into GitHub issues labelled `ready-for-agent` on `Tryline-Studios/pain-workbench`, each linking the spec sections it implements and listing its acceptance criteria and blockers. Pick a ticket, implement it on a branch, keep `just check` and `just test` green, open a PR. The design map (the issue labelled `wayfinder:map`) is history now; do not reopen settled decisions there.
 
 ## Working in the backend
 
-- `backend/` is a uv src-layout project, package `pain_demo`, Python 3.13 pinned. Run everything through the root `justfile`: `just setup` (deps and prek hooks), `just check` (ruff, ty, Biome, tsc, OpenAPI and client drift), `just test` (pytest and Vitest), `just dev` (native API with reload), `just openapi` (regenerate `backend/openapi.json`; run it after any route or model change or CI fails on drift).
+- `backend/` is a uv src-layout project, package `pain_workbench`, Python 3.13 pinned. Run everything through the root `justfile`: `just setup` (deps and prek hooks), `just check` (ruff, ty, Biome, tsc, OpenAPI and client drift), `just test` (pytest and Vitest), `just dev` (native API with reload), `just openapi` (regenerate `backend/openapi.json`; run it after any route or model change or CI fails on drift).
 - Tests are pytest under `backend/tests`, in-process through FastAPI's test client. Warnings are errors. Test at public seams (HTTP, `Settings`, log output), not internals.
-- The `app.py` factory wires the skeleton: `Settings` (`PAIN_DEMO_` prefix, `settings.py`), structlog (`log_config.py`), the request id and one-event-per-request middleware (`request_context.py`), the 1 MB body cap (`body_limit.py`) and RFC 9457 problem details (`problems.py`). New endpoints go in `api/v1/<tag>.py` routers with snake_case `operation_id`s and one of the tags `sample-files`, `catalogue`, `meta`, `validation`.
+- The `app.py` factory wires the skeleton: `Settings` (`PAIN_WORKBENCH_` prefix, `settings.py`), structlog (`log_config.py`), the request id and one-event-per-request middleware (`request_context.py`), the 1 MB body cap (`body_limit.py`) and RFC 9457 problem details (`problems.py`). New endpoints go in `api/v1/<tag>.py` routers with snake_case `operation_id`s and one of the tags `sample-files`, `catalogue`, `meta`, `validation`.
 - Raise `HTTPException` or let request validation fail; the problem handlers shape every error. Never write an error body by hand. The one other error path is the renderer's `RenderFailed`, which `problems.py` shapes as a 500 `build_failed`.
 - The Entity Catalogue is the `catalogue/` package: one TOML file per Entity in `catalogue/entities/<id>.toml` and `catalogue/control_relationships.toml`, the Pydantic schema in `catalogue/schema.py` (every model forbids unknown fields), `load_catalogue` in `catalogue/loader.py` collecting every problem before raising `CatalogueError`, and `catalogue/capabilities.py` for the Name Variants and Placements an Entity supports. `create_app` loads it once, logs `catalogue_invalid` at CRITICAL and exits 1 on failure, and keeps it on `app.state.catalogue`; the Generator Version's `catalogue_snapshot` is the latest Listing verification date. Tests build scratch catalogues in `tmp_path` and pass `catalogue_root=` to `create_app` or `load_catalogue`. Catalogue values come from the roster write-up in `docs/research/entity-catalogue-roster.md`.
 - The Clean Bank List is `generation/clean_banks.toml` (spec section 4), loaded by `generation/clean_banks.py` after the catalogue: `create_app` logs `clean_bank_list_invalid` at CRITICAL and exits 1 if it is malformed or shares a BIC8 or normalised name with the catalogue, and keeps it on `app.state.clean_banks`. `just build-clean-banks` rewrites its IBAN-country section from schwifty's registry; the US section is hand-maintained. Tests pass `clean_banks_path=` to `create_app` or `load_clean_banks`. BIC validation and TOML problem collection shared with the catalogue live in `identifiers.py` and `validated_files.py`.
@@ -45,7 +45,7 @@ The build-ready spec is `docs/spec.md`; it is the source of truth for behaviour,
 
 ### Issue tracker
 
-GitHub Issues on `Tryline-Studios/pain-demo` via `gh`. See `docs/agents/issue-tracker.md`.
+GitHub Issues on `Tryline-Studios/pain-workbench` via `gh`. See `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 

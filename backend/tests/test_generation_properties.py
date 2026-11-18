@@ -11,9 +11,9 @@ from hypothesis import strategies as st
 from lxml import etree
 from sample_files import assert_valid_sample_file, resolve
 
-from pain_demo.app import create_app
-from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES
-from pain_demo.validation import MESSAGE_VERSIONS
+from pain_workbench.app import create_app
+from pain_workbench.generation.clean_banks import SUPPORTED_COUNTRIES
+from pain_workbench.validation import MESSAGE_VERSIONS
 
 CLIENT = TestClient(create_app())
 

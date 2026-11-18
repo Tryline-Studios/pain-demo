@@ -2,9 +2,9 @@
 
 import json
 
-from pain_demo.app import create_app
-from pain_demo.openapi import OPENAPI_PATH, render_openapi
-from pain_demo.version import app_version
+from pain_workbench.app import create_app
+from pain_workbench.openapi import OPENAPI_PATH, render_openapi
+from pain_workbench.version import app_version
 
 
 def test_meta_operations_are_named_and_tagged() -> None:

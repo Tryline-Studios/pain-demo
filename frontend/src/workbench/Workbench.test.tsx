@@ -46,7 +46,9 @@ describe("Workbench", () => {
   it("names the page in a level-one heading before the first generate", () => {
     renderGenerateMode();
 
-    expect(screen.getAllByRole("heading", { level: 1 }).map((heading) => heading.textContent)).toEqual(["pain-demo"]);
+    expect(screen.getAllByRole("heading", { level: 1 }).map((heading) => heading.textContent)).toEqual([
+      "pain-workbench",
+    ]);
   });
 
   it("shows the empty state in the output pane before the first generate", () => {

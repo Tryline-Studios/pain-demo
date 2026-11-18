@@ -1,9 +1,9 @@
-pain-demo, Copyright (c) 2026 Tryline Studios Ltd
+pain-workbench, Copyright (c) 2026 Tryline Studios Ltd
 Licensed under MIT OR Apache-2.0; see LICENSE-MIT and LICENSE-APACHE.
 
 NOTICE
 
-The Entity Catalogue in backend/src/pain_demo/catalogue/ is a frozen snapshot of entries from two public
+The Entity Catalogue in backend/src/pain_workbench/catalogue/ is a frozen snapshot of entries from two public
 sanctions lists, with bank identifiers from GLEIF. It is sample data for testing screening tools, not a
 sanctions list, and it is not kept current (see docs/spec.md, section 3).
 

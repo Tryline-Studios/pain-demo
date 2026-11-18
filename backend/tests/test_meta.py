@@ -5,7 +5,7 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 
-from pain_demo.app import create_app
+from pain_workbench.app import create_app
 
 
 def test_health_reports_ok(client: TestClient) -> None:
@@ -38,7 +38,7 @@ def test_version_reports_the_generator_version_block(client: TestClient) -> None
 
 
 def test_version_uses_the_configured_git_sha(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("PAIN_DEMO_GIT_SHA", "0123456789abcdef0123456789abcdef01234567")
+    monkeypatch.setenv("PAIN_WORKBENCH_GIT_SHA", "0123456789abcdef0123456789abcdef01234567")
 
     with TestClient(create_app()) as client:
         body = client.get("/api/v1/version").json()

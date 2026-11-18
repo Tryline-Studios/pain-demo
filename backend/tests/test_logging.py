@@ -8,11 +8,11 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from pain_demo.app import create_app
-from pain_demo.generation import sample_file
-from pain_demo.generation.model import SampleFileModel
-from pain_demo.renderer import RenderFailed, RenderResult
-from pain_demo.settings import Settings
+from pain_workbench.app import create_app
+from pain_workbench.generation import sample_file
+from pain_workbench.generation.model import SampleFileModel
+from pain_workbench.renderer import RenderFailed, RenderResult
+from pain_workbench.settings import Settings
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +49,7 @@ def test_health_checks_log_at_debug_only(capsys: pytest.CaptureFixture[str]) -> 
 
     with TestClient(create_app(Settings(log_format="json", log_level="DEBUG"))) as client:
         client.get("/api/v1/health")
-    requests = [e for e in json_lines(capsys.readouterr().out) if e["logger"] == "pain_demo.request"]
+    requests = [e for e in json_lines(capsys.readouterr().out) if e["logger"] == "pain_workbench.request"]
     assert [(e["event"], e["level"], e["path"]) for e in requests] == [("request", "debug", "/api/v1/health")]
 
 

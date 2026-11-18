@@ -1,4 +1,4 @@
-# pain-demo
+# pain-workbench
 
 Validates and generates **ISO 20022 pain.001** (Customer Credit Transfer Initiation) files for testing and proving a sanctions payment Screening Tool.
 
@@ -7,7 +7,7 @@ Validates and generates **ISO 20022 pain.001** (Customer Credit Transfer Initiat
 
 Both run in the **Workbench**, a single-screen web UI that opens in Validate mode, and over a REST API at `/api/v1`, which scripts and CI can call directly. Validation also runs from the command line (`pain validate`) without Docker or a server.
 
-> **Status:** v1 is built: Upload Validation, Sample File generation and the Workbench all work. The build-ready spec is [`docs/spec.md`](docs/spec.md). New work is tracked as GitHub issues labelled `ready-for-agent`, and the design history is on the issue labelled `wayfinder:map` ([#1](https://github.com/Tryline-Studios/pain-demo/issues/1)).
+> **Status:** v1 is built: Upload Validation, Sample File generation and the Workbench all work. The build-ready spec is [`docs/spec.md`](docs/spec.md). New work is tracked as GitHub issues labelled `ready-for-agent`, and the design history is on the issue labelled `wayfinder:map` ([#1](https://github.com/Tryline-Studios/pain-workbench/issues/1)).
 
 ## Just run it
 
@@ -68,7 +68,7 @@ uv tool install .\backend
 pain validate C:\payments\pain.001.001.03.xml --output-file .\report.md
 ```
 
-After pulling a newer version, run `uv tool install --reinstall ./backend` to update the installed `pain`. Inside the project environment, `python -m pain_demo validate ...` works too.
+After pulling a newer version, run `uv tool install --reinstall ./backend` to update the installed `pain`. Inside the project environment, `python -m pain_workbench validate ...` works too.
 
 - **Output:** a summary (verdict, Message Version, transactions, problem count, encoding, file name, size, sha256), then each Validation Problem under its numbered source line with its `code` and plain-language `message`.
 - **`--output-file PATH`** writes the report as Markdown instead: a summary table, then each problem with its line and two lines either side in an `xml` code block. An existing file is overwritten, and the folder must already exist. The terminal shows only a one-line summary and where the report went.
@@ -90,7 +90,7 @@ See [spec section 18](docs/spec.md#18-validation-cli).
 - **Answer Key:** canonical JSON with the Effective Request, the Generator Version, and every Hit and Exposure with its XPath. A CSV projection comes from `POST /answer-keys/csv`, and `?format=zip` bundles the XML with both Answer Key files ([11](docs/spec.md#11-answer-key)).
 - **Always valid:** every Sample File is XSD-validated before it is returned. A failure is a `500 build_failed` error, never a silently invalid file ([10.4](docs/spec.md#104-xsd-validation-and-the-build-report)).
 
-The Entity Catalogue holds 50 real Sanctioned Entities (20 Banks, 16 Corporates and 14 Individuals) as one TOML file each in [`backend/src/pain_demo/catalogue/entities/`](backend/src/pain_demo/catalogue/entities/) ([3](docs/spec.md#3-entity-catalogue)).
+The Entity Catalogue holds 50 real Sanctioned Entities (20 Banks, 16 Corporates and 14 Individuals) as one TOML file each in [`backend/src/pain_workbench/catalogue/entities/`](backend/src/pain_workbench/catalogue/entities/) ([3](docs/spec.md#3-entity-catalogue)).
 
 ## API
 
@@ -133,7 +133,7 @@ You need [uv](https://docs.astral.sh/uv/), [just](https://just.systems/), Node 2
 - `just build-clean-banks` rebuilds the IBAN-country section of the Clean Bank List from schwifty's registry. Review the diff before committing.
 - `just verify-catalogue` and `just verify-clean-banks` download the live OFAC SDN and UK Sanctions List files and report catalogue drift or Clean Bank List matches. These are manual checks and never run in CI.
 
-Configuration is through `PAIN_DEMO_`-prefixed environment variables ([16](docs/spec.md#16-configuration)).
+Configuration is through `PAIN_WORKBENCH_`-prefixed environment variables ([16](docs/spec.md#16-configuration)).
 
 ## Docs
 

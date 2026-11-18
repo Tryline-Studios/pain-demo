@@ -9,12 +9,12 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from rapidfuzz.distance import JaroWinkler
 
-from pain_demo.catalogue import load_catalogue
-from pain_demo.catalogue.capabilities import MAX_NAME_LENGTH, transliterations
-from pain_demo.catalogue.schema import Entity, EntityType
-from pain_demo.catalogue.transliteration import transliterate
-from pain_demo.generation.fuzz import LEGAL_FORMS, FuzzOperation, apply_operation, fuzz, keeps_to_similarity
-from pain_demo.generation.screening import FUZZ_THRESHOLD
+from pain_workbench.catalogue import load_catalogue
+from pain_workbench.catalogue.capabilities import MAX_NAME_LENGTH, transliterations
+from pain_workbench.catalogue.schema import Entity, EntityType
+from pain_workbench.catalogue.transliteration import transliterate
+from pain_workbench.generation.fuzz import LEGAL_FORMS, FuzzOperation, apply_operation, fuzz, keeps_to_similarity
+from pain_workbench.generation.screening import FUZZ_THRESHOLD
 
 CATALOGUE = load_catalogue()
 SBERBANK, ALFA_BANK, EVRAZ, ABRAMOVICH = (

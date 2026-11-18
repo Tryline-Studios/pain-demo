@@ -13,8 +13,8 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from pain_demo import validation
-from pain_demo.app import create_app
+from pain_workbench import validation
+from pain_workbench.app import create_app
 
 URL = "/api/v1/validations"
 XML = {"Content-Type": "application/xml"}

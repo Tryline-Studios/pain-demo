@@ -12,14 +12,14 @@ from schwifty import IBAN
 from test_catalogue import MINIMAL_BANK, write_catalogue
 from test_clean_banks import scratch_catalogue
 
-from pain_demo.app import create_app
-from pain_demo.catalogue import load_catalogue
-from pain_demo.catalogue.capabilities import supported_name_variants
-from pain_demo.catalogue.schema import Bank
-from pain_demo.catalogue.transliteration import transliterate
-from pain_demo.generation.clean_banks import IBAN_COUNTRIES, load_clean_banks
-from pain_demo.identifiers import bic_country
-from pain_demo.settings import Settings
+from pain_workbench.app import create_app
+from pain_workbench.catalogue import load_catalogue
+from pain_workbench.catalogue.capabilities import supported_name_variants
+from pain_workbench.catalogue.schema import Bank
+from pain_workbench.catalogue.transliteration import transliterate
+from pain_workbench.generation.clean_banks import IBAN_COUNTRIES, load_clean_banks
+from pain_workbench.identifiers import bic_country
+from pain_workbench.settings import Settings
 
 CATALOGUE = load_catalogue()
 CLEAN_BICS = {bank.bic for bank in load_clean_banks(CATALOGUE).banks}

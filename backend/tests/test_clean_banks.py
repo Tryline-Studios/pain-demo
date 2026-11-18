@@ -5,17 +5,17 @@ from pathlib import Path
 
 import pytest
 
-from pain_demo.app import create_app
-from pain_demo.catalogue import Catalogue, load_catalogue
-from pain_demo.generation import build_clean_banks
-from pain_demo.generation.clean_banks import (
+from pain_workbench.app import create_app
+from pain_workbench.catalogue import Catalogue, load_catalogue
+from pain_workbench.generation import build_clean_banks
+from pain_workbench.generation.clean_banks import (
     DEFAULT_PATH,
     IBAN_COUNTRIES,
     CleanBankListError,
     load_clean_banks,
     normalise_name,
 )
-from pain_demo.settings import Settings
+from pain_workbench.settings import Settings
 
 # --- the committed list
 

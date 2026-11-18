@@ -107,7 +107,7 @@ export const entities: components["schemas"]["EntitySummary"][] = [
 ];
 
 export const sampleXml = `<?xml version='1.0' encoding='UTF-8'?>
-<!-- pain-demo 1.2.3 seed="echoed-seed" -->
+<!-- pain-workbench 1.2.3 seed="echoed-seed" -->
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"/>
 `;
 
@@ -163,7 +163,7 @@ export const generated: components["schemas"]["GeneratedSampleFile"] = {
  * hit in both transactions' Creditor Agent, so highlighting must follow the XPath, not the text.
  */
 export const xmlWithHits = `<?xml version='1.0' encoding='UTF-8'?>
-<!-- pain-demo 1.2.3 seed="hits" -->
+<!-- pain-workbench 1.2.3 seed="hits" -->
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
   <CstmrCdtTrfInitn>
     <GrpHdr>
