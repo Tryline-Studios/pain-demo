@@ -118,7 +118,6 @@ describe("Validate mode", () => {
     await waitFor(() => expect(tile("Verdict")).toHaveTextContent(/^Verdict\s*Valid$/));
     expect(within(report()).queryByText("No problems found")).not.toBeInTheDocument();
     expect(seen).toEqual([{ contentType: "application/xml", text: "<Document/>", fileName: null }]);
-    expect(tile("Verdict")).toHaveTextContent(/^Verdict\s*Valid$/);
     expect(tile("Message Version")).toHaveTextContent("pain.001.001.03");
     expect(tile("Transactions")).toHaveTextContent("2");
     expect(tile("Problems")).toHaveTextContent("0");

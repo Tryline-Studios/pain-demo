@@ -121,9 +121,10 @@ describe("XPath Query", () => {
     const user = await upload();
     const info = screen.getByRole("button", { name: "About XPath queries" });
 
-    while (document.activeElement !== info) {
-      await user.tab();
-    }
+    // The info button sits just before the box in tab order.
+    await user.click(box());
+    await user.tab({ shift: true });
+    expect(info).toHaveFocus();
     const tip = await screen.findByRole("tooltip");
     expect(tip).toHaveTextContent("XPath 1.0, written without namespace prefixes.");
     for (const example of [

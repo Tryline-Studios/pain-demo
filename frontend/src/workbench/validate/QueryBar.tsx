@@ -9,8 +9,7 @@ import type { QueryResult, XPathQuery } from "@/workbench/validate/xpathQuery";
 
 const PLACEHOLDER = "/Document/CstmrCdtTrfInitn";
 const PAUSE_MS = 150;
-
-type Ran = { text: string; result: QueryResult | null };
+// The cheat sheet in the info tooltip (issue #111).
 const EXAMPLES = [
   ["/Document/CstmrCdtTrfInitn", "path from the root"],
   ["//InstdAmt", "InstdAmt at any depth"],
@@ -19,6 +18,8 @@ const EXAMPLES = [
   ["//Cdtr[Nm='ACME Ltd']", "filter by a child's value"],
   ["count(//CdtTrfTxInf)", "a number, not matches"],
 ] as const;
+
+type Ran = { text: string; result: QueryResult | null };
 // Typeahead is for plain paths only: names, `/` and `//`.
 const NOT_PLAIN = /[[(@| ]/;
 
