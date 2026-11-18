@@ -1,5 +1,5 @@
 # The deployable stack (spec 2.2): `just up` builds both images on the host and publishes only localhost:8080.
-name: pain-demo
+name: pain-workbench
 
 services:
   api:
@@ -8,8 +8,8 @@ services:
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
     environment:
-      PAIN_DEMO_LOG_FORMAT: json
-      PAIN_DEMO_LOG_LEVEL: ${PAIN_DEMO_LOG_LEVEL:-INFO}
+      PAIN_WORKBENCH_LOG_FORMAT: json
+      PAIN_WORKBENCH_LOG_LEVEL: ${PAIN_WORKBENCH_LOG_LEVEL:-INFO}
     healthcheck:
       test:
         - CMD

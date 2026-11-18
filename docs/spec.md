@@ -1,6 +1,6 @@
 # pain.001 Sample File generator: build-ready spec
 
-This is the build-ready specification for the pain.001 Sample File generator. It is assembled from the resolved tickets of the wayfinder map ([Wayfinder: pain.001 Sample File generator spec](https://github.com/Tryline-Studios/pain-demo/issues/1)). Every section names the ticket it comes from. Where this document and a ticket disagree, the ticket's resolution comment is the source of truth, and the disagreement belongs in [Open points found while assembling](#open-points-found-while-assembling).
+This is the build-ready specification for the pain.001 Sample File generator. It is assembled from the resolved tickets of the wayfinder map ([Wayfinder: pain.001 Sample File generator spec](https://github.com/Tryline-Studios/pain-workbench/issues/1)). Every section names the ticket it comes from. Where this document and a ticket disagree, the ticket's resolution comment is the source of truth, and the disagreement belongs in [Open points found while assembling](#open-points-found-while-assembling).
 
 Domain terms (Sample File, Message Version, Entity Catalogue, Clean Bank List, Placement, Hit, Exposure, Name Variant, Native Script, Transliteration, Answer Key, Seed, Generator Version, Effective Request, Screening Tool and the rest) are defined once, in [`CONTEXT.md`](../CONTEXT.md). This document uses them without redefining them.
 
@@ -31,7 +31,7 @@ Appendix A: [ADR index](#appendix-a-adr-index). Appendix B: [Ticket index](#appe
 
 ## 1. Purpose and scope
 
-Source: the map's Destination and Notes ([Wayfinder: pain.001 Sample File generator spec](https://github.com/Tryline-Studios/pain-demo/issues/1)), plus the Out of scope lines from [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-demo/issues/6), [Placement selection and overrides](https://github.com/Tryline-Studios/pain-demo/issues/9), [Observability](https://github.com/Tryline-Studios/pain-demo/issues/17), [Multi-version batch generation](https://github.com/Tryline-Studios/pain-demo/issues/18) and [SWIFT character set restriction](https://github.com/Tryline-Studios/pain-demo/issues/20).
+Source: the map's Destination and Notes ([Wayfinder: pain.001 Sample File generator spec](https://github.com/Tryline-Studios/pain-workbench/issues/1)), plus the Out of scope lines from [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-workbench/issues/6), [Placement selection and overrides](https://github.com/Tryline-Studios/pain-workbench/issues/9), [Observability](https://github.com/Tryline-Studios/pain-workbench/issues/17), [Multi-version batch generation](https://github.com/Tryline-Studios/pain-workbench/issues/18) and [SWIFT character set restriction](https://github.com/Tryline-Studios/pain-workbench/issues/20).
 
 ### 1.1 Purpose
 
@@ -65,18 +65,18 @@ The app generates ISO 20022 pain.001 (Customer Credit Transfer Initiation) Sampl
 
 ## 2. Architecture and repo layout
 
-Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-demo/issues/5), [Generation path: flat templates vs corpus.build](https://github.com/Tryline-Studios/pain-demo/issues/13), ADR-0001, ADR-0002.
+Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-workbench/issues/5), [Generation path: flat templates vs corpus.build](https://github.com/Tryline-Studios/pain-workbench/issues/13), ADR-0001, ADR-0002.
 
 ### 2.1 Layout
 
 ```
 .
-├── backend/                       uv src-layout project, package pain_demo
+├── backend/                       uv src-layout project, package pain_workbench
 │   ├── pyproject.toml             requires-python = ">=3.13,<3.14"
 │   ├── .python-version            3.13
 │   ├── uv.lock                    committed
 │   ├── openapi.json               committed, drift-checked (section 12.5)
-│   ├── src/pain_demo/
+│   ├── src/pain_workbench/
 │   │   ├── catalogue/
 │   │   │   ├── entities/<id>.toml           one file per Entity (section 3)
 │   │   │   └── control_relationships.toml
@@ -95,7 +95,7 @@ Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Stu
     └── adr/
 ```
 
-The exact module layout inside `pain_demo` is left to implementation, with one constraint: **one renderer module holds every pain001 import** (section 10.2).
+The exact module layout inside `pain_workbench` is left to implementation, with one constraint: **one renderer module holds every pain001 import** (section 10.2).
 
 ### 2.2 Runtime shape
 
@@ -115,7 +115,7 @@ The exact module layout inside `pain_demo` is left to implementation, with one c
 - **Python quality:** `ruff format` and ruff lint at line length 120, rules `E, F, I, UP, B, SIM, RUF, ASYNC, FAST, PT, S` (`S` off in tests). `ty check`, pinned exactly, default rules; any diagnostic fails CI.
 - **Frontend:** pure TypeScript. No `.js`, `.jsx` or `.mjs`; config files are `.ts`. tsconfig: `allowJs: false`, `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `verbatimModuleSyntax`; no `exactOptionalPropertyTypes`. Biome at `lineWidth: 120`, banning `any` and non-null assertions. Node 24 LTS pinned in `.nvmrc` and `.node-version`; pnpm pinned via `packageManager` and corepack. Docker builds use the same pins.
 - **API client:** a script imports the FastAPI app and writes `backend/openapi.json` with no server running. `openapi-typescript`, `openapi-fetch` and `openapi-react-query` generate the client from it. CI fails if regenerating changes anything.
-- **Configuration:** `pydantic-settings` with the `PAIN_DEMO_` prefix and a committed `.env.example`. No secrets. See section 16.
+- **Configuration:** `pydantic-settings` with the `PAIN_WORKBENCH_` prefix and a committed `.env.example`. No secrets. See section 16.
 
 ### 2.4 Dependency policy
 
@@ -135,7 +135,7 @@ The five excluded packages are upgraded only through `just upgrade-generators` (
 
 ## 3. Entity Catalogue
 
-Source: [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-demo/issues/6) with its amendments, [Entity Catalogue candidate roster](https://github.com/Tryline-Studios/pain-demo/issues/16), [Sanctions list entry shape for banks and corporates](https://github.com/Tryline-Studios/pain-demo/issues/3).
+Source: [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-workbench/issues/6) with its amendments, [Entity Catalogue candidate roster](https://github.com/Tryline-Studios/pain-workbench/issues/16), [Sanctions list entry shape for banks and corporates](https://github.com/Tryline-Studios/pain-workbench/issues/3).
 
 ### 3.1 Scope and sources
 
@@ -171,7 +171,7 @@ Must-includes and accepted facts of the lists:
 
 ### 3.3 Schema
 
-One TOML file per Entity at `backend/src/pain_demo/catalogue/entities/<id>.toml`, validated with Pydantic at startup.
+One TOML file per Entity at `backend/src/pain_workbench/catalogue/entities/<id>.toml`, validated with Pydantic at startup.
 
 | Field | Rule |
 |---|---|
@@ -184,7 +184,7 @@ One TOML file per Entity at `backend/src/pain_demo/catalogue/entities/<id>.toml`
 | Banks: `bics[]` | each with a source (a Listing, or an external non-sanctions citation such as GLEIF's BIC-to-LEI mapping) and a verified date. Non-SWIFT codes (e.g. a Russian domestic BIK such as Evrofinance's UK "BIC 044525204") are never stored as BICs. A Bank with no BIC is allowed; it can only be placed by name and address. |
 | Individuals | names, date of birth, place of birth, nationalities, `country_of_residence` only when a list states it. No ID document numbers, no personal addresses. |
 
-Control Relationships live in `backend/src/pain_demo/catalogue/control_relationships.toml`. Each records:
+Control Relationships live in `backend/src/pain_workbench/catalogue/control_relationships.toml`. Each records:
 
 - the controller Entity and the controlled Legal Entity;
 - the role: `ultimate_beneficial_owner`, `controlling_shareholder`, `director`, `officer` (president, treasurer, representative and similar), or `parent_company`;
@@ -206,7 +206,7 @@ The catalogue is a frozen snapshot. `just verify-catalogue` downloads the curren
 
 ## 4. Clean Bank List and unplanned-hit screening
 
-Source: [Keeping Generated Data free of unplanned hits](https://github.com/Tryline-Studios/pain-demo/issues/14), [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-demo/issues/4).
+Source: [Keeping Generated Data free of unplanned hits](https://github.com/Tryline-Studios/pain-workbench/issues/14), [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-workbench/issues/4).
 
 ### 4.1 Why
 
@@ -214,7 +214,7 @@ schwifty's bank registry names real sanctioned banks (Bank Melli Iran, Bank Sade
 
 ### 4.2 The Clean Bank List
 
-- A committed TOML file at `backend/src/pain_demo/generation/clean_banks.toml` of real, non-sanctioned banks per supported country: country, bank code, BIC, name. US entries also carry an ABA routing number.
+- A committed TOML file at `backend/src/pain_workbench/generation/clean_banks.toml` of real, non-sanctioned banks per supported country: country, bank code, BIC, name. US entries also carry an ABA routing number.
 - It is the **only** source of generated agents and accounts. schwifty is used for IBAN assembly and checksums, never for picking a bank.
 - It lives beside the generation code, not inside the Entity Catalogue.
 - Building it: `just build-clean-banks` takes every registry bank with a BIC for the eleven IBAN countries (GB, IE, DE, FR, IT, ES, NL, BE, PL, AT, PT), drops anything matching the Entity Catalogue by BIC or normalised name, keeps about 25 per country sorted by name for a stable output, and a human reviews the diff before committing. Household names are not required. The US entries (about 15 banks with BIC and ABA routing number) are hand-maintained in the same file; there is no US registry.
@@ -242,7 +242,7 @@ Every generated party name (Faker person or company, for parties and Ultimate pa
 
 ## 5. Generation: request model and Supplied Data merging
 
-Source: [Request model and Supplied Data merging](https://github.com/Tryline-Studios/pain-demo/issues/8) with its amendment from [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-demo/issues/19); context from [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-demo/issues/4) and [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-demo/issues/15).
+Source: [Request model and Supplied Data merging](https://github.com/Tryline-Studios/pain-workbench/issues/8) with its amendment from [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-workbench/issues/19); context from [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-workbench/issues/4) and [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-workbench/issues/15).
 
 ### 5.1 Shape
 
@@ -336,7 +336,7 @@ This replaces the charting-time note "CSV in the library's template format": pai
 
 ## 6. Placement selection and overrides
 
-Source: [Placement selection and overrides](https://github.com/Tryline-Studios/pain-demo/issues/9); context from [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-demo/issues/2) and [Generation path](https://github.com/Tryline-Studios/pain-demo/issues/13).
+Source: [Placement selection and overrides](https://github.com/Tryline-Studios/pain-workbench/issues/9); context from [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-workbench/issues/2) and [Generation path](https://github.com/Tryline-Studios/pain-workbench/issues/13).
 
 ### 6.1 Placements and eligibility
 
@@ -424,7 +424,7 @@ Only on request: a named Hit with `with_controller: true` places the controlled 
 
 ## 7. Name Variants
 
-Source: [Name Variant rules](https://github.com/Tryline-Studios/pain-demo/issues/7).
+Source: [Name Variant rules](https://github.com/Tryline-Studios/pain-workbench/issues/7).
 
 Five Name Variants: `exact`, `alias`, `native_script`, `transliteration`, `fuzzed`. Each is a pure function of the Entity's catalogue names and the seeded RNG, so the same Seed always yields the same string. Every choice (which name, which scheme, which operations) is recorded in the Answer Key (section 11.3).
 
@@ -479,7 +479,7 @@ Starts from any Latin-script listed name (primary or alias; never a non-Latin na
 
 ## 8. Exposures
 
-Source: [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-demo/issues/19).
+Source: [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-workbench/issues/19).
 
 ### 8.1 What an Exposure is
 
@@ -508,7 +508,7 @@ Romanised RU and BY names pass the same catalogue check as every generated party
 
 ## 9. Seed, randomness and Generator Version
 
-Source: [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-demo/issues/15); context from [Generation path](https://github.com/Tryline-Studios/pain-demo/issues/13) and [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-demo/issues/4).
+Source: [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-workbench/issues/15); context from [Generation path](https://github.com/Tryline-Studios/pain-workbench/issues/13) and [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-workbench/issues/4).
 
 ### 9.1 The promise
 
@@ -539,7 +539,7 @@ See section 15.3 and 15.4. Any commit that changes a golden also bumps the app's
 
 ## 10. Rendering engine and version fitting
 
-Source: [Generation path: flat templates vs corpus.build](https://github.com/Tryline-Studios/pain-demo/issues/13), [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-demo/issues/2), ADR-0002.
+Source: [Generation path: flat templates vs corpus.build](https://github.com/Tryline-Studios/pain-workbench/issues/13), [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-workbench/issues/2), ADR-0002.
 
 ### 10.1 Engine
 
@@ -582,7 +582,7 @@ Identifiers (`MsgId`, `PmtInfId`, `EndToEndId`) come from our seeded RNG and are
 
 ## 11. Answer Key
 
-Source: [Answer Key format](https://github.com/Tryline-Studios/pain-demo/issues/10) with amendments from [API contract](https://github.com/Tryline-Studios/pain-demo/issues/11) (`file.sha256`) and [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-demo/issues/19) (`exposures`).
+Source: [Answer Key format](https://github.com/Tryline-Studios/pain-workbench/issues/10) with amendments from [API contract](https://github.com/Tryline-Studios/pain-workbench/issues/11) (`file.sha256`) and [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-workbench/issues/19) (`exposures`).
 
 ### 11.1 Format
 
@@ -652,7 +652,7 @@ displaced: { field, value } | null   the Supplied Data value this hit replaced
 
 ## 12. API contract
 
-Source: [API contract](https://github.com/Tryline-Studios/pain-demo/issues/11) with its amendment from [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-demo/issues/19); ADR-0001.
+Source: [API contract](https://github.com/Tryline-Studios/pain-workbench/issues/11) with its amendment from [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-workbench/issues/19); ADR-0001.
 
 ### 12.1 Endpoints under `/api/v1`
 
@@ -718,13 +718,13 @@ Build warnings for Generated Data are not errors; they ride in the Answer Key's 
 
 ## 13. Web UI
 
-Source: [UI flow](https://github.com/Tryline-Studios/pain-demo/issues/12); context from [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-demo/issues/5) and [API contract](https://github.com/Tryline-Studios/pain-demo/issues/11).
+Source: [UI flow](https://github.com/Tryline-Studios/pain-workbench/issues/12); context from [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-workbench/issues/5) and [API contract](https://github.com/Tryline-Studios/pain-workbench/issues/11).
 
 ### 13.1 Layout: the Workbench
 
 One screen, no client-side router. A Validate | Generate toggle at the top switches between Upload Validation (section 17.9) and generation (this section); the Workbench opens in Validate mode. A settings pane on the left with three collapsible sections (File, Data, Hits) and a sticky Generate button; the output on the right. The settings pane opens at 560px and is resizable by a drag handle between the panes (380px to 900px, remembered per browser via `localStorage`). Spacing is generous: wide gaps between fields, tall rows for named Hits.
 
-**Themes and type** ([#91](https://github.com/Tryline-Studios/pain-demo/issues/91)). The header carries a Light | Dark | System switch beside the version; System follows `prefers-color-scheme` live. The choice is remembered per browser (`localStorage`; a blocked store means System) and applied by an inline script in `index.html` before first paint, so there is no flash of the wrong theme. Both palettes are the shadcn CSS variables in `index.css` (`:root` and `.dark`): cool greys, one deep-blue accent, and red, amber and green only for meaning (problems, Hits, valid); all text meets 4.5:1. The UI is set in Inter and code-like values (XML, XPaths, Seeds, file names, codes) in IBM Plex Mono, both self-hosted from `@fontsource` packages, never a font CDN. At phone width the panes, tiles, source view and problem rail stack, and wide tables scroll inside their card.
+**Themes and type** ([#91](https://github.com/Tryline-Studios/pain-workbench/issues/91)). The header carries a Light | Dark | System switch beside the version; System follows `prefers-color-scheme` live. The choice is remembered per browser (`localStorage`; a blocked store means System) and applied by an inline script in `index.html` before first paint, so there is no flash of the wrong theme. Both palettes are the shadcn CSS variables in `index.css` (`:root` and `.dark`): cool greys, one deep-blue accent, and red, amber and green only for meaning (problems, Hits, valid); all text meets 4.5:1. The UI is set in Inter and code-like values (XML, XPaths, Seeds, file names, codes) in IBM Plex Mono, both self-hosted from `@fontsource` packages, never a font CDN. At phone width the panes, tiles, source view and problem rail stack, and wide tables scroll inside their card.
 
 Prototype (throwaway, never merged): https://claude.ai/artifact/N5sTHZfmtRV7xch54Bjfjr, source on branch `prototype/ui-flow` at `frontend/prototype/ui-flow.html`. Variant B won; A (a wizard) lost on speed for repeat use, C (a transaction ledger) lost on discoverability of file-level settings, though its "click a cell to place a hit" idea could return as an alternative Hits editor.
 
@@ -738,7 +738,7 @@ Prototype (throwaway, never merged): https://claude.ai/artifact/N5sTHZfmtRV7xch5
 
 Summary tiles (transactions, hits, echoed Seed, version), download buttons (zip, XML, Answer Key JSON, Answer Key CSV), then tabs with the **Answer Key table as the default**, the Sample File XML (hits highlighted) and warnings. Before the first generate, an empty state. A 422 renders as a problem block and as inline field errors on the rows the dotted paths point at.
 
-The XML tab is syntax-coloured (tag names, attribute names, attribute values, punctuation, the XML declaration and text each in their own colour, from theme CSS variables with at least 4.5:1 contrast); the colours change only the text, so the Hit highlighting shows through. A small per-line tokenizer in the frontend does it, with no dependency ([#90](https://github.com/Tryline-Studios/pain-demo/issues/90)).
+The XML tab is syntax-coloured (tag names, attribute names, attribute values, punctuation, the XML declaration and text each in their own colour, from theme CSS variables with at least 4.5:1 contrast); the colours change only the text, so the Hit highlighting shows through. A small per-line tokenizer in the frontend does it, with no dependency ([#90](https://github.com/Tryline-Studios/pain-workbench/issues/90)).
 
 ### 13.4 Data flow
 
@@ -748,11 +748,11 @@ The form is populated from `GET /options`, `GET /message-versions` and `GET /ent
 
 ## 14. Observability
 
-Source: [Observability: request logging and error reporting](https://github.com/Tryline-Studios/pain-demo/issues/17).
+Source: [Observability: request logging and error reporting](https://github.com/Tryline-Studios/pain-workbench/issues/17).
 
 ### 14.1 Format
 
-Structured logs via `structlog` (ordinary pin, Dependabot allowed). JSON lines in the container, coloured console lines in the native dev loop, chosen by `PAIN_DEMO_LOG_FORMAT=json|console`, defaulting to console when stdout is a TTY and JSON otherwise.
+Structured logs via `structlog` (ordinary pin, Dependabot allowed). JSON lines in the container, coloured console lines in the native dev loop, chosen by `PAIN_WORKBENCH_LOG_FORMAT=json|console`, defaulting to console when stdout is a TTY and JSON otherwise.
 
 ### 14.2 Request id
 
@@ -769,7 +769,7 @@ At INFO: request id, method, path, status, duration in ms. Generate calls add Me
 ### 14.5 Plumbing
 
 - uvicorn's access log is disabled; its error logger routes through the same structlog pipeline.
-- `PAIN_DEMO_LOG_LEVEL` defaults to INFO. DEBUG adds the scenario dict handed to corpus.build and its build report per request.
+- `PAIN_WORKBENCH_LOG_LEVEL` defaults to INFO. DEBUG adds the scenario dict handed to corpus.build and its build report per request.
 - Caddy keeps its default JSON access log to stdout.
 - Startup validation failures (Entity Catalogue, Clean Bank List) log at CRITICAL and exit non-zero, which the compose healthcheck surfaces.
 
@@ -777,7 +777,7 @@ At INFO: request id, method, path, status, duration in ms. Generate calls add Me
 
 ## 15. Testing, CI and upgrade procedures
 
-Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-demo/issues/5), [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-demo/issues/15), [Keeping Generated Data free of unplanned hits](https://github.com/Tryline-Studios/pain-demo/issues/14), [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-demo/issues/6), [Generation path](https://github.com/Tryline-Studios/pain-demo/issues/13).
+Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-workbench/issues/5), [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-workbench/issues/15), [Keeping Generated Data free of unplanned hits](https://github.com/Tryline-Studios/pain-workbench/issues/14), [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-workbench/issues/6), [Generation path](https://github.com/Tryline-Studios/pain-workbench/issues/13).
 
 ### 15.1 Backend tests
 
@@ -826,23 +826,23 @@ A catalogue edit or a Clean Bank List edit goes through the same golden regenera
 
 ## 16. Configuration
 
-Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-demo/issues/5), [Observability](https://github.com/Tryline-Studios/pain-demo/issues/17).
+Source: [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-workbench/issues/5), [Observability](https://github.com/Tryline-Studios/pain-workbench/issues/17).
 
-`pydantic-settings` with the `PAIN_DEMO_` prefix, plus a committed `.env.example`. No secrets.
+`pydantic-settings` with the `PAIN_WORKBENCH_` prefix, plus a committed `.env.example`. No secrets.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `PAIN_DEMO_LOG_FORMAT` | `console` when stdout is a TTY, else `json` | log renderer |
-| `PAIN_DEMO_LOG_LEVEL` | `INFO` | `DEBUG` adds the corpus.build scenario and build report per request |
-| `PAIN_DEMO_GIT_SHA` | the checkout's `HEAD`, else `unknown` | the commit reported in the Generator Version; the image build sets it because the container has no `.git` (added by the walking-skeleton ticket, [#23](https://github.com/Tryline-Studios/pain-demo/issues/23)) |
+| `PAIN_WORKBENCH_LOG_FORMAT` | `console` when stdout is a TTY, else `json` | log renderer |
+| `PAIN_WORKBENCH_LOG_LEVEL` | `INFO` | `DEBUG` adds the corpus.build scenario and build report per request |
+| `PAIN_WORKBENCH_GIT_SHA` | the checkout's `HEAD`, else `unknown` | the commit reported in the Generator Version; the image build sets it because the container has no `.git` (added by the walking-skeleton ticket, [#23](https://github.com/Tryline-Studios/pain-workbench/issues/23)) |
 
-Not configurable (code constants): the 100-transaction cap; the default countries, amount range and currencies; Placement, Name Variant, intermediary slot and remittance element weights; the background rates for optional roles; the fuzz budget and the 0.85 similarity threshold; the transliteration scheme set; the legal-form dictionary; the Exposure city lists; the 1 MB body limit; the 10 MB Upload Validation limit, the 500,000-element limit, the 100-problem cap, the 10-second XSD time budget and the four Upload Validation workers ([#80](https://github.com/Tryline-Studios/pain-demo/issues/80)).
+Not configurable (code constants): the 100-transaction cap; the default countries, amount range and currencies; Placement, Name Variant, intermediary slot and remittance element weights; the background rates for optional roles; the fuzz budget and the 0.85 similarity threshold; the transliteration scheme set; the legal-form dictionary; the Exposure city lists; the 1 MB body limit; the 10 MB Upload Validation limit, the 500,000-element limit, the 100-problem cap, the 10-second XSD time budget and the four Upload Validation workers ([#80](https://github.com/Tryline-Studios/pain-workbench/issues/80)).
 
 ---
 
 ## 17. Upload Validation
 
-Source: [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-demo/issues/64). Added when the map's destination was redrawn on 2026-11-12; it is the first feature implemented.
+Source: [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-workbench/issues/64). Added when the map's destination was redrawn on 2026-11-12; it is the first feature implemented.
 
 A user uploads an Uploaded Message (a pain.001 XML document this app did not necessarily produce) and gets back a Validation Report: valid, or every Validation Problem with what is wrong, the element, the line and the cause.
 
@@ -878,14 +878,14 @@ Each layer runs only if the previous one passed, so a malformed file reports one
 1. **Well-formed XML.** Parsed with lxml hardened for untrusted input: no entity resolution, no network, no DTD loading, no huge-tree mode. Any encoding the XML declaration names and lxml supports is accepted; with no declaration, UTF-8 (a BOM is fine). Undecodable bytes are `malformed_xml`.
 2. **No DTD.** Any `<!DOCTYPE>` is `dtd_not_allowed`. Real pain.001 never carries one.
 3. **Supported message.** The root `Document` namespace must be `urn:iso:std:iso:20022:tech:xsd:pain.001.001.NN` for one of the eleven Message Versions (.03 to .13), which sets `message_version`. Anything else is `unsupported_message`, naming the namespace found.
-4. **At most 500,000 elements.** More is `too_many_elements`, naming the count and the limit ([#70](https://github.com/Tryline-Studios/pain-demo/issues/70)). The richest realistic 10 MB pain.001 (every optional element, minimum-length values, no indentation) has about 400,000; a flood of empty elements reaches 1.3 million. The XSD cost grows with errors times each error's position among its siblings, so a hostile file under the limit can still run for minutes or longer. Measured with empty `Ustrd` siblings under one parent: 40,000 took 1.5 s and 120,000 took 12.6 s on an idle Apple M3 Pro (close to the square of the count); under CPU load, 40,000 took 21 s and 240,000 about 240 s. A file at the limit is not measured and may take far more than minutes, so the next layer has a time budget.
-5. **XSD-valid** against that Message Version's schema, within 10 seconds ([#80](https://github.com/Tryline-Studios/pain-demo/issues/80)). All errors are collected in one pass, in a worker process (section 17.4). Past the budget the process is stopped and the report has one `validation_timed_out` problem naming the budget; `message_version` and `encoding` are still reported and `transaction_count` is null.
+4. **At most 500,000 elements.** More is `too_many_elements`, naming the count and the limit ([#70](https://github.com/Tryline-Studios/pain-workbench/issues/70)). The richest realistic 10 MB pain.001 (every optional element, minimum-length values, no indentation) has about 400,000; a flood of empty elements reaches 1.3 million. The XSD cost grows with errors times each error's position among its siblings, so a hostile file under the limit can still run for minutes or longer. Measured with empty `Ustrd` siblings under one parent: 40,000 took 1.5 s and 120,000 took 12.6 s on an idle Apple M3 Pro (close to the square of the count); under CPU load, 40,000 took 21 s and 240,000 about 240 s. A file at the limit is not measured and may take far more than minutes, so the next layer has a time budget.
+5. **XSD-valid** against that Message Version's schema, within 10 seconds ([#80](https://github.com/Tryline-Studios/pain-workbench/issues/80)). All errors are collected in one pass, in a worker process (section 17.4). Past the budget the process is stopped and the report has one `validation_timed_out` problem naming the budget; `message_version` and `encoding` are still reported and `transaction_count` is null.
 
 Rules beyond the XSD (MDR or CBPR+ usage rules, IBAN checksums, `NbOfTxs` and `CtrlSum` consistency) are not checked yet; see section 17.9.
 
 ### 17.4 Schemas
 
-The XSDs are pain001's bundled schemas for .03 to .13, the same ones the renderer validates against (section 10.4), so what we validate cannot drift from what we generate. The renderer module stays the only pain001 import and exposes the XSD document per Message Version; Upload Validation compiles it. The XSD layer runs in a pool of at most four worker processes, each reused between uploads and compiling each schema once; a fifth concurrent upload waits for a free worker. A worker past the 10-second budget is killed (libxml2 cannot be interrupted) and replaced, and the replacement serves the next upload. A new worker that has not started within 5 seconds is killed too, and its upload gets a 503 problem saying so rather than waiting on it. Stopping the app waits for running validations and stops the idle workers. Separate processes also stop an XSD error flood from slowing other requests: in one process lxml takes the GIL once per XSD error, so beside 50,000 errors a one-transaction upload took 0.5 to 1.7 s instead of milliseconds ([#70](https://github.com/Tryline-Studios/pain-demo/issues/70)). Validations wait on their own threads, never the pool generation uses. `docs/xsd/` is not committed (the example `.03` file supplied for this feature is identical to the bundled one apart from whitespace).
+The XSDs are pain001's bundled schemas for .03 to .13, the same ones the renderer validates against (section 10.4), so what we validate cannot drift from what we generate. The renderer module stays the only pain001 import and exposes the XSD document per Message Version; Upload Validation compiles it. The XSD layer runs in a pool of at most four worker processes, each reused between uploads and compiling each schema once; a fifth concurrent upload waits for a free worker. A worker past the 10-second budget is killed (libxml2 cannot be interrupted) and replaced, and the replacement serves the next upload. A new worker that has not started within 5 seconds is killed too, and its upload gets a 503 problem saying so rather than waiting on it. Stopping the app waits for running validations and stops the idle workers. Separate processes also stop an XSD error flood from slowing other requests: in one process lxml takes the GIL once per XSD error, so beside 50,000 errors a one-transaction upload took 0.5 to 1.7 s instead of milliseconds ([#70](https://github.com/Tryline-Studios/pain-workbench/issues/70)). Validations wait on their own threads, never the pool generation uses. `docs/xsd/` is not committed (the example `.03` file supplied for this feature is identical to the bundled one apart from whitespace).
 
 ### 17.5 Validation Problem
 
@@ -920,13 +920,13 @@ The one INFO event per request (section 14.3) adds `message_version`, `valid`, p
 
 ### 17.9 Workbench
 
-Source: [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-demo/issues/71).
+Source: [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-workbench/issues/71).
 
 - **Mode switch.** A Validate | Generate toggle at the top of the Workbench, Validate first and selected when the Workbench opens. Generate is the screen of section 13. Validate keeps the same two panes and swaps their content.
 - **Input (left pane).** A drop zone that also opens a file picker (`.xml`, up to 10 MB), and a paste box with a "Validate pasted XML" button. A file is sent as multipart so its name is reported; pasted XML is sent as a raw `application/xml` body.
 - **Report (right pane).** Summary tiles: verdict, Message Version, transactions, problem count (`100+` when `truncated`) and encoding, then the file name, size and a short sha256. Below them, the Uploaded Message's source with line numbers: lines with a Validation Problem are highlighted and its `code` and `message` appear inline under the line. A problem rail on the right lists every problem with `code`, line, `message`, and the `path` and raw `cause`; clicking one scrolls the source to its line. Problems with no line (such as a `dtd_not_allowed` without one) appear in the rail only. A valid message shows "No problems found".
 - **Large files.** The source view is virtualised, rendering only the visible lines, so a 10 MB message shows every line. Whether that is a small dependency or a hand-rolled windowed list is left to the build ticket.
-- **Syntax colouring.** The source is syntax-coloured like the XML tab of section 13.3, under the problem-line highlight. Only visible lines are tokenized; one cheap pass per upload records the state each line starts in, so a comment, CDATA section or tag spanning lines is coloured correctly ([#90](https://github.com/Tryline-Studios/pain-demo/issues/90)).
+- **Syntax colouring.** The source is syntax-coloured like the XML tab of section 13.3, under the problem-line highlight. Only visible lines are tokenized; one cheap pass per upload records the state each line starts in, so a comment, CDATA section or tag spanning lines is coloured correctly ([#90](https://github.com/Tryline-Studios/pain-workbench/issues/90)).
 - **Request problems.** A 413, 415 or 422 is shown as a problem block in the report area, like a 422 in section 13.3.
 - **From a generated Sample File.** Generate mode gains a "Validate this Sample File" action that switches to Validate with the generated XML loaded. It is built once generation exists.
 
@@ -938,7 +938,7 @@ Rules beyond the XSD are out of scope: the Screening Tool validates against the 
 
 ## 18. Validation CLI
 
-Source: [Validation CLI](https://github.com/Tryline-Studios/pain-demo/issues/100), settled in a grilling session on 2026-11-16.
+Source: [Validation CLI](https://github.com/Tryline-Studios/pain-workbench/issues/100), settled in a grilling session on 2026-11-16.
 
 Upload Validation (section 17) from the command line, for checking a pain.001 file on a laptop without Docker or a running server. Development stays on macOS; the CLI must also run on Windows. It is validation only for now; other commands may follow as further subcommands.
 
@@ -946,10 +946,10 @@ Upload Validation (section 17) from the command line, for checking a pain.001 fi
 
 ```
 pain validate <file> [--output-file PATH]
-python -m pain_demo validate <file> [--output-file PATH]
+python -m pain_workbench validate <file> [--output-file PATH]
 ```
 
-- `pyproject.toml` gains `[project.scripts] pain = "pain_demo.cli:main"`, and `pain_demo/__main__.py` calls the same `main`. There is no top-level `pain` package.
+- `pyproject.toml` gains `[project.scripts] pain = "pain_workbench.cli:main"`, and `pain_workbench/__main__.py` calls the same `main`. There is no top-level `pain` package.
 - Run from a checkout with `uv run --project backend pain validate ...`, or install once with `uv tool install ./backend` to put `pain` on the PATH. No standalone executable.
 - `argparse` and the standard library only; no new dependency.
 - One file per run, given as a positional path. No stdin, folders or wildcards.
@@ -1022,7 +1022,7 @@ Example (abridged):
 ### 18.6 Testing
 
 - `tests/test_cli.py` at the public seam: `main([...])` in-process, asserting the exit code, stdout, stderr and the written Markdown. Cases: a valid golden, an XSD-invalid file, a malformed file, `dtd_not_allowed`, a truncated report, overlapping windows merged, a backtick run in a source line, a missing input, an empty input and a missing output folder.
-- One subprocess test runs `python -m pain_demo validate` to cover the entry point.
+- One subprocess test runs `python -m pain_workbench validate` to cover the entry point.
 - CI gains a `windows-latest` job in `backend.yml` that runs `uv sync` and only the CLI and Upload Validation tests (`tests/test_cli.py`, `tests/test_validation_api.py`). The full suite, goldens included, stays on Linux: nobody develops on Windows, so the job only proves the CLI and the spawned XSD worker run there.
 
 ### 18.7 Docs
@@ -1044,58 +1044,58 @@ Every other ticket explicitly declined an ADR.
 
 | Section | Source tickets |
 |---|---|
-| 1 Purpose and scope | [Map](https://github.com/Tryline-Studios/pain-demo/issues/1); out-of-scope lines from [#6](https://github.com/Tryline-Studios/pain-demo/issues/6), [#9](https://github.com/Tryline-Studios/pain-demo/issues/9), [#17](https://github.com/Tryline-Studios/pain-demo/issues/17), [#18](https://github.com/Tryline-Studios/pain-demo/issues/18), [#20](https://github.com/Tryline-Studios/pain-demo/issues/20) |
-| 2 Architecture and repo layout | [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-demo/issues/5), [Generation path](https://github.com/Tryline-Studios/pain-demo/issues/13), ADR-0001, ADR-0002 |
-| 3 Entity Catalogue | [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-demo/issues/6), [Entity Catalogue candidate roster](https://github.com/Tryline-Studios/pain-demo/issues/16), [Sanctions list entry shape](https://github.com/Tryline-Studios/pain-demo/issues/3) |
-| 4 Clean Bank List and screening | [Keeping Generated Data free of unplanned hits](https://github.com/Tryline-Studios/pain-demo/issues/14), [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-demo/issues/4) |
-| 5 Request model | [Request model and Supplied Data merging](https://github.com/Tryline-Studios/pain-demo/issues/8), amendment from [#19](https://github.com/Tryline-Studios/pain-demo/issues/19) |
-| 6 Placement selection | [Placement selection and overrides](https://github.com/Tryline-Studios/pain-demo/issues/9), [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-demo/issues/2) |
-| 7 Name Variants | [Name Variant rules](https://github.com/Tryline-Studios/pain-demo/issues/7) |
-| 8 Exposures | [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-demo/issues/19) |
-| 9 Seed and Generator Version | [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-demo/issues/15) |
-| 10 Rendering engine | [Generation path: flat templates vs corpus.build](https://github.com/Tryline-Studios/pain-demo/issues/13), [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-demo/issues/2), ADR-0002 |
-| 11 Answer Key | [Answer Key format](https://github.com/Tryline-Studios/pain-demo/issues/10), amendments from [#11](https://github.com/Tryline-Studios/pain-demo/issues/11) and [#19](https://github.com/Tryline-Studios/pain-demo/issues/19) |
-| 12 API contract | [API contract](https://github.com/Tryline-Studios/pain-demo/issues/11), amendment from [#19](https://github.com/Tryline-Studios/pain-demo/issues/19), ADR-0001 |
-| 13 Web UI | [UI flow](https://github.com/Tryline-Studios/pain-demo/issues/12) |
-| 14 Observability | [Observability: request logging and error reporting](https://github.com/Tryline-Studios/pain-demo/issues/17) |
-| 15 Testing and upgrades | [#5](https://github.com/Tryline-Studios/pain-demo/issues/5), [#15](https://github.com/Tryline-Studios/pain-demo/issues/15), [#14](https://github.com/Tryline-Studios/pain-demo/issues/14), [#6](https://github.com/Tryline-Studios/pain-demo/issues/6), [#13](https://github.com/Tryline-Studios/pain-demo/issues/13) |
-| 16 Configuration | [#5](https://github.com/Tryline-Studios/pain-demo/issues/5), [#17](https://github.com/Tryline-Studios/pain-demo/issues/17) |
-| 17 Upload Validation | [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-demo/issues/64), [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-demo/issues/71) |
-| 18 Validation CLI | [Validation CLI](https://github.com/Tryline-Studios/pain-demo/issues/100) |
+| 1 Purpose and scope | [Map](https://github.com/Tryline-Studios/pain-workbench/issues/1); out-of-scope lines from [#6](https://github.com/Tryline-Studios/pain-workbench/issues/6), [#9](https://github.com/Tryline-Studios/pain-workbench/issues/9), [#17](https://github.com/Tryline-Studios/pain-workbench/issues/17), [#18](https://github.com/Tryline-Studios/pain-workbench/issues/18), [#20](https://github.com/Tryline-Studios/pain-workbench/issues/20) |
+| 2 Architecture and repo layout | [Repo layout, docker-compose and tooling](https://github.com/Tryline-Studios/pain-workbench/issues/5), [Generation path](https://github.com/Tryline-Studios/pain-workbench/issues/13), ADR-0001, ADR-0002 |
+| 3 Entity Catalogue | [Entity Catalogue contents and schema](https://github.com/Tryline-Studios/pain-workbench/issues/6), [Entity Catalogue candidate roster](https://github.com/Tryline-Studios/pain-workbench/issues/16), [Sanctions list entry shape](https://github.com/Tryline-Studios/pain-workbench/issues/3) |
+| 4 Clean Bank List and screening | [Keeping Generated Data free of unplanned hits](https://github.com/Tryline-Studios/pain-workbench/issues/14), [Seeded fake payment data libraries](https://github.com/Tryline-Studios/pain-workbench/issues/4) |
+| 5 Request model | [Request model and Supplied Data merging](https://github.com/Tryline-Studios/pain-workbench/issues/8), amendment from [#19](https://github.com/Tryline-Studios/pain-workbench/issues/19) |
+| 6 Placement selection | [Placement selection and overrides](https://github.com/Tryline-Studios/pain-workbench/issues/9), [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-workbench/issues/2) |
+| 7 Name Variants | [Name Variant rules](https://github.com/Tryline-Studios/pain-workbench/issues/7) |
+| 8 Exposures | [Sanctioned-country exposure in Generated Data](https://github.com/Tryline-Studios/pain-workbench/issues/19) |
+| 9 Seed and Generator Version | [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-workbench/issues/15) |
+| 10 Rendering engine | [Generation path: flat templates vs corpus.build](https://github.com/Tryline-Studios/pain-workbench/issues/13), [Placements and fields per Message Version](https://github.com/Tryline-Studios/pain-workbench/issues/2), ADR-0002 |
+| 11 Answer Key | [Answer Key format](https://github.com/Tryline-Studios/pain-workbench/issues/10), amendments from [#11](https://github.com/Tryline-Studios/pain-workbench/issues/11) and [#19](https://github.com/Tryline-Studios/pain-workbench/issues/19) |
+| 12 API contract | [API contract](https://github.com/Tryline-Studios/pain-workbench/issues/11), amendment from [#19](https://github.com/Tryline-Studios/pain-workbench/issues/19), ADR-0001 |
+| 13 Web UI | [UI flow](https://github.com/Tryline-Studios/pain-workbench/issues/12) |
+| 14 Observability | [Observability: request logging and error reporting](https://github.com/Tryline-Studios/pain-workbench/issues/17) |
+| 15 Testing and upgrades | [#5](https://github.com/Tryline-Studios/pain-workbench/issues/5), [#15](https://github.com/Tryline-Studios/pain-workbench/issues/15), [#14](https://github.com/Tryline-Studios/pain-workbench/issues/14), [#6](https://github.com/Tryline-Studios/pain-workbench/issues/6), [#13](https://github.com/Tryline-Studios/pain-workbench/issues/13) |
+| 16 Configuration | [#5](https://github.com/Tryline-Studios/pain-workbench/issues/5), [#17](https://github.com/Tryline-Studios/pain-workbench/issues/17) |
+| 17 Upload Validation | [Upload Validation: scope, error report and API](https://github.com/Tryline-Studios/pain-workbench/issues/64), [Upload Validation in the Workbench](https://github.com/Tryline-Studios/pain-workbench/issues/71) |
+| 18 Validation CLI | [Validation CLI](https://github.com/Tryline-Studios/pain-workbench/issues/100) |
 
 Research write-ups (primary sources) are in `docs/research/`: `placements-per-message-version.md`, `seeded-fake-payment-data.md`, `sanctions-list-entry-shape.md`, `entity-catalogue-roster.md`.
 
 ## Open points found while assembling
 
-All eight were reviewed and accepted as written on 2026-09-17 (see the resolution on [Assemble docs/spec.md](https://github.com/Tryline-Studios/pain-demo/issues/21)); the choices below are decisions, not questions. None blocks implementation.
+All eight were reviewed and accepted as written on 2026-09-17 (see the resolution on [Assemble docs/spec.md](https://github.com/Tryline-Studios/pain-workbench/issues/21)); the choices below are decisions, not questions. None blocks implementation.
 
-1. **Golden count.** [Generation path](https://github.com/Tryline-Studios/pain-demo/issues/13) says "One fixed Seed rendered in all eleven Message Versions is committed and byte-compared in CI." The later [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-demo/issues/15) says "two fixed requests rendered in all eleven Message Versions ... (44 files)". This spec follows the later ticket (section 15.3).
+1. **Golden count.** [Generation path](https://github.com/Tryline-Studios/pain-workbench/issues/13) says "One fixed Seed rendered in all eleven Message Versions is committed and byte-compared in CI." The later [Seed contract across app upgrades](https://github.com/Tryline-Studios/pain-workbench/issues/15) says "two fixed requests rendered in all eleven Message Versions ... (44 files)". This spec follows the later ticket (section 15.3).
 
-2. **ADR-0001 names the wrong pain001 function.** ADR-0001 reads "call pain001's in-memory functions (e.g. `generate_xml_string`) as a pinned internal dependency", while ADR-0002 and [Generation path](https://github.com/Tryline-Studios/pain-demo/issues/13) settle on `corpus.build` and say the flat pipeline "is not used". The decision in ADR-0001 (own API, bundled API not mounted) stands; only its example is stale. Suggested follow-up: amend the example in ADR-0001 to "e.g. `pain001.corpus.build`, see ADR-0002". **Fixed on this branch:** the example now reads `pain001.corpus.build`, see ADR-0002.
-3. **Two client-generation recipes.** [Repo layout](https://github.com/Tryline-Studios/pain-demo/issues/5) names `just gen-client`; [API contract](https://github.com/Tryline-Studios/pain-demo/issues/11) names `just openapi` for regenerating `openapi.json`. This spec treats them as two steps (section 15.4): `openapi` writes the JSON, `gen-client` writes the TypeScript client. Two recipes, two steps.
+2. **ADR-0001 names the wrong pain001 function.** ADR-0001 reads "call pain001's in-memory functions (e.g. `generate_xml_string`) as a pinned internal dependency", while ADR-0002 and [Generation path](https://github.com/Tryline-Studios/pain-workbench/issues/13) settle on `corpus.build` and say the flat pipeline "is not used". The decision in ADR-0001 (own API, bundled API not mounted) stands; only its example is stale. Suggested follow-up: amend the example in ADR-0001 to "e.g. `pain001.corpus.build`, see ADR-0002". **Fixed on this branch:** the example now reads `pain001.corpus.build`, see ADR-0002.
+3. **Two client-generation recipes.** [Repo layout](https://github.com/Tryline-Studios/pain-workbench/issues/5) names `just gen-client`; [API contract](https://github.com/Tryline-Studios/pain-workbench/issues/11) names `just openapi` for regenerating `openapi.json`. This spec treats them as two steps (section 15.4): `openapi` writes the JSON, `gen-client` writes the TypeScript client. Two recipes, two steps.
 
-4. **Currency override versus Exposures.** [Request model](https://github.com/Tryline-Studios/pain-demo/issues/8) says that when `currencies` is given "each transaction draws uniformly from it". [Sanctioned-country exposure](https://github.com/Tryline-Studios/pain-demo/issues/19) says an exposed transaction gets "the country's currency". Neither ticket says which wins when both apply. This spec follows the later ticket for exposed transactions (the Exposure currency applies) and the `currencies` list for all others.
+4. **Currency override versus Exposures.** [Request model](https://github.com/Tryline-Studios/pain-workbench/issues/8) says that when `currencies` is given "each transaction draws uniformly from it". [Sanctioned-country exposure](https://github.com/Tryline-Studios/pain-workbench/issues/19) says an exposed transaction gets "the country's currency". Neither ticket says which wins when both apply. This spec follows the later ticket for exposed transactions (the Exposure currency applies) and the `currencies` list for all others.
 
-5. **`GET /health` and `GET /version` bodies.** [API contract](https://github.com/Tryline-Studios/pain-demo/issues/11) fixes `/version` to "the Generator Version block" and `/health` to "Compose healthcheck" without a body. The implementer should return `{ "status": "ok" }` from `/health` and exactly the Answer Key's `generator` block (section 11.2) from `/version`, so the two stay in sync.
+5. **`GET /health` and `GET /version` bodies.** [API contract](https://github.com/Tryline-Studios/pain-workbench/issues/11) fixes `/version` to "the Generator Version block" and `/health` to "Compose healthcheck" without a body. The implementer should return `{ "status": "ok" }` from `/health` and exactly the Answer Key's `generator` block (section 11.2) from `/version`, so the two stay in sync.
 
-6. **Address fields in Supplied Data for exposure countries.** [Request model](https://github.com/Tryline-Studios/pain-demo/issues/8) says "A country outside the twelve is a validation error" and its amendment from [#19](https://github.com/Tryline-Studios/pain-demo/issues/19) says "Supplied Data addresses accept any ISO 3166 country". This spec reads the first as applying to `countries[]` only (section 5.4 and 5.5), which is what the amendment states.
+6. **Address fields in Supplied Data for exposure countries.** [Request model](https://github.com/Tryline-Studios/pain-workbench/issues/8) says "A country outside the twelve is a validation error" and its amendment from [#19](https://github.com/Tryline-Studios/pain-workbench/issues/19) says "Supplied Data addresses accept any ISO 3166 country". This spec reads the first as applying to `countries[]` only (section 5.4 and 5.5), which is what the amendment states.
 
-7. **Kitchen-sink golden and Exposures.** The kitchen-sink golden was defined in [Seed contract](https://github.com/Tryline-Studios/pain-demo/issues/15) before Exposures existed. This spec adds "at least one Exposure" to it (section 15.3) so the exposures path is covered by goldens; this was an inference at assembly time and is now accepted.
+7. **Kitchen-sink golden and Exposures.** The kitchen-sink golden was defined in [Seed contract](https://github.com/Tryline-Studios/pain-workbench/issues/15) before Exposures existed. This spec adds "at least one Exposure" to it (section 15.3) so the exposures path is covered by goldens; this was an inference at assembly time and is now accepted.
 
-8. **Configuration surface.** Only two `PAIN_DEMO_` settings are named by any ticket (section 16). Host and port for uvicorn, and any Caddy settings, are left to compose and the FastAPI defaults; no ticket asked for more.
+8. **Configuration surface.** Only two `PAIN_WORKBENCH_` settings are named by any ticket (section 16). Host and port for uvicorn, and any Caddy settings, are left to compose and the FastAPI defaults; no ticket asked for more.
 
-Added while building [Drawn Hits on party and agent Placements](https://github.com/Tryline-Studios/pain-demo/issues/30):
+Added while building [Drawn Hits on party and agent Placements](https://github.com/Tryline-Studios/pain-workbench/issues/30):
 
 9. **Sanctioned Debtor beside a sanctioned Debtor Agent.** Both own the one `DbtrAcct` (section 6.9). The Debtor Agent's Entity is then a Bank in the Debtor's Listing country, drawn from the placement stream; if no such Bank is free, the Debtor's rule wins (its account is clean and in its own country) and the agent still renders its name and BIC.
-10. **Sanctioned Creditor outside the request's countries.** Its account is in its Listing country (section 6.9), but its Creditor Agent is a clean bank from the request's countries, so e.g. Alrosa holds a Russian `Othr/Id` at a US bank. **Resolved in [Exposures](https://github.com/Tryline-Studios/pain-demo/issues/37)** for RU, BY, IR, KP, SY and VE: a sanctioned Creditor or Debtor in one of those countries banks with a synthetic Exposure agent in that country, so its account and agent agree (section 6.9). Still a known limit for the other Listing countries outside the twelve (AE, CN, IN, IQ and a few more): their Creditor Agent stays a clean bank from the request's countries.
+10. **Sanctioned Creditor outside the request's countries.** Its account is in its Listing country (section 6.9), but its Creditor Agent is a clean bank from the request's countries, so e.g. Alrosa holds a Russian `Othr/Id` at a US bank. **Resolved in [Exposures](https://github.com/Tryline-Studios/pain-workbench/issues/37)** for RU, BY, IR, KP, SY and VE: a sanctioned Creditor or Debtor in one of those countries banks with a synthetic Exposure agent in that country, so its account and agent agree (section 6.9). Still a known limit for the other Listing countries outside the twelve (AE, CN, IN, IQ and a few more): their Creditor Agent stays a clean bank from the request's countries.
 
-Added while building [Supplied Data as JSON](https://github.com/Tryline-Studios/pain-demo/issues/34):
+Added while building [Supplied Data as JSON](https://github.com/Tryline-Studios/pain-workbench/issues/34):
 
 11. **Town is 35 characters before .12, not 70.** `TwnNm` is `Max35Text` in PostalAddress6 and 24 (as are building name, town location name and district name in 24); street is 70. Section 5.4's "street and town are 70" is read as the XSD has it, so a supplied town of 36 to 70 characters is a 422 rather than a `build_failed`.
 12. **Care-of and unit number are refused in every version for now.** pain001 0.0.70's `corpus.build` has no key for `CareOf` or `UnitNb`, and `raw` merges are not used (section 10.2). Before .12 they are refused as missing from the version; from .12 as "not supported yet", until a pain001 release emits them or a ticket allows `raw` for them.
 13. **Shapes the spec left open.** A party `id` is `{ other_id, scheme? }`, rendered as `Id/OrgId/Othr`. An address with `lines` is unstructured: only `country` may go beside them. An agent may leave out its BIC or its name with `null`, not both. `displaced.field` is the request's dotted path (0-based list positions, as in a 422) of the supplied party, agent or remittance element, and `displaced.value` is the value as supplied, `null` for an element that was left out. When `transactions[]` is supplied, drawn Hits go to transaction numbers one by one from the placement stream, each preferring the transactions whose targeted role was not supplied; without it the draw is unchanged.
 
-Added while building [Supplied Data as CSV](https://github.com/Tryline-Studios/pain-demo/issues/35):
+Added while building [Supplied Data as CSV](https://github.com/Tryline-Studios/pain-workbench/issues/35):
 
 14. **CSV errors, nulls and the header template.** A 422 from `POST /sample-files/csv` names `supplied_data[<row>].<column>`, the row numbered from 1 like the transaction it becomes (a `payment.*` error is row 1) and the column as it appears in the header; an unknown or duplicate column is `supplied_data.<column>`, and a setting in the `request` part is named as in `POST /sample-files`. Supplied Data in the `request` part is a 422: it belongs in the CSV. An empty cell is absent, so a CSV cannot leave an optional element out (no `null`); the JSON endpoint and the form can. List positions run from 0 without gaps. `GET /options` publishes the header template as `supplied_data_columns`, every list at position 0, and the Workbench offers it as a download. Requests log `data_source` `csv`.
 

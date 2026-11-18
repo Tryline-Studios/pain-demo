@@ -9,7 +9,7 @@ from sample_files import resolve
 from test_clean_banks import scratch_catalogue
 from test_drawn_hits import PMT_INF, generate, tree
 
-from pain_demo.app import create_app
+from pain_workbench.app import create_app
 
 
 def hits_of(client: TestClient, **settings: object) -> list[dict]:

@@ -10,14 +10,14 @@ from pathlib import Path
 import pytest
 from test_validation_api import BAD_CURRENCY, pain001, with_transactions
 
-from pain_demo.cli import main
+from pain_workbench.cli import main
 
 GOLDEN = Path(__file__).parent / "goldens" / "clean" / "pain.001.001.03.xml"
 
 
-def test_python_dash_m_pain_demo_validate_runs_the_cli() -> None:
+def test_python_dash_m_pain_workbench_validate_runs_the_cli() -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "pain_demo", "validate", str(GOLDEN)], capture_output=True, check=False, timeout=60
+        [sys.executable, "-m", "pain_workbench", "validate", str(GOLDEN)], capture_output=True, check=False, timeout=60
     )
 
     assert (result.returncode, result.stderr) == (0, b"")

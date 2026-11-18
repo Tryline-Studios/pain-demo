@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
-from pain_demo.app import create_app
+from pain_workbench.app import create_app
 
 PROBLEM_JSON = "application/problem+json"
 

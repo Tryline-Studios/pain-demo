@@ -5,7 +5,7 @@ import re
 from lxml import etree
 from pain001.corpus.rules.mdr import evaluate_mdr
 
-from pain_demo.validation import validate_message
+from pain_workbench.validation import validate_message
 
 
 def assert_valid_sample_file(xml: bytes, message_version: str) -> None:

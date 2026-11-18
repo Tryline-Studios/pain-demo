@@ -8,8 +8,8 @@ from decimal import Decimal
 import pytest
 from sample_files import assert_valid_sample_file
 
-from pain_demo import renderer
-from pain_demo.generation.model import (
+from pain_workbench import renderer
+from pain_workbench.generation.model import (
     Address,
     Agent,
     Iban,
@@ -19,8 +19,8 @@ from pain_demo.generation.model import (
     SampleFileModel,
     Transaction,
 )
-from pain_demo.renderer import RenderFailed, render
-from pain_demo.validation import MESSAGE_VERSIONS
+from pain_workbench.renderer import RenderFailed, render
+from pain_workbench.validation import MESSAGE_VERSIONS
 
 
 def address(country: str) -> Address:

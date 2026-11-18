@@ -69,7 +69,7 @@ export function Workbench() {
             </g>
           </svg>
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <h1 className="font-bold text-[15px] tracking-[-0.01em]">pain-demo</h1>
+            <h1 className="font-bold text-[15px] tracking-[-0.01em]">pain-workbench</h1>
             <span className="text-[13px] text-muted-foreground">ISO 20022 pain.001 Workbench</span>
           </div>
         </div>

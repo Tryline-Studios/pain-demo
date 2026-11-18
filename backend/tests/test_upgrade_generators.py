@@ -2,7 +2,7 @@
 
 import pytest
 
-from pain_demo import upgrade_generators
+from pain_workbench import upgrade_generators
 
 
 def upgrade(*argv: str) -> list[list[str]]:

@@ -18,17 +18,17 @@ from sample_files import assert_valid_sample_file
 from schwifty import IBAN
 from test_clean_banks import scratch_catalogue
 
-from pain_demo.app import create_app
-from pain_demo.catalogue import load_catalogue
-from pain_demo.generation.clean_banks import SUPPORTED_COUNTRIES as COUNTRIES
-from pain_demo.generation.clean_banks import load_clean_banks
-from pain_demo.generation.generated_data import GeneratedData
-from pain_demo.generation.model import SampleFileModel
-from pain_demo.generation.sample_file import AnswerKey, answer_key_json
-from pain_demo.renderer import RenderFailed
-from pain_demo.settings import Settings
-from pain_demo.validation import MESSAGE_VERSIONS
-from pain_demo.version import app_version
+from pain_workbench.app import create_app
+from pain_workbench.catalogue import load_catalogue
+from pain_workbench.generation.clean_banks import SUPPORTED_COUNTRIES as COUNTRIES
+from pain_workbench.generation.clean_banks import load_clean_banks
+from pain_workbench.generation.generated_data import GeneratedData
+from pain_workbench.generation.model import SampleFileModel
+from pain_workbench.generation.sample_file import AnswerKey, answer_key_json
+from pain_workbench.renderer import RenderFailed
+from pain_workbench.settings import Settings
+from pain_workbench.validation import MESSAGE_VERSIONS
+from pain_workbench.version import app_version
 
 CATALOGUE = load_catalogue()
 CLEAN_BANKS = load_clean_banks(CATALOGUE)
@@ -116,7 +116,7 @@ def test_the_file_starts_with_a_comment_carrying_the_seed_and_app_version(client
     lines = generate(client, seed="regression-run-42")["sample_file"]["xml"].splitlines()
 
     assert lines[0] == "<?xml version='1.0' encoding='UTF-8'?>"
-    assert lines[1] == f'<!-- pain-demo {app_version()} seed="regression-run-42" -->'
+    assert lines[1] == f'<!-- pain-workbench {app_version()} seed="regression-run-42" -->'
 
 
 @pytest.mark.parametrize("seed", ["a--b", "trailing-", "--", 'quote " and \\ back', "naïve\tseed"])
@@ -332,7 +332,7 @@ def test_a_build_failure_is_a_500_problem_and_logs_the_effective_request(
     def failing_render(model: object) -> object:
         raise RenderFailed([".../Cdtr/Nm: value length cannot be greater than 140"])
 
-    monkeypatch.setattr("pain_demo.generation.sample_file.render", failing_render)
+    monkeypatch.setattr("pain_workbench.generation.sample_file.render", failing_render)
     with TestClient(create_app(Settings(log_format="json", log_level="INFO"))) as client:
         response = client.post("/api/v1/sample-files", json={"seed": "broken"}, headers={"X-Request-Id": "req-b"})
 

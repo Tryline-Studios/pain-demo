@@ -3,8 +3,8 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from pain_demo import validation
-from pain_demo.app import create_app
+from pain_workbench import validation
+from pain_workbench.app import create_app
 
 ROSTER: dict[str, list[str]] = {
     "bank": [

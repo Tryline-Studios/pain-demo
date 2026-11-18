@@ -15,11 +15,11 @@ import pytest
 from fastapi.testclient import TestClient
 from sample_files import assert_valid_sample_file
 
-from pain_demo.app import create_app
-from pain_demo.catalogue.capabilities import NameVariant, Placement
-from pain_demo.generation.sample_file import AnswerKey, answer_key_json
-from pain_demo.settings import Settings
-from pain_demo.validation import MESSAGE_VERSIONS
+from pain_workbench.app import create_app
+from pain_workbench.catalogue.capabilities import NameVariant, Placement
+from pain_workbench.generation.sample_file import AnswerKey, answer_key_json
+from pain_workbench.settings import Settings
+from pain_workbench.validation import MESSAGE_VERSIONS
 
 GOLDENS = Path(__file__).parent / "goldens"
 UPDATE = os.environ.get("UPDATE_GOLDENS") == "1"

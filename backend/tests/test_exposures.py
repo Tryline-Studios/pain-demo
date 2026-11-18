@@ -10,9 +10,9 @@ from sample_files import resolve
 from schwifty import IBAN
 from test_drawn_hits import CATALOGUE, CLEAN_BICS, PMT_INF, generate, tree
 
-from pain_demo.app import create_app
-from pain_demo.generation.screening import NameScreen
-from pain_demo.identifiers import bic_country
+from pain_workbench.app import create_app
+from pain_workbench.generation.screening import NameScreen
+from pain_workbench.identifiers import bic_country
 
 EXPOSURE_CURRENCIES = {"RU": "RUB", "BY": "BYN", "IR": "IRR", "KP": "KPW", "SY": "SYP", "VE": "VES"}
 CITIES = {

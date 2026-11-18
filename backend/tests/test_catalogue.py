@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from pain_demo.app import create_app
-from pain_demo.catalogue import CatalogueError, load_catalogue
-from pain_demo.settings import Settings
+from pain_workbench.app import create_app
+from pain_workbench.catalogue import CatalogueError, load_catalogue
+from pain_workbench.settings import Settings
 
 
 def test_the_shipped_catalogue_holds_the_full_roster(roster_ids: list[str]) -> None:

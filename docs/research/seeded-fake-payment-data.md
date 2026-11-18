@@ -1,6 +1,6 @@
 # Seeded fake payment data libraries
 
-Research for [#4](https://github.com/Tryline-Studios/pain-demo/issues/4), part of the wayfinder map [#1](https://github.com/Tryline-Studios/pain-demo/issues/1).
+Research for [#4](https://github.com/Tryline-Studios/pain-workbench/issues/4), part of the wayfinder map [#1](https://github.com/Tryline-Studios/pain-workbench/issues/1).
 
 **Question.** Which Python libraries can produce realistic, country-appropriate Generated Data (party names, structured addresses, checksum-valid IBANs, plausible BICs, amounts, currencies) that is reproducible from a Seed and runs on Python 3.13? How do the candidates compare on IBAN/BIC validity, per-country locales, determinism, licence and maintenance?
 
