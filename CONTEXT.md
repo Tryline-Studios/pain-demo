@@ -24,6 +24,10 @@ _Avoid_: Validation result, error list, lint output
 One located defect in an Uploaded Message: what is wrong, the element and line where it occurs, and the cause.
 _Avoid_: Error, violation, finding
 
+**XPath Query**:
+An XPath 1.0 expression, written without namespace prefixes, run in the browser against an Uploaded Message in Validate mode to find its matching elements and values. Match states and paths follow the [`xpath-query`](https://github.com/Tryline-Studios/xpath-query) CLI.
+_Avoid_: Search, filter, lookup
+
 **Generated Data**:
 Payment content fabricated by the app (fake names, accounts, amounts) rather than supplied by a user.
 _Avoid_: Random data, mock data, dummy data

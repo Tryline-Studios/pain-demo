@@ -1,14 +1,18 @@
 import { Check, CircleAlert, FileText } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ProblemBlock } from "@/workbench/ProblemBlock";
 import { MonoValue, TILES, Tile } from "@/workbench/Tile";
 import { ProblemRail } from "@/workbench/validate/ProblemRail";
-import { SourceView, splitLines } from "@/workbench/validate/SourceView";
+import { QueryBar } from "@/workbench/validate/QueryBar";
+import { type Found, SourceView, splitLines } from "@/workbench/validate/SourceView";
 import type { Validation, ValidationProblem } from "@/workbench/validate/useValidation";
+import { buildXPathQuery } from "@/workbench/validate/xpathQuery";
 
 /** The right pane in Validate mode: summary tiles, the file line and the problems (spec 17.9). */
 export function ValidationReportPane({ validation }: { validation: Validation }) {
   const report = validation.data;
+  // Kept across uploads, so the same query runs again on the next message.
+  const [query, setQuery] = useState("");
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,7 +68,13 @@ export function ValidationReportPane({ validation }: { validation: Validation })
             <p className="text-muted-foreground text-sm">Only the first 100 problems are shown.</p>
           ) : null}
           {/* Keyed by submission so a new report starts at the top with no line marked. */}
-          <SourceAndRail key={validation.submittedAt} source={validation.source} problems={report.problems} />
+          <SourceAndRail
+            key={validation.submittedAt}
+            source={validation.source}
+            problems={report.problems}
+            query={query}
+            onQueryChange={setQuery}
+          />
         </>
       )}
     </div>
@@ -89,19 +99,63 @@ function problemCount(report: Validation["data"]) {
   return report.truncated ? "100+" : report.problems.length;
 }
 
-/** The source view with the problem rail on its right; clicking a problem scrolls the source to its line. */
-function SourceAndRail({ source, problems }: { source: string; problems: ValidationProblem[] }) {
+const MALFORMED = "XPath Query is off: the Uploaded Message is not well-formed XML";
+
+/** Why the XPath Query is off: the browser parser must never see a malformed message or a DTD (spec 17.3, 17.10). */
+function unavailableReason(problems: ValidationProblem[]) {
+  if (problems.some((problem) => problem.code === "malformed_xml")) {
+    return MALFORMED;
+  }
+  if (problems.some((problem) => problem.code === "dtd_not_allowed")) {
+    return "XPath Query is off: the Uploaded Message carries a DTD";
+  }
+  return null;
+}
+
+/**
+ * The XPath Query bar over the source view, with the problem rail on its right. Clicking a problem scrolls the source
+ * to its line; the query's matches stay tinted, and whichever jump came last decides where the source is.
+ */
+function SourceAndRail({
+  source,
+  problems,
+  query,
+  onQueryChange,
+}: {
+  source: string;
+  problems: ValidationProblem[];
+  query: string;
+  onQueryChange: (query: string) => void;
+}) {
   // `key` tells apart two problems on one line, so only the chosen card is marked.
   const [target, setTarget] = useState<{ line: number; key: string } | null>(null);
+  const [found, setFound] = useState<Found>({ lines: [], current: null });
   const lines = useMemo(() => splitLines(source), [source]);
+  const blocked = unavailableReason(problems);
+  const xpath = useMemo(() => (blocked === null ? buildXPathQuery(lines) : null), [blocked, lines]);
+  const onMatches = useCallback(
+    (matched: number[], current: number | null) =>
+      setFound({ lines: matched, current: current === null ? null : { line: current } }),
+    [],
+  );
+  const sourcePanel = (
+    <div className="flex flex-col gap-2">
+      <QueryBar
+        xpath={xpath}
+        unavailable={blocked ?? (xpath === null ? MALFORMED : null)}
+        query={query}
+        onQueryChange={onQueryChange}
+        onMatches={onMatches}
+      />
+      <SourceView lines={lines} problems={problems} target={target} found={found} />
+    </div>
+  );
   if (problems.length === 0) {
-    return <SourceView lines={lines} problems={problems} target={null} />;
+    return sourcePanel;
   }
   return (
     <div className="flex flex-wrap items-start gap-4">
-      <div className="min-w-0 flex-[999_1_520px]">
-        <SourceView lines={lines} problems={problems} target={target} />
-      </div>
+      <div className="min-w-0 flex-[999_1_520px]">{sourcePanel}</div>
       <section aria-labelledby="problems-heading" className="flex min-w-0 flex-[1_1_340px] flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <h2 id="problems-heading" className="font-semibold text-sm">
