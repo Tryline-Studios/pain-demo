@@ -116,5 +116,6 @@ test("Validate mode sends a file through Caddy and shows its verdict", async ({ 
   const report = page.getByRole("region", { name: "Validation Report" });
   await expect(report.getByRole("group", { name: "Verdict" })).toHaveText(/^Verdict\s*Valid$/);
   await expect(report.getByText("small.xml")).toBeVisible();
-  await expect(report.getByText("No problems found")).toBeVisible();
+  await expect(report.getByRole("group", { name: "Problems" })).toHaveText(/^Problems\s*0$/);
+  await expect(report.getByText("No problems found")).toHaveCount(0);
 });

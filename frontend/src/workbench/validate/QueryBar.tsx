@@ -1,6 +1,7 @@
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Fragment, type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { INPUT } from "@/workbench/generate/FileSection";
 import { rank } from "@/workbench/validate/fuzzyRank";
@@ -8,6 +9,15 @@ import type { QueryResult, XPathQuery } from "@/workbench/validate/xpathQuery";
 
 const PLACEHOLDER = "/Document/CstmrCdtTrfInitn";
 const PAUSE_MS = 150;
+// The cheat sheet in the info tooltip (issue #111).
+const EXAMPLES = [
+  ["/Document/CstmrCdtTrfInitn", "path from the root"],
+  ["//InstdAmt", "InstdAmt at any depth"],
+  ["//CdtTrfTxInf[2]", "the second CdtTrfTxInf"],
+  ["//InstdAmt/@Ccy", "an attribute"],
+  ["//Cdtr[Nm='ACME Ltd']", "filter by a child's value"],
+  ["count(//CdtTrfTxInf)", "a number, not matches"],
+] as const;
 
 type Ran = { text: string; result: QueryResult | null };
 // Typeahead is for plain paths only: names, `/` and `//`.
@@ -39,6 +49,7 @@ export function QueryBar({
   const [listOpen, setListOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const listId = useId();
+  const inputId = useId();
 
   const execute = (text: string): Ran => {
     const xpath = text.trim() === "" ? null : getXPath();
@@ -123,78 +134,106 @@ export function QueryBar({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
-        <div className="relative min-w-0 flex-1">
-          <input
-            type="text"
-            role="combobox"
-            aria-label="XPath Query"
-            aria-autocomplete="list"
-            aria-expanded={shown}
-            aria-controls={listId}
-            aria-activedescendant={shown && active >= 0 ? `${listId}-${active}` : undefined}
-            className={INPUT}
-            placeholder={PLACEHOLDER}
-            spellCheck={false}
-            autoComplete="off"
-            disabled={unavailable !== null}
-            value={query}
-            onChange={(event) => {
-              onQueryChange(event.target.value);
-              setListOpen(true);
-              setActive(-1);
-            }}
-            onKeyDown={onKeyDown}
-            onBlur={() => setListOpen(false)}
-          />
-          <div
-            id={listId}
-            role="listbox"
-            aria-label="Paths"
-            hidden={!shown}
-            className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border bg-popover py-1 font-mono text-xs shadow-md"
-          >
-            {shown
-              ? options.map((path, at) => (
-                  // The combobox pattern keeps focus and keys in the box (aria-activedescendant); options take clicks only.
-                  // biome-ignore lint/a11y/useFocusableInteractive: focus stays in the combobox
-                  // biome-ignore lint/a11y/useKeyWithClickEvents: the combobox handles the keys
-                  <div
-                    key={path}
-                    id={`${listId}-${at}`}
-                    role="option"
-                    aria-selected={at === active}
-                    className={cn("cursor-pointer truncate px-2.5 py-1", {
-                      "bg-primary-soft text-primary": at === active,
-                    })}
-                    // Keeps focus in the box, so blur does not close the list before the click lands.
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => accept(path)}
-                  >
-                    {path}
-                  </div>
-                ))
-              : null}
-          </div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <div className="flex items-center gap-1">
+          <label htmlFor={inputId} className="font-medium text-sm">
+            XPath Query
+          </label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-xs" aria-label="About XPath queries">
+                <Info aria-hidden />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" className="max-w-md">
+              <div className="flex flex-col gap-1.5">
+                <p>XPath 1.0, written without namespace prefixes.</p>
+                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+                  {EXAMPLES.map(([example, meaning]) => (
+                    <Fragment key={example}>
+                      <dt className="font-mono">{example}</dt>
+                      <dd>{meaning}</dd>
+                    </Fragment>
+                  ))}
+                </dl>
+              </div>
+            </TooltipContent>
+          </Tooltip>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Previous match"
-          disabled={matches.length === 0}
-          onClick={() => step(-1)}
-        >
-          <ChevronUp aria-hidden />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Next match"
-          disabled={matches.length === 0}
-          onClick={() => step(1)}
-        >
-          <ChevronDown aria-hidden />
-        </Button>
+        {/* Wraps under the label at phone width, keeping the box full width. */}
+        <div className="flex min-w-64 flex-1 items-center gap-2">
+          <div className="relative min-w-0 flex-1">
+            <input
+              id={inputId}
+              type="text"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={shown}
+              aria-controls={listId}
+              aria-activedescendant={shown && active >= 0 ? `${listId}-${active}` : undefined}
+              className={INPUT}
+              placeholder={PLACEHOLDER}
+              spellCheck={false}
+              autoComplete="off"
+              disabled={unavailable !== null}
+              value={query}
+              onChange={(event) => {
+                onQueryChange(event.target.value);
+                setListOpen(true);
+                setActive(-1);
+              }}
+              onKeyDown={onKeyDown}
+              onBlur={() => setListOpen(false)}
+            />
+            <div
+              id={listId}
+              role="listbox"
+              aria-label="Paths"
+              hidden={!shown}
+              className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border bg-popover py-1 font-mono text-xs shadow-md"
+            >
+              {shown
+                ? options.map((path, at) => (
+                    // The combobox pattern keeps focus and keys in the box (aria-activedescendant); options take clicks only.
+                    // biome-ignore lint/a11y/useFocusableInteractive: focus stays in the combobox
+                    // biome-ignore lint/a11y/useKeyWithClickEvents: the combobox handles the keys
+                    <div
+                      key={path}
+                      id={`${listId}-${at}`}
+                      role="option"
+                      aria-selected={at === active}
+                      className={cn("cursor-pointer truncate px-2.5 py-1", {
+                        "bg-primary-soft text-primary": at === active,
+                      })}
+                      // Keeps focus in the box, so blur does not close the list before the click lands.
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => accept(path)}
+                    >
+                      {path}
+                    </div>
+                  ))
+                : null}
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Previous match"
+            disabled={matches.length === 0}
+            onClick={() => step(-1)}
+          >
+            <ChevronUp aria-hidden />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Next match"
+            disabled={matches.length === 0}
+            onClick={() => step(1)}
+          >
+            <ChevronDown aria-hidden />
+          </Button>
+        </div>
       </div>
       <p role="status" aria-live="polite" className="min-h-4 truncate font-mono text-muted-foreground text-xs">
         {unavailable ?? statusOf(result, index)}

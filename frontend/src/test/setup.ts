@@ -7,6 +7,13 @@ import { server } from "@/test/server";
 // so the mock server has to have patched it by then.
 server.listen({ onUnhandledFrame: "error" });
 
+// jsdom has no ResizeObserver; Radix's Tooltip positioning needs one to exist.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 beforeEach(() => {
   // jsdom has no matchMedia; a light system scheme unless a test says otherwise.
   window.matchMedia = vi.fn(
