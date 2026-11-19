@@ -30,7 +30,7 @@ dev = [
     "prek",
     "pytest",
     "ruff",
-    "ty==0.0.95",
+    "ty==0.0.104",
     "types-lxml>=2026.2.16",
 ]
 
