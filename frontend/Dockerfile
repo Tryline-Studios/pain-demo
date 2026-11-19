@@ -9,7 +9,7 @@ COPY . .
 RUN pnpm build
 
 # Stage 2: Caddy serves the build and proxies /api to the api service.
-FROM caddy:2.11.6-alpine
+FROM caddy:2.11.9-alpine
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv
 EXPOSE 8080
